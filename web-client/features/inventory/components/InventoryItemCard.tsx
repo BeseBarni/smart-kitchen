@@ -14,7 +14,7 @@ interface Props {
 
 export function InventoryItemCard({ item, asOf, disabled, onEdit, onAdjust }: Props): React.JSX.Element {
   const days = daysUntil(item.bestBefore, asOf);
-  const statusColor = days <= 1 ? "text-destructive" : days <= 3 ? "text-warning" : "text-muted-foreground";
+  const statusColor = days <= 1 ? "text-destructive" : days <= 3 ? "text-[color:var(--stitch-tertiary)] dark:text-warning" : "text-muted-foreground";
   return (
     <article className="rounded-xl border border-border bg-card p-3 shadow-[0_1px_3px_rgba(17,24,39,0.04)]">
       <div className="flex items-start gap-3">
