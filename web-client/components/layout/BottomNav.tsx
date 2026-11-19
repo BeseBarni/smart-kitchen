@@ -16,9 +16,9 @@ export function BottomNav(): React.JSX.Element {
         <Link href="/inventory" aria-current={pathname === "/inventory" ? "page" : undefined} className={`${itemClass} ${pathname === "/inventory" ? "text-primary-pressed" : "text-muted-foreground"} focus-visible:outline-2 focus-visible:outline-ring`}>
           <Refrigerator size={22} aria-hidden="true" />Inventory
         </Link>
-        <button type="button" disabled title="Recipes are not available in this demo" className={`${itemClass} text-muted-foreground opacity-60`}>
+        <Link href="/recipes" aria-current={pathname === "/recipes" || pathname.startsWith("/recipes/") ? "page" : undefined} className={`${itemClass} ${pathname === "/recipes" || pathname.startsWith("/recipes/") ? "text-primary-pressed" : "text-muted-foreground"} focus-visible:outline-2 focus-visible:outline-ring`}>
           <BookOpen size={22} aria-hidden="true" />Recipes
-        </button>
+        </Link>
       </div>
     </nav>
   );

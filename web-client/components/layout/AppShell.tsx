@@ -6,7 +6,9 @@ import type { ReactNode } from "react";
 import { BottomNav } from "./BottomNav";
 
 export function AppShell({ children }: { children: ReactNode }): React.JSX.Element {
-  const isInventory = usePathname().startsWith("/inventory");
+  const pathname = usePathname();
+  const section = pathname.startsWith("/inventory") ? "Inventory" :
+    pathname.startsWith("/recipes") ? "Recipes" : "Assistant Chat";
   return (
     <div className="mx-auto min-h-dvh w-full max-w-[430px] bg-background">
       <header className="fixed inset-x-0 top-0 z-50 mx-auto max-w-[430px] bg-background/95 pt-[env(safe-area-inset-top,0px)] shadow-[0_1px_8px_rgba(0,0,0,0.03)] backdrop-blur-xl">
@@ -15,7 +17,7 @@ export function AppShell({ children }: { children: ReactNode }): React.JSX.Eleme
             <div className="flex items-center gap-1.5">
               <span className="text-title-sm">PrepPilot</span>
               <span aria-hidden="true" className="text-muted-foreground">·</span>
-              <span className="truncate text-body-sm text-muted-foreground">{isInventory ? "Inventory" : "Assistant Chat"}</span>
+              <span className="truncate text-body-sm text-muted-foreground">{section}</span>
             </div>
             <div className="mt-0.5 flex items-center gap-1.5 text-label-sm text-muted-foreground">
               <span className="size-1.5 rounded-full bg-primary" aria-hidden="true" />
