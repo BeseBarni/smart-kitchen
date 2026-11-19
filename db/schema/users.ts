@@ -1,4 +1,4 @@
-import { pgSchema, pgTable, text, integer, jsonb, timestamp } from "drizzle-orm/pg-core";
+import { pgSchema, pgTable, text, integer, jsonb, timestamp, uuid } from "drizzle-orm/pg-core";
 import { unitSystemEnum } from "./enums";
 
 const neonAuth = pgSchema("neon_auth");
@@ -11,11 +11,11 @@ export interface DietaryPreferences {
 }
 
 export const authUsers = neonAuth.table("user", {
-  id: text("id").primaryKey(),
+  id: uuid("id").primaryKey(),
 });
 
 export const userProfiles = pgTable("user_profiles", {
-  userId: text("user_id")
+  userId: uuid("user_id")
     .primaryKey()
     .references(() => authUsers.id, { onDelete: "cascade" }),
   dailyCalorieTarget: integer("daily_calorie_target"),

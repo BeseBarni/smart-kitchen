@@ -19,7 +19,7 @@ export const inventoryItems = pgTable(
   "inventory_items",
   {
     id: uuid("id").defaultRandom().primaryKey(),
-    userId: text("user_id")
+    userId: uuid("user_id")
       .notNull()
       .references(() => authUsers.id, { onDelete: "cascade" }),
     name: text("name").notNull(),
@@ -59,7 +59,7 @@ export const mealLogs = pgTable(
   "meal_logs",
   {
     id: uuid("id").defaultRandom().primaryKey(),
-    userId: text("user_id")
+    userId: uuid("user_id")
       .notNull()
       .references(() => authUsers.id, { onDelete: "cascade" }),
     inventoryItemId: uuid("inventory_item_id").references(() => inventoryItems.id, {

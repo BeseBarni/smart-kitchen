@@ -41,6 +41,10 @@ export const conversationItemPayloadSchema = z
           .array(conversationAttachmentSchema)
           .optional()
           .describe("Optional message attachments."),
+        uiDirectives: z
+          .array(chatJsonValueSchema)
+          .optional()
+          .describe("Optional UI directives emitted during the turn."),
       })
       .describe("A text message with optional attachments."),
     z

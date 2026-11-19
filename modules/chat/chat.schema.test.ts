@@ -19,6 +19,22 @@ test("conversation item accepts matching type and payload discriminators", () =>
   assert.equal(conversationItemSchema.safeParse(item).success, true);
 });
 
+test("assistant messages accept JSON-safe UI directives for replay", () => {
+  assert.equal(conversationItemSchema.safeParse({
+    ...item,
+    role: "assistant",
+    payload: {
+      kind: "message",
+      text: "Added soup.",
+      uiDirectives: [{
+        component: "inventory_action_card",
+        action: "added",
+        items: [{ id: "item-1", name: "Soup", quantity: 2, unit: "portion", location: "freezer" }],
+      }],
+    },
+  }).success, true);
+});
+
 test("conversation item rejects mismatched type and payload discriminators", () => {
   assert.equal(
     conversationItemSchema.safeParse({

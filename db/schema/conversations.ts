@@ -17,6 +17,7 @@ export type ConversationItemPayload =
       kind: "message";
       text: string;
       attachments?: { name: string; mimeType: string; url?: string }[];
+      uiDirectives?: ConversationJsonValue[];
     }
   | { kind: "tool_call"; arguments: ConversationJsonObject }
   | {
@@ -41,7 +42,7 @@ export const conversations = pgTable(
   "conversations",
   {
     id: uuid("id").defaultRandom().primaryKey(),
-    userId: text("user_id")
+    userId: uuid("user_id")
       .notNull()
       .references(() => authUsers.id, { onDelete: "cascade" }),
     title: text("title"),
