@@ -10,10 +10,10 @@ export function InventoryActionCard({ actions }: { actions: readonly InventoryAc
         <Badge variant="secondary" className="bg-white text-secondary-foreground">Example only</Badge>
       </div>
       <div className="mt-3 space-y-2">
-        {actions.map((action) => {
+        {actions.map((action, index) => {
           const Icon = action.storage === "freezer" ? Snowflake : Refrigerator;
           return (
-            <div key={action.storage} className="flex gap-2 rounded-lg bg-card p-2">
+            <div key={`${action.storage}-${index}`} className="flex gap-2 rounded-lg bg-card p-2">
               <Icon size={16} className="mt-0.5 shrink-0 text-secondary-foreground" aria-hidden="true" />
               <div className="min-w-0">
                 <div className="truncate text-title-sm">{action.storage === "freezer" ? "Freezer" : "Fridge"}: {action.name}</div>
