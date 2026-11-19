@@ -20,7 +20,7 @@ export function AccountForm(): React.JSX.Element {
   const [message, setMessage] = useState("");
   const [failure, setFailure] = useState("");
   const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<FormValues>({
-    resolver: zodResolver(formSchema),
+    resolver: zodResolver(signup ? formSchema : formSchema.extend({ name: z.string() })),
     defaultValues: { name: "", email: "", password: "" },
   });
   const submit = async (values: FormValues): Promise<void> => {
