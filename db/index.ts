@@ -1,4 +1,5 @@
 import { drizzle, type PostgresJsDatabase } from "drizzle-orm/postgres-js";
+import { sql } from "drizzle-orm";
 import postgres from "postgres";
 import * as schema from "./schema/index";
 
@@ -31,6 +32,10 @@ export async function closeDatabase(): Promise<void> {
     client = undefined;
     database = undefined;
   }
+}
+
+export async function pingDatabase(): Promise<void> {
+  await getDatabase().execute(sql`select 1`);
 }
 
 export * from "./schema";

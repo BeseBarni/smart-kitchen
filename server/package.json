@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@app/ai": "workspace:*",
+    "@app/db": "workspace:*",
     "@app/modules": "workspace:*",
     "@app/shared": "workspace:*",
     "@hono/zod-validator": "^0.7.5",

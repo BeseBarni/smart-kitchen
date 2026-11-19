@@ -1,10 +1,50 @@
 import { Hono } from "hono";
+import { cors } from "hono/cors";
 import { accountRoutes } from "./routes/account.routes";
 import { authRoutes } from "./routes/auth.routes";
+import { chatRoutes } from "./routes/chat.routes";
+import { healthRoutes } from "./routes/health.routes";
+import { ingredientRoutes } from "./routes/ingredients.routes";
+import { inventoryRoutes } from "./routes/inventory.routes";
+import { mealLogRoutes } from "./routes/meal-logs.routes";
+import { profileRoutes } from "./routes/profile.routes";
+import { recipeRoutes } from "./routes/recipes.routes";
+import type { AuthEnvironment } from "./middleware/auth.middleware";
+import { errorResponse } from "./middleware/error-handler";
 
-export const app = new Hono()
+function allowedOrigins(): string[] {
+  return (process.env.CORS_ALLOWED_ORIGINS ?? "")
+    .split(",")
+    .map((origin) => origin.trim())
+    .filter((origin) => origin.length > 0);
+}
+
+export const app = new Hono<AuthEnvironment>()
   .basePath("/api")
+  .use(
+    "*",
+    cors({
+      origin: (origin) => allowedOrigins().includes(origin) ? origin : "",
+      credentials: true,
+      allowMethods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+      allowHeaders: ["Content-Type", "Authorization"],
+    }),
+  )
+  .onError((error, context) => {
+    console.error("Unhandled API error:", error);
+    return errorResponse(context, {
+      code: "INTERNAL_ERROR",
+      message: "An unexpected server error occurred.",
+    });
+  })
   .route("/", authRoutes)
-  .route("/", accountRoutes);
+  .route("/", accountRoutes)
+  .route("/", healthRoutes)
+  .route("/", profileRoutes)
+  .route("/", ingredientRoutes)
+  .route("/", recipeRoutes)
+  .route("/", inventoryRoutes)
+  .route("/", mealLogRoutes)
+  .route("/", chatRoutes);
 
 export type AppType = typeof app;
