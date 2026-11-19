@@ -1,0 +1,21 @@
+{
+  "name": "@app/server",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./index.ts"
+  },
+  "scripts": {
+    "dev": "tsx watch index.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@app/ai": "workspace:*",
+    "@app/modules": "workspace:*",
+    "@app/shared": "workspace:*",
+    "@hono/zod-validator": "^0.7.5",
+    "hono": "^4.10.6",
+    "zod": "^4.1.12"
+  }
+}

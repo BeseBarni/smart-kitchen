@@ -1,0 +1,9 @@
+packages:
+  - web-client
+  - server
+  - modules
+  - ai
+  - db
+  - shared
+allowBuilds:
+  esbuild: true

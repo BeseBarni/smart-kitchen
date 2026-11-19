@@ -1,0 +1,21 @@
+{
+  "name": "@app/ai",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./index.ts",
+    "./orchestrator": "./orchestrator.ts",
+    "./llm-client": "./llm.client.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@app/modules": "workspace:*",
+    "@app/shared": "workspace:*",
+    "@openrouter/ai-sdk-provider": "^3.1.0",
+    "ai": "^7.0.177",
+    "zod": "^4.1.12"
+  }
+}
