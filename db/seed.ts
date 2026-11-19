@@ -1,3 +1,7 @@
+import { config } from "dotenv";
+import { dirname, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
+import { eq } from "drizzle-orm";
 import { closeDatabase, getDatabase } from "./index";
 import {
   authUsers,
@@ -11,7 +15,8 @@ import {
   userProfiles,
 } from "./schema";
 
-const userId = "seed-neon-auth-user";
+config({ path: resolve(dirname(fileURLToPath(import.meta.url)), "../.env"), quiet: true });
+
 const ids = {
   chicken: "10000000-0000-4000-8000-000000000001",
   rice: "10000000-0000-4000-8000-000000000002",
@@ -36,11 +41,21 @@ const ids = {
 } as const;
 
 async function seed(): Promise<void> {
+  const userId = process.env.SEED_USER_ID;
+  if (!userId) {
+    throw new Error("SEED_USER_ID is required and must identify an existing Neon Auth user.");
+  }
+
   const database = getDatabase();
 
   try {
     await database.transaction(async (tx) => {
-      await tx.insert(authUsers).values({ id: userId }).onConflictDoNothing();
+      const [seedUser] = await tx
+        .select({ id: authUsers.id })
+        .from(authUsers)
+        .where(eq(authUsers.id, userId))
+        .limit(1);
+      if (!seedUser) throw new Error("SEED_USER_ID does not match an existing Neon Auth user.");
 
       await tx
         .insert(userProfiles)

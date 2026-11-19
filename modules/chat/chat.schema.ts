@@ -106,6 +106,15 @@ export const conversationItemSchema = z
     metadata: conversationItemMetadataSchema.nullable().describe("Optional execution metadata."),
     createdAt: z.iso.datetime().describe("Creation time in ISO-8601 format."),
   })
+  .superRefine(({ type, payload }, context) => {
+    if (type !== payload.kind) {
+      context.addIssue({
+        code: "custom",
+        path: ["payload", "kind"],
+        message: "Payload kind must match the conversation item type.",
+      });
+    }
+  })
   .describe("One ordered conversation ledger item.");
 
 export const chatSchema = z
