@@ -7,8 +7,10 @@ local URL; `/` redirects to `/chat`.
 The chat is a read-only demonstration. Messaging, quick prompts, camera, voice,
 and recipe actions are unavailable. `/inventory` provides a mock-backed
 fridge/freezer list with search, filters, add/edit, and portion controls;
-decreasing the last portion removes the item. AI Rescue, AI Autofill, and Recipes
-are unavailable. All data is illustrative and never synced or saved: mock state
+decreasing the last portion removes the item. `/recipes` provides a mock-backed
+recipe library with search, filters, and favorites. Recipe creation, details,
+Cook & Stock, AI Rescue, and AI Autofill are unavailable; recipe stock labels
+are illustrative and do not reflect the inventory. All data is illustrative and never synced or saved: mock state
 is held in browser memory and resets on reload. Provisional feature contracts
 will need alignment with future shared schemas and Hono endpoints.
 
