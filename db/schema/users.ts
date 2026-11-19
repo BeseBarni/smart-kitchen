@@ -1,5 +1,7 @@
-import { pgTable, text, integer, jsonb, timestamp } from "drizzle-orm/pg-core";
+import { pgSchema, pgTable, text, integer, jsonb, timestamp } from "drizzle-orm/pg-core";
 import { unitSystemEnum } from "./enums";
+
+const neonAuth = pgSchema("neon_auth");
 
 export interface DietaryPreferences {
   allergies: string[];
@@ -8,9 +10,8 @@ export interface DietaryPreferences {
   notes?: string;
 }
 
-export const authUsers = pgTable("auth_users", {
+export const authUsers = neonAuth.table("user", {
   id: text("id").primaryKey(),
-  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
 });
 
 export const userProfiles = pgTable("user_profiles", {

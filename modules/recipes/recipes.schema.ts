@@ -40,6 +40,11 @@ export const recipeSchema = z
 
 export const createRecipeSchema = recipeSchema
   .omit({ id: true, userId: true, createdAt: true, updatedAt: true })
+  .extend({
+    ingredients: z
+      .array(recipeIngredientSchema.omit({ id: true, recipeId: true }))
+      .describe("Ingredients used by this recipe."),
+  })
   .describe("Input for creating a recipe.");
 
 export const updateRecipeSchema = createRecipeSchema
