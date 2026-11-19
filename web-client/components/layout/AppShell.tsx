@@ -1,6 +1,7 @@
 "use client";
 
 import { SlidersHorizontal, UserRound } from "lucide-react";
+import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
 import { BottomNav } from "./BottomNav";
@@ -8,7 +9,8 @@ import { BottomNav } from "./BottomNav";
 export function AppShell({ children }: { children: ReactNode }): React.JSX.Element {
   const pathname = usePathname();
   const section = pathname.startsWith("/inventory") ? "Inventory" :
-    pathname.startsWith("/recipes") ? "Recipes" : "Assistant Chat";
+    pathname.startsWith("/recipes") ? "Recipes" :
+    pathname.startsWith("/account") ? "Account" : "Assistant Chat";
   return (
     <div className="mx-auto min-h-dvh w-full max-w-[430px] bg-background">
       <header className="fixed inset-x-0 top-0 z-50 mx-auto max-w-[430px] bg-background/95 pt-[env(safe-area-inset-top,0px)] shadow-[0_1px_8px_rgba(0,0,0,0.03)] backdrop-blur-xl">
@@ -26,7 +28,9 @@ export function AppShell({ children }: { children: ReactNode }): React.JSX.Eleme
           </div>
           <div className="flex shrink-0 items-center">
             <button type="button" disabled aria-label="Filters unavailable in demo" className="flex size-11 items-center justify-center text-muted-foreground opacity-60"><SlidersHorizontal size={20} /></button>
-            <span className="flex size-8 items-center justify-center rounded-full bg-primary text-primary-foreground" aria-label="Demo profile"><UserRound size={18} /></span>
+            <Link href="/account" className="flex size-11 items-center justify-center" aria-label="Account">
+              <span className="flex size-8 items-center justify-center rounded-full bg-primary text-primary-foreground"><UserRound size={18} /></span>
+            </Link>
           </div>
         </div>
       </header>
