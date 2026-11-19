@@ -9,7 +9,7 @@ export function FreshnessAlert({ items }: { items: readonly InventoryItem[] }): 
       <div className="flex items-start gap-3">
         <Clock3 size={20} className="mt-1 shrink-0 text-warning" aria-hidden="true" />
         <div className="min-w-0 flex-1">
-          <p className="text-label-sm uppercase text-warning">Urgent freshness</p>
+          <p className="text-label-sm uppercase text-[color:var(--stitch-tertiary)]">Urgent freshness</p>
           <p className="text-title-sm">{portions} {portions === 1 ? "portion" : "portions"} expiring within 2 days</p>
           <p className="text-body-sm text-muted-foreground">{items.map((item) => item.name).join(" · ")}</p>
         </div>
