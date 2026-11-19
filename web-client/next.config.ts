@@ -1,4 +1,8 @@
 import type { NextConfig } from "next";
+import { config } from "dotenv";
+import { resolve } from "node:path";
+
+config({ path: resolve(process.cwd(), "..", ".env"), quiet: true });
 
 const nextConfig: NextConfig = {
   /* config options here */
