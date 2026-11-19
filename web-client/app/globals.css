@@ -52,6 +52,8 @@
   --radius-stitch-sm: 0.25rem; --radius-stitch-default: 0.5rem;
   --radius-stitch-md: 0.75rem; --radius-stitch-lg: 1rem; --radius-stitch-xl: 1.5rem;
   --color-warning: #d97706;
+  --color-warning-surface: #fffbeb;
+  --color-warning-border: #fcd34d;
   --color-primary-pressed: #047857;
   --color-destructive-surface: #fef2f2;
   --color-destructive-border: #fca5a5;
