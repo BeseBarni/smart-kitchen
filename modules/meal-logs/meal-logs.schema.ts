@@ -25,5 +25,44 @@ export const createMealLogSchema = mealLogSchema
   .omit({ id: true, userId: true, createdAt: true })
   .describe("Input for recording a meal.");
 
+export const listMealLogsQuerySchema = z
+  .object({
+    from: z.iso.datetime().optional().describe("Inclusive start timestamp."),
+    to: z.iso.datetime().optional().describe("Exclusive end timestamp."),
+    mealType: z.enum(["breakfast", "lunch", "dinner", "snack"]).optional().describe("Meal filter."),
+    limit: z.coerce.number().int().positive().max(100).default(50).describe("Maximum results."),
+    offset: z.coerce.number().int().nonnegative().default(0).describe("Results to skip."),
+  })
+  .describe("Meal log listing filters.");
+
+export const dailySummaryQuerySchema = z
+  .object({ date: z.iso.date().describe("Calendar date in YYYY-MM-DD format.") })
+  .describe("Date for a daily nutrition summary.");
+
+export const deleteMealLogQuerySchema = z
+  .object({
+    restoreInventory: z.enum(["true", "false"]).default("false").transform((value) => value === "true")
+      .describe("Restore linked inventory quantity."),
+  })
+  .describe("Meal log deletion options.");
+
+export const dailyMealSummarySchema = z
+  .object({
+    date: z.iso.date().describe("Summary date."),
+    calories: z.number().nonnegative(),
+    proteinG: z.number().nonnegative(),
+    carbsG: z.number().nonnegative(),
+    fatG: z.number().nonnegative(),
+    costAmount: z.number().nonnegative(),
+    mealCount: z.number().int().nonnegative(),
+  })
+  .describe("Daily nutrition and meal count aggregate.");
+
+export const mealLogIdSchema = z.string().uuid().describe("Meal log identifier.");
+export const deleteMealLogInputSchema = z
+  .object({ restoreInventory: z.boolean().default(false).describe("Restore linked inventory quantity.") })
+  .describe("Meal log deletion options.");
+
 export type MealLogDto = z.infer<typeof mealLogSchema>;
 export type CreateMealLogInput = z.infer<typeof createMealLogSchema>;
+export type ListMealLogsQuery = z.infer<typeof listMealLogsQuerySchema>;

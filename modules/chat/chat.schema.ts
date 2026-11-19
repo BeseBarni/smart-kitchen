@@ -124,7 +124,44 @@ export const chatSchema = z
   })
   .describe("A complete conversation and its ledger.");
 
+export const listConversationsQuerySchema = z
+  .object({
+    limit: z.coerce.number().int().positive().max(100).default(50).describe("Maximum results."),
+    offset: z.coerce.number().int().nonnegative().default(0).describe("Results to skip."),
+  })
+  .describe("Conversation listing filters.");
+
+export const createConversationInputSchema = z
+  .object({ title: z.string().trim().min(1).max(120).optional().describe("Optional conversation title.") })
+  .describe("Input for creating a conversation.");
+
+export const updateConversationTitleSchema = z
+  .object({ title: z.string().trim().min(1).max(120).describe("New conversation title.") })
+  .describe("Input for renaming a conversation.");
+
+export const conversationItemsQuerySchema = z
+  .object({
+    limit: z.coerce.number().int().positive().max(200).default(100).describe("Maximum items."),
+    afterSequence: z.coerce.number().int().nonnegative().optional().describe("Exclusive sequence cursor."),
+  })
+  .describe("Conversation history pagination.");
+
+export const conversationIdSchema = z.string().uuid().describe("Conversation identifier.");
+
+export const conversationStreamInputSchema = z
+  .object({
+    message: z.string().trim().min(1).describe("Message sent by the user."),
+    attachments: z.array(conversationAttachmentSchema).optional().describe("Optional message attachments."),
+  })
+  .describe("Input for streaming a conversation turn.");
+
+export const createChatInputSchema = conversationStreamInputSchema
+  .extend({ conversationId: conversationIdSchema.optional().describe("Existing conversation, if any.") })
+  .describe("Input for the convenience chat endpoint.");
+
 export type ConversationItemPayloadDto = z.infer<typeof conversationItemPayloadSchema>;
 export type ConversationItemMetadataDto = z.infer<typeof conversationItemMetadataSchema>;
 export type ConversationDto = z.infer<typeof conversationSchema>;
 export type ConversationItemDto = z.infer<typeof conversationItemSchema>;
+export type ConversationStreamInput = z.infer<typeof conversationStreamInputSchema>;
+export type CreateChatInput = z.infer<typeof createChatInputSchema>;

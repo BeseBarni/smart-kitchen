@@ -34,6 +34,18 @@ export const updateIngredientSchema = createIngredientSchema
   .partial()
   .describe("Fields that can be changed for an ingredient.");
 
+export const listIngredientsQuerySchema = z
+  .object({
+    search: z.string().optional().describe("Text to match against ingredient names."),
+    category: z.string().optional().describe("Restrict results to a category."),
+    limit: z.coerce.number().int().positive().max(100).default(50).describe("Maximum results."),
+    offset: z.coerce.number().int().nonnegative().default(0).describe("Results to skip."),
+  })
+  .describe("Ingredient listing filters.");
+
+export const ingredientIdSchema = z.string().uuid().describe("Ingredient identifier.");
+
 export type IngredientDto = z.infer<typeof ingredientSchema>;
 export type CreateIngredientInput = z.infer<typeof createIngredientSchema>;
 export type UpdateIngredientInput = z.infer<typeof updateIngredientSchema>;
+export type ListIngredientsQuery = z.infer<typeof listIngredientsQuerySchema>;

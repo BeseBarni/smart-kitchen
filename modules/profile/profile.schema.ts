@@ -29,6 +29,10 @@ export const updateProfileSchema = profileSchema
   .partial()
   .describe("Fields that can be changed in a user's profile.");
 
+export const getOrCreateProfileInputSchema = z
+  .object({})
+  .describe("Input for retrieving or creating the current user's profile.");
+
 export type DietaryPreferencesDto = z.infer<typeof dietaryPreferencesSchema>;
 export type ProfileDto = z.infer<typeof profileSchema>;
 export type UpdateProfileInput = z.infer<typeof updateProfileSchema>;

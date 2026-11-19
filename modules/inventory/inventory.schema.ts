@@ -35,6 +35,56 @@ export const updateInventoryItemSchema = createInventoryItemSchema
   .partial()
   .describe("Fields that can be changed for an inventory item.");
 
+export const listInventoryQuerySchema = z
+  .object({
+    storageLocation: z.enum(["fridge", "freezer", "pantry"]).optional().describe("Storage filter."),
+    status: z.enum(["in_stock", "consumed", "discarded"]).default("in_stock").describe("Status filter."),
+    itemType: z.enum(["meal_prep", "ingredient", "packaged"]).optional().describe("Item type filter."),
+    search: z.string().optional().describe("Text to match against item names."),
+    sortBy: z.enum(["expiresAt", "name", "createdAt"]).default("expiresAt").describe("Result order."),
+    limit: z.coerce.number().int().positive().max(100).default(50).describe("Maximum results."),
+    offset: z.coerce.number().int().nonnegative().default(0).describe("Results to skip."),
+  })
+  .describe("Inventory listing filters.");
+
+export const expiringInventoryQuerySchema = z
+  .object({
+    withinHours: z.coerce.number().positive().max(8760).default(48).describe("Expiry window in hours."),
+  })
+  .describe("Expiring inventory query.");
+
+export const inventorySummarySchema = z
+  .object({
+    totalItems: z.number().int().nonnegative().describe("Number of in-stock inventory records."),
+    totalQuantity: z.number().nonnegative().describe("Total remaining quantity."),
+    byLocation: z
+      .object({
+        fridge: z.object({ items: z.number().int().nonnegative(), quantity: z.number().nonnegative() }),
+        freezer: z.object({ items: z.number().int().nonnegative(), quantity: z.number().nonnegative() }),
+        pantry: z.object({ items: z.number().int().nonnegative(), quantity: z.number().nonnegative() }),
+      })
+      .describe("Remaining quantity by location."),
+    expiringSoonCount: z.number().int().nonnegative().describe("Items expiring within 48 hours."),
+  })
+  .describe("Aggregate inventory summary.");
+
+export const adjustInventoryInputSchema = z
+  .object({ delta: z.number().finite().refine((value) => value !== 0).describe("Quantity adjustment.") })
+  .describe("Inventory quantity adjustment.");
+
+export const consumeInventoryInputSchema = z
+  .object({
+    quantity: z.number().positive().describe("Amount to consume."),
+    mealType: z.enum(["breakfast", "lunch", "dinner", "snack"]).optional().describe("Meal category."),
+    eatenAt: z.iso.datetime().optional().describe("Consumption timestamp."),
+  })
+  .describe("Input for consuming inventory and recording a meal.");
+
+export const inventoryItemIdSchema = z.string().uuid().describe("Inventory item identifier.");
+
 export type InventoryItemDto = z.infer<typeof inventoryItemSchema>;
 export type CreateInventoryItemInput = z.infer<typeof createInventoryItemSchema>;
 export type UpdateInventoryItemInput = z.infer<typeof updateInventoryItemSchema>;
+export type ListInventoryQuery = z.infer<typeof listInventoryQuerySchema>;
+export type AdjustInventoryInput = z.infer<typeof adjustInventoryInputSchema>;
+export type ConsumeInventoryInput = z.infer<typeof consumeInventoryInputSchema>;
