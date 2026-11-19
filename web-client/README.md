@@ -37,3 +37,5 @@ local development without overriding already-set environment variables.
 Application queries use the pooled URL; Drizzle migrations use the unpooled
 URL. Use `http://localhost` for local Auth; the origin must be trusted by Neon.
 Configure production trusted domains and custom SMTP before production use.
+To seed sample data, set `SEED_USER_ID` to an existing Neon Auth user ID and
+run `pnpm --filter @app/db db:seed` from the repository root.
