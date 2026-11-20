@@ -6,10 +6,13 @@
   "exports": {
     ".": "./index.ts",
     "./orchestrator": "./orchestrator.ts",
-    "./llm-client": "./llm.client.ts"
+    "./llm-client": "./llm.client.ts",
+    "./runner": "./runner.ts"
   },
   "scripts": {
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test": "tsx --test agents/agent-loop.test.ts agents/orchestrator.tools.test.ts core/sse.encoder.test.ts tools/adapters/vercel.adapter.test.ts runner.test.ts",
+    "smoke-test": "tsx scripts/smoke-test.ts"
   },
   "dependencies": {
     "@ai-sdk/google": "^4.0.122",

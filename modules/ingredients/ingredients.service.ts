@@ -1,5 +1,5 @@
 import { err, ok, type AppError, type Result } from "@app/shared";
-import { ensureAuthUser } from "../shared/user.repo";
+import { requireAuthUser } from "../shared/user.service";
 import { numericToNumber } from "../shared/numeric";
 import {
   deleteIngredientRow,
@@ -53,7 +53,8 @@ export async function create(
   userId: string,
   input: CreateIngredientInput,
 ): Promise<Result<IngredientDto, AppError>> {
-  await ensureAuthUser(userId);
+  const user = await requireAuthUser(userId);
+  if (!user.success) return user;
   const row = await insertIngredient(userId, input);
   return row ? ok(toDto(row)) : err({ code: "INTERNAL_ERROR", message: "Ingredient was not created." });
 }

@@ -10,7 +10,7 @@ import {
   listConversationsQuerySchema,
   updateConversationTitleSchema,
 } from "@app/modules";
-import { streamConversationTurn } from "@app/ai";
+import { runStreamingTurn } from "@app/ai";
 import { Hono, type Context } from "hono";
 import { z } from "zod";
 import type { AuthEnvironment } from "../middleware/auth.middleware";
@@ -25,23 +25,20 @@ async function streamResponse(
   conversationId: string,
   message: { message: string; attachments?: Array<{ name: string; mimeType: string; url?: string }> },
 ): Promise<Response> {
-  const result = await streamConversationTurn({
+  const result = await runStreamingTurn({
     userId,
     conversationId,
     userMessage: message,
     abortSignal: context.req.raw.signal,
   });
   if (!result.success) return resultToResponse(context, result);
-  const response = result.data.result.toUIMessageStreamResponse({
+  return new Response(result.data, {
     headers: {
+      "Content-Type": "text/event-stream; charset=utf-8",
       "Cache-Control": "no-cache, no-transform",
+      Connection: "keep-alive",
       "X-Conversation-Id": conversationId,
     },
-  });
-  return new Response(response.body, {
-    status: response.status,
-    statusText: response.statusText,
-    headers: response.headers,
   });
 }
 

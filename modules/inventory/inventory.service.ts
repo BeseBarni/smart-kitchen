@@ -1,5 +1,5 @@
 import { err, ok, type AppError, type Result } from "@app/shared";
-import { ensureAuthUser } from "../shared/user.repo";
+import { requireAuthUser } from "../shared/user.service";
 import { numericToNumber } from "../shared/numeric";
 import { getById as getIngredientById } from "../ingredients/ingredients.service";
 import { getById as getRecipeById } from "../recipes/recipes.service";
@@ -98,7 +98,8 @@ export async function create(
 ): Promise<Result<InventoryItemDto, AppError>> {
   const validationError = await validateOwnership(userId, input);
   if (validationError) return err(validationError);
-  await ensureAuthUser(userId);
+  const user = await requireAuthUser(userId);
+  if (!user.success) return user;
   const row = await insertInventoryItem(userId, input);
   return row ? ok(toInventoryItemDto(row)) : err({ code: "INTERNAL_ERROR", message: "Item was not created." });
 }

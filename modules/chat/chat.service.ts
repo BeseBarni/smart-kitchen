@@ -1,5 +1,5 @@
 import { err, ok, type AppError, type Result } from "@app/shared";
-import { ensureAuthUser } from "../shared/user.repo";
+import { requireAuthUser } from "../shared/user.service";
 import {
   appendConversationRows,
   createConversationRow,
@@ -59,7 +59,8 @@ export async function createConversation(
   userId: string,
   input: { title?: string } = {},
 ): Promise<Result<ConversationDto, AppError>> {
-  await ensureAuthUser(userId);
+  const user = await requireAuthUser(userId);
+  if (!user.success) return user;
   const row = await createConversationRow(userId, input.title);
   return row
     ? ok(toConversationDto(row))

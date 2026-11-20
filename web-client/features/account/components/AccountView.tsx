@@ -5,7 +5,6 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { fetchAccount } from "../api/account.api";
 import { authClient } from "../api/auth-client";
-import { AccountForm } from "./AccountForm";
 
 export function AccountView(): React.JSX.Element {
   const session = authClient.useSession();
@@ -27,8 +26,8 @@ export function AccountView(): React.JSX.Element {
         setError(result.error.message ?? "Could not sign out.");
         return;
       }
-      await session.refetch();
-      client.removeQueries({ queryKey: ["account"] });
+      client.clear();
+      window.location.replace("/auth/sign-in");
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Could not sign out.");
     } finally {
@@ -41,7 +40,12 @@ export function AccountView(): React.JSX.Element {
       <p className="text-body-sm text-muted-foreground">Your account is separate from the demo inventory and recipes, which are not synced.</p>
       {session.isPending ? <p role="status">Loading session...</p> : session.error ? (
         <div role="alert" className="space-y-3"><p>Could not load your session.</p><Button className="h-11" onClick={() => void session.refetch()}>Try again</Button></div>
-      ) : !session.data?.user ? <AccountForm /> : (
+      ) : !session.data?.user ? (
+        <div role="alert" className="space-y-3">
+          <p>Your session has ended.</p>
+          <Button className="h-11" onClick={() => window.location.replace("/auth/sign-in")}>Sign in</Button>
+        </div>
+      ) : (
         <div className="space-y-4 rounded-xl border bg-card p-4">
           {account.isPending ? <p role="status">Loading account...</p> : account.isError ? (
             <div role="alert" className="space-y-3"><p>{account.error.message}</p><Button className="h-11" onClick={() => void account.refetch()}>Try again</Button></div>

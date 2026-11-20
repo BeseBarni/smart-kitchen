@@ -1,6 +1,6 @@
 import { err, ok, type AppError, type Result } from "@app/shared";
 import { findByIds } from "../ingredients/ingredients.service";
-import { ensureAuthUser } from "../shared/user.repo";
+import { requireAuthUser } from "../shared/user.service";
 import {
   cookRecipeRows,
   deleteRecipeRow,
@@ -60,7 +60,8 @@ export async function create(
 ): Promise<Result<RecipeDto, AppError>> {
   const linked = await loadLinked(userId, input.ingredients);
   if (!linked.success) return err(linked.error);
-  await ensureAuthUser(userId);
+  const user = await requireAuthUser(userId);
+  if (!user.success) return user;
   const computed = withRecipeOverrides(
     input,
     calculateRecipeValues(input.ingredients, linked.data, input.servings),
