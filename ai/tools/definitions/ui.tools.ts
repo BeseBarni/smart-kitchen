@@ -48,6 +48,9 @@ export const requestConfirmationTool = defineTool({
   name: "ui_request_confirmation",
   description: "Ask for explicit confirmation before a consequential or ambiguous action; do not mutate data.",
   inputSchema: confirmationInput,
+  modelInputSchema: confirmationInput.extend({
+    payload: z.record(z.string(), z.unknown()).describe("JSON-safe action details for a future confirmed turn."),
+  }),
   outputSchema: confirmationInput,
   annotations: { readOnlyHint: true, idempotentHint: true },
   execute: async (input) => toolOk(input),

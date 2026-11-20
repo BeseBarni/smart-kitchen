@@ -141,7 +141,7 @@ export function toVercelTools(
   for (const definition of definitions) {
     tools[definition.name] = tool({
       description: definition.description,
-      inputSchema: definition.inputSchema,
+      inputSchema: definition.modelInputSchema ?? definition.inputSchema,
       execute: (input, options) =>
         executeToolCall(definition, input, context, options.toolCallId),
     });

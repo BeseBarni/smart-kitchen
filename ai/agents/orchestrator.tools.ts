@@ -1,3 +1,5 @@
+import { recipeSchema } from "@app/modules";
+import { err } from "@app/shared";
 import { z } from "zod";
 import { requestConfirmationTool } from "../tools/definitions/ui.tools";
 import { defineTool, toolOk } from "../tools/definitions/tool.types";
@@ -40,10 +42,22 @@ export function orchestratorTools(context: AgentContext) {
         status: "delegating",
         label: "Delegating a recipe task.",
       });
-      return toolOk({ summary: (await recipeArchitectAgent.execute({
+      const result = await recipeArchitectAgent.execute({
         task: input.task,
         contextHint: `Requested mode: ${input.mode}`,
-      }, context)).summary });
+      }, context);
+      const savedRecipes = result.ledgerItems.flatMap((item) => {
+        if (item.toolName !== "recipes_create" || item.payload.kind !== "tool_result") return [];
+        const parsed = recipeSchema.pick({ id: true, title: true }).safeParse(item.payload.result);
+        return parsed.success ? [parsed.data] : [];
+      });
+      if (input.mode === "save" && savedRecipes.length === 0) {
+        return err({
+          code: "VALIDATION_ERROR",
+          message: "No recipe was saved. Do not stock a substitute; clarify or retry the requested save.",
+        });
+      }
+      return toolOk({ summary: result.summary, savedRecipes });
     },
   });
   const advisor = defineTool({

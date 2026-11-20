@@ -44,7 +44,7 @@ export async function runAgentLoop(input: {
     if (part.type === "text-delta") {
       summary += part.text;
       if (input.forwardText) input.context.emit({ type: "text_delta", delta: part.text });
-    } else if (part.type === "error") {
+    } else if (part.type === "error" || part.type === "tool-error") {
       throw part.error;
     }
   }

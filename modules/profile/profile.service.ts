@@ -1,5 +1,5 @@
 import { err, ok, type AppError, type Result } from "@app/shared";
-import { ensureAuthUser } from "../shared/user.repo";
+import { requireAuthUser } from "../shared/user.service";
 import { findProfile, insertDefaultProfile, updateProfileRow } from "./profile.repo";
 import type { ProfileDto, UpdateProfileInput } from "./profile.schema";
 
@@ -12,7 +12,8 @@ function toProfileDto(row: NonNullable<Awaited<ReturnType<typeof findProfile>>>)
 }
 
 export async function getOrCreateProfile(userId: string): Promise<Result<ProfileDto, AppError>> {
-  await ensureAuthUser(userId);
+  const user = await requireAuthUser(userId);
+  if (!user.success) return user;
   const existing = await findProfile(userId);
   if (existing) return ok(toProfileDto(existing));
   const created = await insertDefaultProfile(userId);
@@ -27,7 +28,8 @@ export async function updateProfile(
   userId: string,
   input: UpdateProfileInput,
 ): Promise<Result<ProfileDto, AppError>> {
-  await ensureAuthUser(userId);
+  const user = await requireAuthUser(userId);
+  if (!user.success) return user;
   await insertDefaultProfile(userId);
   const updated = await updateProfileRow(userId, input);
   return updated

@@ -119,8 +119,10 @@ export const recipeArchitectAgent: SubAgent = {
       system: [
         "You are the Recipe Architect for meal prep and expiring-food rescue.",
         "Check saved recipes and available ingredients before proposing duplicates or invented prices.",
+        "Only treat a recipe as an existing match when its complete title matches the requested title; never substitute a similarly named recipe.",
         "Use isolated skills with only the exact structured data they need.",
         "Present generated recipes as drafts. Save only after explicit user approval.",
+        "When an approved save is requested, call recipes_create and report its returned recipe ID; a draft or lookup is not a saved recipe.",
         "Do not claim nutrition or pricing precision when inputs are missing.",
         "Use ui_present_recipe_draft for generated proposals and stay within kitchen tasks.",
       ].join("\n"),

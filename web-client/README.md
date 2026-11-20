@@ -78,9 +78,11 @@ Configure custom SMTP and other production settings before launch.
 The existing Vercel AI SDK integration uses the Google Gemini provider. Obtain
 a Gemini API key from Google AI Studio and set `GOOGLE_GENERATIVE_AI_API_KEY`
 or `GEMINI_API_KEY` in the root `.env`; this is **not** the Google OAuth client
-secret. Defaults are `gemini-2.5-flash` and `gemini-2.5-pro`; `AI_MODEL`,
+secret. Both model tiers default to `gemini-3.5-flash-lite`; `AI_MODEL`,
 `FAST_MODEL`, and `REASONING_MODEL` can override the corresponding model IDs.
-Make sure your key has access to the chosen models.
+Make sure your key has access and sufficient quota for the chosen models. The
+default is a lightweight model rather than a Pro reasoning model; override
+`REASONING_MODEL` if your workload needs a more capable model available to you.
 
 The smoke test writes conversations, recipes, and inventory. Use only a
 disposable development database and a dedicated existing Neon Auth user.
@@ -101,3 +103,5 @@ process; environment variables already set in the shell take precedence.
 This tests the backend agent and real model calls, **not** the read-only chat
 UI. A successful run ends with `Smoke test passed`; model access, network,
 database, or nondeterministic model output can cause failures.
+For per-minute quota limits, optionally set `AI_SMOKE_TEST_DELAY_MS=65000` to
+pause between turns. This cannot bypass daily quotas or limits within a turn.

@@ -21,6 +21,8 @@ export type ToolDefinition = {
   name: string;
   description: string;
   inputSchema: z.ZodType;
+  // Model-facing schemas may be broader; execute always validates inputSchema.
+  modelInputSchema?: z.ZodType;
   annotations: {
     readOnlyHint?: boolean;
     destructiveHint?: boolean;
@@ -56,6 +58,7 @@ export function defineTool<TSchema extends z.ZodType, TOutput>(
     name: spec.name,
     description: spec.description,
     inputSchema: spec.inputSchema,
+    modelInputSchema: spec.modelInputSchema,
     annotations: spec.annotations,
     invalidateDomains: spec.invalidateDomains,
     toUiDirective,

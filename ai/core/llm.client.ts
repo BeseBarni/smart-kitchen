@@ -8,8 +8,8 @@ import {
 import { err, ok, type AppError, type Result } from "@app/shared";
 import type { z } from "zod";
 
-export const FAST_MODEL = process.env.FAST_MODEL ?? "gemini-2.5-flash";
-export const REASONING_MODEL = process.env.REASONING_MODEL ?? "gemini-2.5-pro";
+export const FAST_MODEL = process.env.FAST_MODEL ?? "gemini-3.5-flash-lite";
+export const REASONING_MODEL = process.env.REASONING_MODEL ?? "gemini-3.5-flash-lite";
 
 let googleProvider: ReturnType<typeof createGoogleGenerativeAI> | undefined;
 

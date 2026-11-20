@@ -4,7 +4,8 @@ import { err, ok } from "@app/shared";
 import { z } from "zod";
 import type { LedgerItem } from "../definitions/tool.types";
 import { defineTool } from "../definitions/tool.types";
-import { executeToolCall } from "./vercel.adapter";
+import { requestConfirmationTool } from "../definitions/ui.tools";
+import { executeToolCall, toVercelTools } from "./vercel.adapter";
 
 test("executes a validated tool and emits lifecycle and UI events", async () => {
   const toolDefinition = defineTool({
@@ -55,6 +56,7 @@ test("returns service errors as tool outcomes without emitting a UI directive", 
     annotations: { destructiveHint: true },
     execute: async () => err({ code: "ITEM_NOT_FOUND", message: "Not found." }),
   });
+
   const events: Array<{ type: string }> = [];
   const result = await executeToolCall(
     toolDefinition,
@@ -73,4 +75,35 @@ test("returns service errors as tool outcomes without emitting a UI directive", 
     "tool_call_started",
     "tool_call_completed",
   ]);
+});
+
+test("confirmation uses a nonrecursive model schema while validating JSON inputs", async () => {
+  const context = {
+    userId: "user-1",
+    agent: "inventory_ops" as const,
+    emit: () => {},
+    recordLedger: async () => {},
+  };
+  const adapted = toVercelTools([requestConfirmationTool], context);
+  assert.ok(adapted.ui_request_confirmation);
+  assert.ok(requestConfirmationTool.modelInputSchema);
+  assert.equal(adapted.ui_request_confirmation.inputSchema, requestConfirmationTool.modelInputSchema);
+  assert.equal(JSON.stringify(z.toJSONSchema(requestConfirmationTool.modelInputSchema)).includes('"$ref"'), false);
+
+  const input = {
+    actionId: "discard",
+    title: "Discard food",
+    description: "Discard the selected item.",
+    confirmLabel: "Discard",
+    payload: { item: { id: "item-1", portions: [1, 2] } },
+  };
+  assert.equal((await executeToolCall(requestConfirmationTool, input, context, "valid")).success, true);
+  const invalid = await executeToolCall(
+    requestConfirmationTool,
+    { ...input, payload: { quantity: Infinity } },
+    context,
+    "invalid",
+  );
+  assert.equal(invalid.success, false);
+  if (!invalid.success) assert.equal(invalid.error.code, "VALIDATION_ERROR");
 });

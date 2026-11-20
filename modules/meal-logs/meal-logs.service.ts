@@ -1,5 +1,5 @@
 import { err, ok, type AppError, type Result } from "@app/shared";
-import { ensureAuthUser } from "../shared/user.repo";
+import { requireAuthUser } from "../shared/user.service";
 import { numericToNumber } from "../shared/numeric";
 import { getById as getRecipeById } from "../recipes/recipes.service";
 import {
@@ -48,7 +48,8 @@ export async function createManualLog(
     const recipe = await getRecipeById(userId, input.recipeId);
     if (!recipe.success) return err({ code: "VALIDATION_ERROR", message: "Linked recipe was not found." });
   }
-  await ensureAuthUser(userId);
+  const user = await requireAuthUser(userId);
+  if (!user.success) return user;
   const row = await insertMealLog(userId, input);
   return row
     ? ok(toDto(row))
