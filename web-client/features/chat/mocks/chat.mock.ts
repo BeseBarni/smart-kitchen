@@ -1,4 +1,4 @@
-interface DemoChatMessage {
+interface ChatMessage {
   id: string;
   role: "user" | "assistant";
   createdAt: string;
@@ -13,16 +13,16 @@ interface DemoChatMessage {
   };
 }
 
-interface DemoChatConversation {
+interface ChatConversation {
   prompts: { id: "plan" | "rescue" | "meal" | "quick"; label: string }[];
-  messages: DemoChatMessage[];
+  messages: ChatMessage[];
 }
 
-interface DemoSendMessageInput {
+interface SendMessageInput {
   text: string;
 }
 
-const sample: DemoChatConversation = {
+const initialConversation: ChatConversation = {
   prompts: [
     { id: "plan", label: "Plan Meal Prep" },
     { id: "rescue", label: "Fridge Rescue" },
@@ -56,19 +56,19 @@ const sample: DemoChatConversation = {
   ],
 };
 
-let conversation: DemoChatConversation = structuredClone(sample);
+let conversation: ChatConversation = structuredClone(initialConversation);
 let nextMessageId = 0;
 
-export async function getConversation(): Promise<DemoChatConversation> {
+export async function getConversation(): Promise<ChatConversation> {
   return structuredClone(conversation);
 }
 
-export async function sendMessage(input: DemoSendMessageInput): Promise<DemoChatMessage> {
+export async function sendMessage(input: SendMessageInput): Promise<ChatMessage> {
   const text = input.text.trim();
   if (!text) throw new Error("Message cannot be empty.");
 
-  const message: DemoChatMessage = {
-    id: `demo-${++nextMessageId}`,
+  const message: ChatMessage = {
+    id: `message-${++nextMessageId}`,
     role: "user",
     text,
     createdAt: new Date().toISOString(),

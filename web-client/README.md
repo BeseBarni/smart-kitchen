@@ -7,8 +7,8 @@ local URL; `/` redirects to `/chat`.
 Application pages require a Neon Auth session. Use email/password or Google to
 sign in; sign-in redirects to `/chat`, and the account screen provides sign-out.
 The Hono API checks sessions independently, including `/api/health`. Auth
-endpoints and CORS preflights remain public. Signing in does not sync the demo
-inventory, recipes, or chat.
+endpoints and CORS preflights remain public. Inventory, recipes, and chat are
+not linked to the account session.
 
 The chat supports streamed messaging, saved conversations, automatic titles,
 quick prompts and assistant-suggested replies. Structured recipes open in a

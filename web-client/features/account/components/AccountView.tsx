@@ -37,7 +37,6 @@ export function AccountView(): React.JSX.Element {
   return (
     <div className="space-y-4 py-6">
       <h1 className="text-headline-lg">Account</h1>
-      <p className="text-body-sm text-muted-foreground">Your account is separate from the demo inventory and recipes, which are not synced.</p>
       {session.isPending ? <p role="status">Loading session...</p> : session.error ? (
         <div role="alert" className="space-y-3"><p>Could not load your session.</p><Button className="h-11" onClick={() => void session.refetch()}>Try again</Button></div>
       ) : !session.data?.user ? (

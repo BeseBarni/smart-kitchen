@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { getConversation, sendMessage } from "./chat.mock";
 
-test("mock conversation is isolated and persists demo mutations", async () => {
+test("mock conversation is isolated and persists message mutations", async () => {
   const first = await getConversation();
   assert.equal(first.messages.length, 2);
   const firstMessage = first.messages[0];

@@ -1,6 +1,6 @@
 "use client";
 
-import { SlidersHorizontal, UserRound } from "lucide-react";
+import { UserRound } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, type ReactNode } from "react";
@@ -28,13 +28,8 @@ export function AppShell({ children }: { children: ReactNode }): React.JSX.Eleme
               <span aria-hidden="true" className="text-muted-foreground">·</span>
               <span className="truncate text-body-sm text-muted-foreground">{section}</span>
             </div>
-            <div className="mt-0.5 flex items-center gap-1.5 text-label-sm text-muted-foreground">
-              <span className="size-1.5 rounded-full bg-primary" aria-hidden="true" />
-              Demo · not synced
-            </div>
           </div>
           <div className="flex shrink-0 items-center">
-            <button type="button" disabled aria-label="Filters unavailable in demo" className="flex size-11 items-center justify-center text-muted-foreground opacity-60"><SlidersHorizontal size={20} /></button>
             <Link href="/account" className="flex size-11 items-center justify-center" aria-label="Account">
               <span className="flex size-8 items-center justify-center rounded-full bg-primary text-primary-foreground"><UserRound size={18} /></span>
             </Link>
