@@ -74,3 +74,15 @@ test("validates persisted UI directives while mapping assistant messages", () =>
 
   assert.equal(turns[0]?.uiDirectives[0]?.component, "inventory_action_card");
 });
+
+test("replays assistant recommendation chips with their message", () => {
+  const turns = mapConversationHistory([
+    item({ sequence: 0, type: "message", role: "user", payload: { kind: "message", text: "Make soup" } }),
+    item({ sequence: 1, type: "message", role: "assistant", payload: {
+      kind: "message",
+      text: "Try tomato soup.",
+      uiDirectives: [{ component: "recommendation_chips", recommendations: ["Add a side dish"] }],
+    } }),
+  ]);
+  assert.deepEqual(turns[0]?.uiDirectives, [{ component: "recommendation_chips", recommendations: ["Add a side dish"] }]);
+});

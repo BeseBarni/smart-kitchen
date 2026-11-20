@@ -10,6 +10,7 @@ export type AgentName =
 
 export type AgentStreamEvent =
   | { type: "turn_started"; conversationId: string; turnId: string }
+  | { type: "conversation_title_updated"; conversationId: string }
   | {
       type: "agent_status";
       agent: AgentName;

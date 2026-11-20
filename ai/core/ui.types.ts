@@ -56,6 +56,10 @@ export type DailyMacroSummary = {
 
 export type UiDirective =
   | {
+      component: "recommendation_chips";
+      recommendations: string[];
+    }
+  | {
       component: "inventory_action_card";
       action: "added" | "updated" | "consumed" | "discarded";
       items: InventoryActionSummary[];

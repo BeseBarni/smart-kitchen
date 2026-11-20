@@ -4,14 +4,29 @@ import { InventoryActionCard } from "./InventoryActionCard";
 import { RecipeSuggestionCard } from "./RecipeSuggestionCard";
 import type { UiDirective } from "../types";
 import { Button } from "@/components/ui/button";
+import { MarkdownContent } from "@/components/MarkdownContent";
 
 export function UiDirectiveRenderer({
   directive,
   onReply,
+  disabled,
 }: {
   directive: UiDirective;
   onReply: (message: string) => void;
+  disabled: boolean;
 }): React.JSX.Element {
+  if (directive.component === "recommendation_chips") {
+    return (
+      <div aria-label="Suggested replies" className="flex flex-wrap gap-2">
+        {directive.recommendations.map((recommendation, index) => (
+          <button key={`${index}-${recommendation}`} type="button" disabled={disabled} onClick={() => onReply(recommendation)}
+            className="min-h-11 rounded-full border border-border bg-card px-3 text-label-md text-foreground disabled:opacity-50">
+            {recommendation}
+          </button>
+        ))}
+      </div>
+    );
+  }
   if (directive.component === "inventory_action_card") {
     return <InventoryActionCard {...directive} />;
   }
@@ -60,7 +75,7 @@ export function UiDirectiveRenderer({
   return (
     <section aria-label="Confirm proposed action" className="space-y-2 rounded-xl border border-amber-500/30 bg-amber-50 p-3.5">
       <h2 className="text-title-sm">{directive.title}</h2>
-      <p className="text-body-sm">{directive.description}</p>
+      <MarkdownContent text={directive.description} className="text-body-sm" />
       <Button
         type="button"
         className="h-11"

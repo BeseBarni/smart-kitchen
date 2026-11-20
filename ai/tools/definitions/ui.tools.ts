@@ -60,4 +60,19 @@ export const requestConfirmationTool = defineTool({
   }),
 });
 
-export const uiTools = [presentRecipeDraftTool, requestConfirmationTool] as const;
+const recommendationsSchema = z.object({
+  recommendations: z.array(z.string().trim().min(1).max(120).describe("A concise follow-up message the user can send."))
+    .min(1).max(4).describe("Relevant follow-up messages."),
+}).strict();
+
+export const presentRecommendationsTool = defineTool({
+  name: "ui_present_recommendations",
+  description: "Present one to four relevant optional follow-up messages after your answer. Do not suggest actions that were not performed as completed.",
+  inputSchema: recommendationsSchema,
+  outputSchema: recommendationsSchema,
+  annotations: { readOnlyHint: true, idempotentHint: true },
+  execute: async (input) => toolOk(input),
+  toUiDirective: ({ recommendations }) => ({ component: "recommendation_chips", recommendations }),
+});
+
+export const uiTools = [presentRecipeDraftTool, requestConfirmationTool, presentRecommendationsTool] as const;

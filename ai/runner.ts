@@ -11,6 +11,7 @@ import { createSseStream } from "./core/sse.encoder";
 import type { AgentStreamEvent } from "./core/stream.types";
 import type { UiDirective } from "./core/ui.types";
 import { orchestratorAgent } from "./agents/orchestrator.agent";
+import { generateConversationTitle } from "./agents/conversation-title";
 import type { AgentContext, LedgerItem } from "./agents/agent.types";
 
 function jsonDirectives(directives: UiDirective[]) {
@@ -55,7 +56,7 @@ export async function runStreamingTurn(input: {
   }]);
   if (!userItem.success) return err(userItem.error);
 
-  const wasUntitled = existing.data.conversation.title === null;
+  const isFirstMessage = existing.data.conversation.title === null && userItem.data[0]?.sequence === 1;
   const turnId = randomUUID();
   return ok(createSseStream(async (send, signal) => {
     const startedAt = Date.now();
@@ -79,6 +80,19 @@ export async function runStreamingTurn(input: {
     };
 
     emit({ type: "turn_started", conversationId: input.conversationId, turnId });
+    const titleUpdate = isFirstMessage ? (async () => {
+      try {
+        const title = await generateConversationTitle(input.userMessage.message);
+        const updated = await chatService.updateTitleIfUntitled(input.userId, input.conversationId, title);
+        if (!updated.success) {
+          console.error("Conversation title update failed:", updated.error.message);
+        } else if (updated.data.updated) {
+          emit({ type: "conversation_title_updated", conversationId: input.conversationId });
+        }
+      } catch (error) {
+        console.error("Conversation title generation failed:", failureMessage(error));
+      }
+    })() : Promise.resolve();
     try {
       const result = await orchestratorAgent.execute(
         { task: input.userMessage.message },
@@ -102,15 +116,7 @@ export async function runStreamingTurn(input: {
       }]);
       if (!finalItem.success) throw new Error(finalItem.error.message);
 
-      if (wasUntitled) {
-        const title = input.userMessage.message.trim().slice(0, 80);
-        void chatService.updateTitle(input.userId, input.conversationId, title).then(
-          (updated) => {
-            if (!updated.success) console.error("Conversation title update failed:", updated.error.message);
-          },
-          (error: unknown) => console.error("Conversation title update failed:", failureMessage(error)),
-        );
-      }
+      await titleUpdate;
       emit({
         type: "turn_completed",
         conversationId: input.conversationId,
@@ -126,6 +132,8 @@ export async function runStreamingTurn(input: {
         message: "The assistant couldn't finish this response. Please try again.",
         recoverable: true,
       });
+    } finally {
+      await titleUpdate;
     }
   }, input.abortSignal));
 }

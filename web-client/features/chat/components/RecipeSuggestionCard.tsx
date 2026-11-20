@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { MarkdownContent } from "@/components/MarkdownContent";
 import { useRecipeMutations, useRecipes } from "@/features/recipes";
 import type { UiDirective } from "../types";
 
@@ -65,7 +66,9 @@ export function RecipeSuggestionCard({ recipe, status, canSave, canCookAndStock 
       <div className="space-y-2 p-3.5">
         <div>
           <h3 className="text-headline-md">{recipe.title}</h3>
-          <p className="mt-0.5 text-body-sm text-muted-foreground">{recipe.description}</p>
+          {status === "draft"
+            ? <MarkdownContent text={recipe.description} className="mt-0.5 text-body-sm text-muted-foreground" />
+            : <p className="mt-0.5 text-body-sm text-muted-foreground">{recipe.description}</p>}
         </div>
         <div className="flex flex-wrap gap-1.5">
           {recipe.ingredients.map((ingredient, index) => <Badge key={`${ingredient.name}-${index}`} variant="outline" className="h-auto rounded-lg bg-muted px-2.5 py-1 text-label-sm text-muted-foreground">{ingredient.name}</Badge>)}

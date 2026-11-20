@@ -55,6 +55,7 @@ export function ChatView(): React.JSX.Element {
 
   const selectPrompt = (prompt: QuickPrompt): void => setDraft(promptText[prompt.id]);
   const replyToDirective = (message: string): void => {
+    if (stream.isStreaming) return;
     setDraft("");
     void stream.sendMessage(message);
   };
@@ -66,6 +67,7 @@ export function ChatView(): React.JSX.Element {
         activeId={activeConversationId}
         onSelect={setActiveConversationId}
         onCreate={createConversation}
+        disabled={stream.isStreaming || create.isPending}
       />
       {create.isError && <p role="alert" className="py-2 text-label-md text-destructive">Could not create a conversation: {create.error.message}</p>}
       {isPending && activeConversationId ? (
@@ -79,14 +81,8 @@ export function ChatView(): React.JSX.Element {
         </div>
       ) : (
         <>
-          <QuickPrompts prompts={[
-            { id: "plan", label: "Plan Meal Prep" },
-            { id: "rescue", label: "Fridge Rescue" },
-            { id: "meal", label: "Log Eaten Meal" },
-            { id: "quick", label: "Quick Log" },
-          ]} onSelect={selectPrompt} />
           {turns.length ? (
-            <ChatMessageList turns={turns} activeStatus={stream.activeStatus} onReply={replyToDirective} />
+            <ChatMessageList turns={turns} activeStatus={stream.activeStatus} onReply={replyToDirective} streaming={stream.isStreaming} />
           ) : (
             <div className="py-10 text-center text-body-md text-muted-foreground">
               <p>{activeConversationId ? "No messages in this conversation yet." : "Start a conversation with your kitchen assistant."}</p>
@@ -101,6 +97,12 @@ export function ChatView(): React.JSX.Element {
         onDraftChange={setDraft}
         onSubmit={submitMessage}
         onStop={stream.stopStreaming}
+        quickPrompts={<QuickPrompts prompts={[
+          { id: "plan", label: "Plan Meal Prep" },
+          { id: "rescue", label: "Fridge Rescue" },
+          { id: "meal", label: "Log Eaten Meal" },
+          { id: "quick", label: "Quick Log" },
+        ]} onSelect={selectPrompt} />}
       />
     </>
   );

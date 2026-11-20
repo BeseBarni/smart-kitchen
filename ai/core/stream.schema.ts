@@ -26,6 +26,10 @@ const recipePayloadSchema = z.object({
 });
 export const uiDirectiveSchema = z.discriminatedUnion("component", [
   z.object({
+    component: z.literal("recommendation_chips"),
+    recommendations: z.array(z.string().trim().min(1).max(120)).min(1).max(4),
+  }),
+  z.object({
     component: z.literal("inventory_action_card"),
     action: z.enum(["added", "updated", "consumed", "discarded"]),
     items: z.array(inventoryActionSchema),
@@ -84,6 +88,7 @@ export const uiDirectiveSchema = z.discriminatedUnion("component", [
 
 export const agentStreamEventSchema: z.ZodType<AgentStreamEvent> = z.discriminatedUnion("type", [
   z.object({ type: z.literal("turn_started"), conversationId: z.string(), turnId: z.string() }),
+  z.object({ type: z.literal("conversation_title_updated"), conversationId: z.string() }),
   z.object({
     type: z.literal("agent_status"),
     agent: agentNameSchema,

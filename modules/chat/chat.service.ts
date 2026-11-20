@@ -9,6 +9,7 @@ import {
   listConversationRows,
   recentConversationItems,
   updateConversationTitleRow,
+  updateUntitledConversationRow,
   type AppendConversationItem,
 } from "./chat.repo";
 import type {
@@ -90,6 +91,14 @@ export async function updateTitle(
 ): Promise<Result<ConversationDto, AppError>> {
   const row = await updateConversationTitleRow(userId, conversationId, title);
   return row ? ok(toConversationDto(row)) : err(toError());
+}
+
+export async function updateTitleIfUntitled(
+  userId: string,
+  conversationId: string,
+  title: string,
+): Promise<Result<{ updated: boolean }, AppError>> {
+  return ok({ updated: await updateUntitledConversationRow(userId, conversationId, title) });
 }
 
 export async function deleteConversation(
