@@ -4,7 +4,7 @@ import { err, ok } from "@app/shared";
 import { z } from "zod";
 import type { LedgerItem } from "../definitions/tool.types";
 import { defineTool } from "../definitions/tool.types";
-import { requestConfirmationTool } from "../definitions/ui.tools";
+import { presentRecommendationsTool, requestConfirmationTool } from "../definitions/ui.tools";
 import { executeToolCall, toVercelTools } from "./vercel.adapter";
 
 test("executes a validated tool and emits lifecycle and UI events", async () => {
@@ -106,4 +106,21 @@ test("confirmation uses a nonrecursive model schema while validating JSON inputs
   );
   assert.equal(invalid.success, false);
   if (!invalid.success) assert.equal(invalid.error.code, "VALIDATION_ERROR");
+});
+
+test("recommendation tool emits validated chips and rejects invalid suggestions", async () => {
+  const events: import("../../core/stream.types").AgentStreamEvent[] = [];
+  const context = {
+    userId: "user-1",
+    agent: "orchestrator" as const,
+    emit: (event: import("../../core/stream.types").AgentStreamEvent) => events.push(event),
+    recordLedger: async () => {},
+  };
+  const recommendations = ["Suggest a side dish", "Make it vegetarian"];
+  const valid = await executeToolCall(presentRecommendationsTool, { recommendations }, context, "chips");
+  assert.equal(valid.success, true);
+  const directive = events.find((event) => event.type === "ui_directive");
+  assert.deepEqual(directive?.directive, { component: "recommendation_chips", recommendations });
+  const invalid = await presentRecommendationsTool.execute({ recommendations: [] }, context);
+  assert.equal(invalid.success, false);
 });

@@ -1,6 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
+import { MarkdownContent } from "@/components/MarkdownContent";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Sheet, SheetContent, SheetDescription, SheetTitle } from "@/components/ui/sheet";
 import type { Recipe } from "../types";
@@ -25,9 +26,14 @@ export function RecipeDetailsSheet({ recipe, open, loading, error, onClose, onRe
         {error && <div role="alert" className="space-y-3"><p>Could not load this recipe.</p><Button type="button" onClick={onRetry} className="h-11">Try again</Button></div>}
         {recipe && !loading && (
           <div className="space-y-4">
-            <div><SheetTitle>{recipe.title}</SheetTitle><SheetDescription>{recipe.description ?? "Recipe details"}</SheetDescription></div>
+            <div>
+              <SheetTitle>{recipe.title}</SheetTitle>
+              {recipe.source === "ai_skill" && recipe.description
+                ? <><SheetDescription className="sr-only">Recipe details</SheetDescription><MarkdownContent text={recipe.description} className="text-sm text-muted-foreground" /></>
+                : <SheetDescription>{recipe.description ?? "Recipe details"}</SheetDescription>}
+            </div>
             <section><h3 className="text-title-sm">Ingredients</h3><ul className="list-disc pl-5 text-body-md">{recipe.ingredients.map((line) => <li key={line.id}>{line.quantity} {line.unit} {line.displayName}</li>)}</ul></section>
-            <section><h3 className="text-title-sm">Instructions</h3><ol className="list-decimal space-y-1 pl-5 text-body-md">{recipe.instructions.map((step, index) => <li key={`${index}-${step}`}>{step}</li>)}</ol></section>
+            <section><h3 className="text-title-sm">Instructions</h3><ol className="list-decimal space-y-1 pl-5 text-body-md">{recipe.instructions.map((step, index) => <li key={`${index}-${step}`}>{recipe.source === "ai_skill" ? <MarkdownContent text={step} /> : step}</li>)}</ol></section>
             <div className="grid grid-cols-2 gap-2">
               <Button type="button" variant="outline" className="min-h-11" onClick={onEdit}>Edit</Button>
               <Button type="button" className="min-h-11" onClick={onCook}>Cook &amp; stock</Button>

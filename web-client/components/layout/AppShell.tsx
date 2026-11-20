@@ -20,7 +20,7 @@ export function AppShell({ children }: { children: ReactNode }): React.JSX.Eleme
     pathname.startsWith("/account") ? "Account" : "Assistant Chat";
   return (
     <div className="mx-auto min-h-dvh w-full max-w-[430px] bg-background">
-      <header className="fixed inset-x-0 top-0 z-50 mx-auto max-w-[430px] bg-background/95 pt-[env(safe-area-inset-top,0px)] shadow-[0_1px_8px_rgba(0,0,0,0.03)] backdrop-blur-xl">
+      {pathname !== "/chat" && <header className="fixed inset-x-0 top-0 z-50 mx-auto max-w-[430px] bg-background/95 pt-[env(safe-area-inset-top,0px)] shadow-[0_1px_8px_rgba(0,0,0,0.03)] backdrop-blur-xl">
         <div className="flex h-16 items-center justify-between px-margin">
           <div className="min-w-0">
             <div className="flex items-center gap-1.5">
@@ -40,7 +40,7 @@ export function AppShell({ children }: { children: ReactNode }): React.JSX.Eleme
             </Link>
           </div>
         </div>
-      </header>
+      </header>}
       <main className="min-h-dvh px-margin pt-[calc(4rem+env(safe-area-inset-top,0px))] pb-[calc(10rem+env(safe-area-inset-bottom,0px))]">
         {children}
       </main>

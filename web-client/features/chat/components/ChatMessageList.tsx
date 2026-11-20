@@ -8,10 +8,12 @@ export function ChatMessageList({
   turns,
   activeStatus,
   onReply,
+  streaming,
 }: {
   turns: readonly ChatTurn[];
   activeStatus: ChatTurn["activeStatus"];
   onReply: (message: string) => void;
+  streaming: boolean;
 }): React.JSX.Element {
   return (
     <ol aria-label="Conversation messages" className="space-y-5 pb-36 pt-4">
@@ -23,7 +25,7 @@ export function ChatMessageList({
             <p role="status" className="text-label-md text-muted-foreground">{activeStatus.label}</p>
           )}
           {turn.uiDirectives.map((directive, index) => (
-            <UiDirectiveRenderer key={`${turn.id}-directive-${index}`} directive={directive} onReply={onReply} />
+            <UiDirectiveRenderer key={`${turn.id}-directive-${index}`} directive={directive} onReply={onReply} disabled={streaming} />
           ))}
         </li>
       ))}

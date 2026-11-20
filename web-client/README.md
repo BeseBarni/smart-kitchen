@@ -10,8 +10,9 @@ The Hono API checks sessions independently, including `/api/health`. Auth
 endpoints and CORS preflights remain public. Signing in does not sync the demo
 inventory, recipes, or chat.
 
-The chat is a read-only demonstration. Messaging, quick prompts, camera, voice,
-and recipe actions are unavailable. `/inventory` provides a mock-backed
+The chat supports streamed messaging, saved conversations, automatic titles,
+quick prompts and assistant-suggested replies. Photo uploads and voice input
+are not currently available. `/inventory` provides a mock-backed
 fridge/freezer list with search, filters, add/edit, and portion controls;
 decreasing the last portion removes the item. `/recipes` provides a mock-backed
 recipe library with search, filters, and favorites. Recipe creation, details,
@@ -19,6 +20,12 @@ Cook & Stock, AI Rescue, and AI Autofill are unavailable; recipe stock labels
 are illustrative and do not reflect the inventory. All data is illustrative and never synced or saved: mock state
 is held in browser memory and resets on reload. Provisional feature contracts
 will need alignment with future shared schemas and Hono endpoints.
+
+Assistant messages, confirmation descriptions, recipe drafts, and saved AI
+recipe descriptions and steps support GitHub-flavored Markdown. User messages
+and manual recipes remain plain text. Raw HTML is not rendered, unsafe link
+protocols are blocked, and Markdown images show alternative text without
+loading external images.
 
 The UI follows the PrepPilot Meal Assistant PWA Stitch project. Its narrative
 design-system colors take precedence over the conflicting rendered screen

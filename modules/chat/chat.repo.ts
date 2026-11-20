@@ -1,4 +1,4 @@
-import { and, asc, desc, eq, gt, sql } from "drizzle-orm";
+import { and, asc, desc, eq, gt, isNull, sql } from "drizzle-orm";
 import {
   conversationItems,
   conversations,
@@ -86,6 +86,15 @@ export async function updateConversationTitleRow(
     .where(and(eq(conversations.userId, userId), eq(conversations.id, conversationId)))
     .returning();
   return row;
+}
+
+export async function updateUntitledConversationRow(userId: string, conversationId: string, title: string): Promise<boolean> {
+  const rows = await getDatabase()
+    .update(conversations)
+    .set({ title, updatedAt: new Date() })
+    .where(and(eq(conversations.userId, userId), eq(conversations.id, conversationId), isNull(conversations.title)))
+    .returning({ id: conversations.id });
+  return rows.length > 0;
 }
 
 export async function deleteConversationRow(userId: string, conversationId: string): Promise<boolean> {

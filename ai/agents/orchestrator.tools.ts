@@ -1,7 +1,7 @@
 import { recipeSchema } from "@app/modules";
 import { err } from "@app/shared";
 import { z } from "zod";
-import { requestConfirmationTool } from "../tools/definitions/ui.tools";
+import { presentRecommendationsTool, requestConfirmationTool } from "../tools/definitions/ui.tools";
 import { defineTool, toolOk } from "../tools/definitions/tool.types";
 import { inventoryOpsAgent } from "./inventory-ops.agent";
 import { kitchenAdvisorAgent } from "./kitchen-advisor.agent";
@@ -77,5 +77,5 @@ export function orchestratorTools(context: AgentContext) {
       return toolOk({ summary: (await kitchenAdvisorAgent.execute({ task: question }, context)).summary });
     },
   });
-  return [inventory, recipe, advisor, requestConfirmationTool] as const;
+  return [inventory, recipe, advisor, requestConfirmationTool, presentRecommendationsTool] as const;
 }

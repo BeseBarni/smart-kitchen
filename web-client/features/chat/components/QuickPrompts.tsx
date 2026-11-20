@@ -7,7 +7,7 @@ const icons: Record<QuickPrompt["id"], LucideIcon> = {
 
 export function QuickPrompts({ prompts, onSelect }: { prompts: readonly QuickPrompt[]; onSelect: (prompt: QuickPrompt) => void }): React.JSX.Element {
   return (
-    <div aria-label="Quick prompts" className="hide-scrollbar sticky top-[calc(4rem+env(safe-area-inset-top,0px))] z-20 -mx-margin overflow-x-auto bg-background/95 px-margin backdrop-blur-md">
+    <div aria-label="Quick prompts" className="hide-scrollbar pointer-events-auto overflow-x-auto pb-2">
       <div className="flex w-max gap-1">
         {prompts.map((prompt) => {
           const Icon = icons[prompt.id];
