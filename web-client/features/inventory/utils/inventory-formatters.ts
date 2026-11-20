@@ -48,7 +48,3 @@ export function freshnessLabel(days: number): string {
   if (days === 1) return "Expires tomorrow";
   return `${days} days left`;
 }
-
-export function containerLabel(container: "glass" | "bag" | "box"): string {
-  return { glass: "Pyrex Glass", bag: "Vacuum Bag", box: "Meal Box" }[container];
-}

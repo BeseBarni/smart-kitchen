@@ -1,21 +1,15 @@
 // Provisional UI contracts until shared inventory DTOs are defined.
-export type Storage = "fridge" | "freezer";
-export type Container = "glass" | "bag" | "box";
+import type {
+  CreateInventoryItemInput,
+  InventoryItemDto,
+  InventorySummaryDto,
+  ListInventoryQuery,
+  UpdateInventoryItemInput,
+} from "@app/modules/schemas";
 
-export interface InventoryInput {
-  name: string;
-  storage: Storage;
-  portions: number;
-  bestBefore: string;
-  container: Container;
-  location: string;
-}
-
-export interface InventoryItem extends InventoryInput {
-  id: string;
-}
-
-export interface PortionAdjustment {
-  id: string;
-  delta: 1 | -1;
-}
+export type InventoryItem = InventoryItemDto;
+export type InventoryInput = CreateInventoryItemInput;
+export type InventoryUpdate = UpdateInventoryItemInput;
+export type InventorySummary = InventorySummaryDto;
+export type InventoryListFilters = Partial<ListInventoryQuery>;
+export type Storage = InventoryItemDto["storageLocation"];

@@ -285,6 +285,9 @@ importers:
       '@ai-sdk/react':
         specifier: ^4.0.181
         version: 4.0.181(react@19.3.0)(zod@4.6.7)
+      '@app/ai':
+        specifier: workspace:*
+        version: link:../ai
       '@app/modules':
         specifier: workspace:*
         version: link:../modules

@@ -1,18 +1,45 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import type { InventoryItem } from "../types";
+import type { InventoryItem, Storage } from "../types";
 import { addDays, addMonths, daysUntil, freshnessLabel } from "./inventory-formatters";
 import { filterInventory, inventoryCounts, rescueItems } from "./inventory-selectors";
 
+function item(id: string, name: string, storageLocation: Storage, remainingQuantity: number, expiresAt: string): InventoryItem {
+  return {
+    id,
+    userId: "user-1",
+    name,
+    itemType: "meal_prep",
+    recipeId: null,
+    ingredientId: null,
+    storageLocation,
+    status: "in_stock",
+    initialQuantity: remainingQuantity,
+    remainingQuantity,
+    unit: "portion",
+    preparedAt: null,
+    expiresAt,
+    imageUrl: null,
+    caloriesPerUnit: null,
+    proteinPerUnit: null,
+    carbsPerUnit: null,
+    fatPerUnit: null,
+    costPerUnit: null,
+    currency: "HUF",
+    createdAt: "2026-03-01T00:00:00.000Z",
+    updatedAt: "2026-03-01T00:00:00.000Z",
+  };
+}
+
 const items: InventoryItem[] = [
-  { id: "1", name: "Soup", storage: "fridge", portions: 2, bestBefore: "2026-03-01", container: "glass", location: "Top shelf" },
-  { id: "2", name: "Chili", storage: "freezer", portions: 3, bestBefore: "2026-03-03", container: "bag", location: "Drawer" },
-  { id: "3", name: "Rice", storage: "fridge", portions: 1, bestBefore: "2026-02-28", container: "box", location: "" },
+  item("1", "Soup", "fridge", 2, "2026-03-01T23:59:59.999Z"),
+  item("2", "Chili", "freezer", 3, "2026-03-03T23:59:59.999Z"),
+  item("3", "Rice", "fridge", 1, "2026-02-28T23:59:59.999Z"),
 ];
 
 test("counts and searches use portions and combine storage with case-insensitive search", () => {
-  assert.deepEqual(inventoryCounts(items), { all: 6, fridge: 3, freezer: 3 });
-  assert.deepEqual(filterInventory(items, "fridge", "SHELF").map((item) => item.id), ["1"]);
+  assert.deepEqual(inventoryCounts(items), { all: 6, fridge: 3, freezer: 3, pantry: 0 });
+  assert.deepEqual(filterInventory(items, "fridge", "SOUP").map((item) => item.id), ["1"]);
   assert.deepEqual(filterInventory(items, "freezer", "soup"), []);
 });
 

@@ -1,24 +1,7 @@
-// Provisional UI contracts until shared recipe DTOs and endpoints exist.
-export type RecipeFilter = "all" | "meal-prep" | "ai-generated" | "quick" | "freezer-friendly";
-export type RecipeTag = "meal-prep" | "ai-generated" | "freezer-friendly";
+import type { ListRecipesQuery, RecipeDto } from "@app/modules/schemas";
 
-export interface Recipe {
-  id: string;
-  title: string;
-  image: string;
-  imageAlt: string;
-  highlight: string;
-  stockLabel: string;
-  prepMinutes: number;
-  portions: number;
-  storageLabel: string;
-  calories: number;
-  ingredients: string[];
-  tags: RecipeTag[];
-  favorite: boolean;
-}
-
-export interface FavoriteUpdate {
-  id: string;
-  favorite: boolean;
-}
+export type Recipe = RecipeDto;
+export type RecipeFilter = "all" | "ai-generated" | "quick" | "freezer-friendly";
+export type RecipeListFilters = Omit<Partial<ListRecipesQuery>, "isFreezerFriendly"> & {
+  isFreezerFriendly?: "true" | "false";
+};

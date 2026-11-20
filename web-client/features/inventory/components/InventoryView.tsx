@@ -4,11 +4,10 @@ import { toast } from "sonner";
 import { useSyncExternalStore } from "react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useInventory, useInventoryMutations } from "../hooks/use-inventory";
+import { useExpiringInventory, useInventory, useInventoryMutations, useInventorySummary } from "../hooks/use-inventory";
 import { useInventoryUiStore } from "../stores/inventory-ui.store";
 import type { InventoryInput } from "../types";
 import { todayLocal } from "../utils/inventory-formatters";
-import { filterInventory, inventoryCounts, rescueItems } from "../utils/inventory-selectors";
 import { FreshnessAlert } from "./FreshnessAlert";
 import { InventoryFilters } from "./InventoryFilters";
 import { InventoryHeader } from "./InventoryHeader";
@@ -27,10 +26,16 @@ function serverDate(): null {
 }
 
 export function InventoryView(): React.JSX.Element {
-  const query = useInventory();
-  const { create, update, adjust } = useInventoryMutations();
   const ui = useInventoryUiStore();
-  const busy = create.isPending || update.isPending || adjust.isPending;
+  const filters = {
+    ...(ui.filter !== "all" ? { storageLocation: ui.filter } : {}),
+    ...(ui.search ? { search: ui.search } : {}),
+  };
+  const query = useInventory(filters);
+  const summary = useInventorySummary();
+  const expiring = useExpiringInventory();
+  const { create, update, remove, adjust, consume, discard } = useInventoryMutations();
+  const busy = create.isPending || update.isPending || remove.isPending || adjust.isPending || consume.isPending || discard.isPending;
   const items = query.data ?? [];
   const asOf = useSyncExternalStore(subscribeToDate, todayLocal, serverDate);
   const selected = items.find((item) => item.id === ui.selectedId);
@@ -42,7 +47,7 @@ export function InventoryView(): React.JSX.Element {
       } else {
         await create.mutateAsync(input);
       }
-      toast.success("Demo inventory updated.");
+      toast.success("Inventory updated.");
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Could not save this item.");
       throw error;
@@ -55,19 +60,57 @@ export function InventoryView(): React.JSX.Element {
       toast.error(error instanceof Error ? error.message : "Could not update portions.");
     }
   };
+  const logEaten = async (id: string): Promise<void> => {
+    try {
+      await consume.mutateAsync({ id, quantity: 1 });
+      toast.success("Meal logged.");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Could not log this meal.");
+    }
+  };
+  const discardItem = async (id: string): Promise<void> => {
+    try {
+      await discard.mutateAsync(id);
+      toast.success("Item discarded.");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Could not discard this item.");
+    }
+  };
+  const deleteItem = async (id: string): Promise<void> => {
+    try {
+      await remove.mutateAsync(id);
+      toast.success("Item deleted.");
+      ui.closeSheet();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Could not delete this item.");
+      throw error;
+    }
+  };
+  const retry = (): void => {
+    void query.refetch();
+    void summary.refetch();
+    void expiring.refetch();
+  };
 
-  if (query.isPending || !asOf) return <div role="status" aria-label="Loading inventory" className="space-y-3 pt-4"><Skeleton className="h-16 w-full" /><Skeleton className="h-28 w-full" /><Skeleton className="h-28 w-full" /></div>;
-  if (query.isError) return <div role="alert" className="space-y-3 py-8"><p>Could not load demo inventory.</p><Button type="button" className="h-11" onClick={() => void query.refetch()}>Try again</Button></div>;
+  if (query.isPending || summary.isPending || expiring.isPending || !asOf) return <div role="status" aria-label="Loading inventory" className="space-y-3 pt-4"><Skeleton className="h-16 w-full" /><Skeleton className="h-28 w-full" /><Skeleton className="h-28 w-full" /></div>;
+  if (query.isError || summary.isError || expiring.isError) return <div role="alert" className="space-y-3 py-8"><p>Could not load your inventory.</p><Button type="button" className="h-11" onClick={retry}>Try again</Button></div>;
+
+  const counts = {
+    all: summary.data.totalQuantity,
+    fridge: summary.data.byLocation.fridge.quantity,
+    freezer: summary.data.byLocation.freezer.quantity,
+    pantry: summary.data.byLocation.pantry.quantity,
+  };
 
   return (
     <div className="space-y-3 pb-8">
-      <InventoryHeader total={inventoryCounts(items).all} search={ui.search} searchOpen={ui.searchOpen} onSearch={ui.setSearch} onToggleSearch={() => { ui.setSearchOpen(!ui.searchOpen); if (ui.searchOpen) ui.setSearch(""); }} onAdd={ui.openAdd} />
-      <InventoryFilters filter={ui.filter} counts={inventoryCounts(items)} onChange={ui.setFilter} />
-      <FreshnessAlert items={rescueItems(items, asOf)} />
-      <InventoryList items={filterInventory(items, ui.filter, ui.search)} asOf={asOf} disabled={busy} empty={!items.length} onEdit={ui.openEdit} onAdjust={(id, delta) => void changePortions(id, delta)} />
+      <InventoryHeader total={counts.all} search={ui.search} searchOpen={ui.searchOpen} onSearch={ui.setSearch} onToggleSearch={() => { ui.setSearchOpen(!ui.searchOpen); if (ui.searchOpen) ui.setSearch(""); }} onAdd={ui.openAdd} />
+      <InventoryFilters filter={ui.filter} counts={counts} onChange={ui.setFilter} />
+      <FreshnessAlert items={expiring.data ?? []} />
+      <InventoryList items={items} asOf={asOf} disabled={busy} empty={summary.data.totalItems === 0} onEdit={ui.openEdit} onAdjust={(id, delta) => void changePortions(id, delta)} onConsume={(id) => void logEaten(id)} onDiscard={(id) => void discardItem(id)} />
       <InventoryTip />
       {ui.sheet === "add" && <InventoryItemSheet busy={busy} onClose={ui.closeSheet} onSave={save} />}
-      {ui.sheet === "edit" && selected && <InventoryItemSheet key={selected.id} item={selected} busy={busy} onClose={ui.closeSheet} onSave={save} />}
+      {ui.sheet === "edit" && selected && <InventoryItemSheet key={selected.id} item={selected} busy={busy} onClose={ui.closeSheet} onSave={save} onDelete={deleteItem} />}
     </div>
   );
 }

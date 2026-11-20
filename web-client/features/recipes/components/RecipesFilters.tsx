@@ -9,7 +9,6 @@ interface RecipesFiltersProps {
 
 const filters: { id: RecipeFilter; label: string }[] = [
   { id: "all", label: "All" },
-  { id: "meal-prep", label: "Meal Prep" },
   { id: "ai-generated", label: "AI Generated" },
   { id: "quick", label: "Quick <30m" },
   { id: "freezer-friendly", label: "Freezer Friendly" },

@@ -1,13 +1,8 @@
-import type { AppType } from "@app/server";
-import { hc } from "hono/client";
+import { z } from "zod";
+import { apiClient, unwrapApiResponse } from "@/lib/api-client";
 
-const client = hc<AppType>("/");
+const accountSchema = z.object({ id: z.string(), name: z.string(), email: z.email() });
 
 export async function fetchAccount(): Promise<{ id: string; name: string; email: string }> {
-  const response = await client.api.account.$get();
-  if (!response.ok) {
-    const body = await response.json();
-    throw new Error("error" in body ? body.error : "Could not load account.");
-  }
-  return response.json();
+  return unwrapApiResponse(await apiClient.api.account.$get(), accountSchema);
 }

@@ -8,7 +8,10 @@ interface Props {
 
 export function InventoryFilters({ filter, counts, onChange }: Props): React.JSX.Element {
   const options: { value: StorageFilter; label: string }[] = [
-    { value: "all", label: "All" }, { value: "fridge", label: "Fridge" }, { value: "freezer", label: "Freezer" },
+    { value: "all", label: "All" },
+    { value: "fridge", label: "Fridge" },
+    { value: "freezer", label: "Freezer" },
+    { value: "pantry", label: "Pantry" },
   ];
   return (
     <div aria-label="Storage filter" className="hide-scrollbar flex gap-2 overflow-x-auto">

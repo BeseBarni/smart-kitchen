@@ -1,6 +1,28 @@
-import type { ChatConversation, ChatMessage, SendMessageInput } from "../types";
+interface DemoChatMessage {
+  id: string;
+  role: "user" | "assistant";
+  createdAt: string;
+  text: string;
+  actions?: { storage: "fridge" | "freezer"; name: string; details: string }[];
+  recipe?: {
+    title: string;
+    description: string;
+    prepMinutes: number;
+    portions: number;
+    ingredients: string[];
+  };
+}
 
-const sample: ChatConversation = {
+interface DemoChatConversation {
+  prompts: { id: "plan" | "rescue" | "meal" | "quick"; label: string }[];
+  messages: DemoChatMessage[];
+}
+
+interface DemoSendMessageInput {
+  text: string;
+}
+
+const sample: DemoChatConversation = {
   prompts: [
     { id: "plan", label: "Plan Meal Prep" },
     { id: "rescue", label: "Fridge Rescue" },
@@ -34,18 +56,18 @@ const sample: ChatConversation = {
   ],
 };
 
-let conversation: ChatConversation = structuredClone(sample);
+let conversation: DemoChatConversation = structuredClone(sample);
 let nextMessageId = 0;
 
-export async function getConversation(): Promise<ChatConversation> {
+export async function getConversation(): Promise<DemoChatConversation> {
   return structuredClone(conversation);
 }
 
-export async function sendMessage(input: SendMessageInput): Promise<ChatMessage> {
+export async function sendMessage(input: DemoSendMessageInput): Promise<DemoChatMessage> {
   const text = input.text.trim();
   if (!text) throw new Error("Message cannot be empty.");
 
-  const message: ChatMessage = {
+  const message: DemoChatMessage = {
     id: `demo-${++nextMessageId}`,
     role: "user",
     text,
