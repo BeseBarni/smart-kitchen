@@ -1,42 +1,53 @@
-// These UI contracts are provisional until shared chat DTOs are defined.
-export interface InventoryAction {
-  readonly storage: "freezer" | "fridge";
-  readonly name: string;
-  readonly details: string;
+import type { AgentName, AgentStreamEvent, UiDirective } from "@app/ai/types";
+import type { ConversationDto, ConversationItemDto } from "@app/modules/schemas";
+
+export type { UiDirective };
+export type { ConversationDto, ConversationItemDto };
+
+export interface ChatMessage {
+  id: string;
+  role: "user" | "assistant";
+  text: string;
+  createdAt: string;
 }
 
-export interface RecipeSuggestion {
-  readonly title: string;
-  readonly description: string;
-  readonly prepMinutes: number;
-  readonly portions: number;
-  readonly ingredients: readonly string[];
+export interface ChatToolStep {
+  id: string;
+  agent: AgentName | null;
+  toolName: string;
+  argsSummary: string;
+  status: "running" | "completed" | "failed";
+  summary: string;
 }
 
-interface BaseMessage {
-  readonly id: string;
-  readonly text: string;
-  readonly createdAt: string;
+export type AgentStatus = Extract<AgentStreamEvent, { type: "agent_status" }>;
+
+export interface ChatTurn {
+  id: string;
+  userMessage?: ChatMessage;
+  assistantMessage: ChatMessage;
+  toolSteps: ChatToolStep[];
+  uiDirectives: UiDirective[];
+  activeStatus: AgentStatus | null;
 }
 
-export type ChatMessage =
-  | (BaseMessage & { readonly role: "user" })
-  | (BaseMessage & {
-      readonly role: "assistant";
-      readonly actions?: readonly InventoryAction[];
-      readonly recipe?: RecipeSuggestion;
-    });
+export interface ConversationHistory {
+  conversation: ConversationDto;
+  items: ConversationItemDto[];
+}
+
+export interface MappedConversationHistory extends ConversationHistory {
+  turns: ChatTurn[];
+}
 
 export interface QuickPrompt {
-  readonly id: "plan" | "rescue" | "meal" | "quick";
-  readonly label: string;
+  id: "plan" | "rescue" | "meal" | "quick";
+  label: string;
 }
 
-export interface ChatConversation {
-  readonly messages: readonly ChatMessage[];
-  readonly prompts: readonly QuickPrompt[];
-}
-
-export interface SendMessageInput {
-  readonly text: string;
-}
+export const quickPrompts: readonly QuickPrompt[] = [
+  { id: "plan", label: "Plan Meal Prep" },
+  { id: "rescue", label: "Fridge Rescue" },
+  { id: "meal", label: "Log Eaten Meal" },
+  { id: "quick", label: "Quick Log" },
+];

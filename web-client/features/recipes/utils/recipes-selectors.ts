@@ -4,12 +4,13 @@ export function filterRecipes(recipes: readonly Recipe[], filter: RecipeFilter, 
   const needle = search.trim().toLocaleLowerCase();
   return recipes.filter((recipe) => {
     const matchesFilter = filter === "all" ||
-      (filter === "quick" ? recipe.prepMinutes < 30 : recipe.tags.includes(filter));
-    const text = [recipe.title, ...recipe.ingredients, ...recipe.tags.map((tag) => tag.replaceAll("-", " "))];
+      (filter === "quick" ? recipe.prepTimeMin !== null && recipe.prepTimeMin < 30 :
+        filter === "ai-generated" ? recipe.source === "ai_skill" : recipe.isFreezerFriendly);
+    const text = [recipe.title, recipe.description ?? "", ...recipe.ingredients.map(({ displayName }) => displayName)];
     return matchesFilter && text.some((value) => value.toLocaleLowerCase().includes(needle));
   });
 }
 
-export function recipeCounts(recipes: readonly Recipe[]): { total: number; favorites: number } {
-  return { total: recipes.length, favorites: recipes.filter((recipe) => recipe.favorite).length };
+export function recipeCounts(recipes: readonly Recipe[]): { total: number } {
+  return { total: recipes.length };
 }

@@ -1,32 +1,35 @@
+import Link from "next/link";
 import { ArrowRight, CircleCheck, Refrigerator, Snowflake } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import type { InventoryAction } from "../types";
+import type { UiDirective } from "../types";
 
-export function InventoryActionCard({ actions }: { actions: readonly InventoryAction[] }): React.JSX.Element {
+type Props = Extract<UiDirective, { component: "inventory_action_card" }>;
+
+export function InventoryActionCard({ action, items }: Props): React.JSX.Element {
+  const actionLabel = action.charAt(0).toUpperCase() + action.slice(1);
   return (
-    <section aria-label="Example inventory actions" className="rounded-xl border border-primary/20 bg-secondary p-3.5">
+    <section aria-label={`Inventory ${action}`} className="rounded-xl border border-primary/20 bg-secondary p-3.5">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <h2 className="flex items-center gap-1.5 text-title-sm text-secondary-foreground"><CircleCheck size={18} />Inventory Updated ({actions.length} actions)</h2>
-        <Badge variant="secondary" className="bg-white text-secondary-foreground">Example only</Badge>
+        <h2 className="flex items-center gap-1.5 text-title-sm text-secondary-foreground"><CircleCheck size={18} aria-hidden="true" />{actionLabel} {items.length === 1 ? "item" : `${items.length} items`}</h2>
+        <Badge variant="secondary" className="bg-white text-secondary-foreground">Synced</Badge>
       </div>
-      <div className="mt-3 space-y-2">
-        {actions.map((action, index) => {
-          const Icon = action.storage === "freezer" ? Snowflake : Refrigerator;
+      <ul className="mt-3 space-y-2">
+        {items.map((item) => {
+          const Icon = item.location === "freezer" ? Snowflake : Refrigerator;
           return (
-            <div key={`${action.storage}-${index}`} className="flex gap-2 rounded-lg bg-card p-2">
+            <li key={item.id} className="flex gap-2 rounded-lg bg-card p-2">
               <Icon size={16} className="mt-0.5 shrink-0 text-secondary-foreground" aria-hidden="true" />
               <div className="min-w-0">
-                <div className="truncate text-title-sm">{action.storage === "freezer" ? "Freezer" : "Fridge"}: {action.name}</div>
-                <div className="text-label-md text-muted-foreground">{action.details}</div>
+                <div className="truncate text-title-sm">{item.name}</div>
+                <div className="text-label-md text-muted-foreground">{item.quantity} {item.unit} · {item.location}</div>
               </div>
-            </div>
+            </li>
           );
         })}
-      </div>
-      <button type="button" disabled className="mt-1 flex min-h-11 items-center gap-1 text-label-md text-secondary-foreground opacity-60">
+      </ul>
+      <Link href="/inventory" className="mt-1 flex min-h-11 items-center gap-1 text-label-md text-secondary-foreground">
         View in Inventory <ArrowRight size={14} aria-hidden="true" />
-      </button>
-      <p className="text-label-md text-secondary-foreground">Sample actions only; nothing was synced.</p>
+      </Link>
     </section>
   );
 }

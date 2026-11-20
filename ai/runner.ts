@@ -20,7 +20,8 @@ function jsonDirectives(directives: UiDirective[]) {
 }
 
 function failureMessage(error: unknown): string {
-  return error instanceof Error ? error.message : "The AI turn failed unexpectedly.";
+  if (error instanceof Error) return error.message;
+  return typeof error === "string" ? error : "The AI turn failed unexpectedly.";
 }
 
 export function assistantMessagePayload(
@@ -118,10 +119,11 @@ export async function runStreamingTurn(input: {
       });
     } catch (error) {
       if (signal.aborted) return;
+      console.error("AI turn failed:", failureMessage(error));
       emit({
         type: "error",
         code: "INTERNAL_ERROR",
-        message: failureMessage(error),
+        message: "The assistant couldn't finish this response. Please try again.",
         recoverable: true,
       });
     }

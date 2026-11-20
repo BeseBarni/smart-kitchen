@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { adjustPortions, createInventory, listInventory, updateInventory } from "./inventory.mock";
-import type { InventoryInput } from "../types";
+import type { InventoryInput } from "./mock.types";
 
 test("inventory mocks isolate results and support create, edit, adjust and remove", async () => {
   const first = await listInventory();

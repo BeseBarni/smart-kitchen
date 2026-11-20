@@ -35,19 +35,30 @@ export async function runAgentLoop(input: {
       content: [input.request.task, input.request.contextHint].filter(Boolean).join("\n\n"),
     }],
     tools,
-    stopWhen: stepCountIs(5),
+    stopWhen: stepCountIs(10),
     abortSignal: input.context.abortSignal,
   });
 
   let summary = "";
+  const invalidToolCalls = new Set<string>();
   for await (const part of stream.fullStream) {
     if (part.type === "text-delta") {
       summary += part.text;
       if (input.forwardText) input.context.emit({ type: "text_delta", delta: part.text });
+    } else if (part.type === "tool-call" && part.invalid) {
+      invalidToolCalls.add(part.toolCallId);
+    } else if (part.type === "tool-error" && invalidToolCalls.delete(part.toolCallId)) {
+      continue;
     } else if (part.type === "error" || part.type === "tool-error") {
-      throw part.error;
+      throw part.error instanceof Error
+        ? part.error
+        : new Error(typeof part.error === "string" ? part.error : "The AI provider returned an unexpected error.");
     }
   }
+  if (await stream.finishReason === "tool-calls") {
+    throw new Error(`${input.agent} reached the tool step limit before completing its response.`);
+  }
+  if (!summary.trim()) throw new Error(`${input.agent} completed without a response.`);
   const usage = await stream.totalUsage;
   const usageTotal = {
     inputTokens: usage.inputTokens ?? 0,

@@ -40,11 +40,11 @@ export const app = new Hono<AuthEnvironment>()
   .route("/", authRoutes)
   .route("/", accountRoutes)
   .route("/", healthRoutes)
-  .route("/", profileRoutes)
-  .route("/", ingredientRoutes)
-  .route("/", recipeRoutes)
-  .route("/", inventoryRoutes)
-  .route("/", mealLogRoutes)
+  .route("/profile", profileRoutes)
+  .route("/ingredients", ingredientRoutes)
+  .route("/recipes", recipeRoutes)
+  .route("/inventory", inventoryRoutes)
+  .route("/meal-logs", mealLogRoutes)
   .route("/", chatRoutes);
 
 export type AppType = typeof app;

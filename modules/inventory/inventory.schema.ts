@@ -68,6 +68,8 @@ export const inventorySummarySchema = z
   })
   .describe("Aggregate inventory summary.");
 
+export type InventorySummaryDto = z.infer<typeof inventorySummarySchema>;
+
 export const adjustInventoryInputSchema = z
   .object({ delta: z.number().finite().refine((value) => value !== 0).describe("Quantity adjustment.") })
   .describe("Inventory quantity adjustment.");

@@ -1,4 +1,4 @@
-import type { InventoryInput, InventoryItem, PortionAdjustment } from "../types";
+import type { InventoryInput, InventoryItem, PortionAdjustment } from "./mock.types";
 import { inventoryFormSchema } from "../utils/inventory-form.schema";
 import { addDays, addMonths, todayLocal } from "../utils/inventory-formatters";
 

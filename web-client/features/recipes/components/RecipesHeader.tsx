@@ -4,22 +4,20 @@ import { Input } from "@/components/ui/input";
 
 interface RecipesHeaderProps {
   total: number;
-  favorites: number;
   search: string;
   onSearch: (value: string) => void;
+  onNew: () => void;
 }
 
-export function RecipesHeader({ total, favorites, search, onSearch }: RecipesHeaderProps): React.JSX.Element {
+export function RecipesHeader({ total, search, onSearch, onNew }: RecipesHeaderProps): React.JSX.Element {
   return (
     <header className="space-y-3 pt-4">
       <div className="flex items-center justify-between gap-3">
         <div>
           <h1 className="text-headline-lg-mobile">Recipes</h1>
-          <p className="text-label-md text-muted-foreground">
-            {total} cataloged · {favorites} {favorites === 1 ? "favorite" : "favorites"}
-          </p>
+          <p className="text-label-md text-muted-foreground">{total} {total === 1 ? "recipe" : "recipes"}</p>
         </div>
-        <Button type="button" disabled title="Creating recipes is unavailable in this demo" aria-label="New recipe unavailable in this demo" className="min-h-11">
+        <Button type="button" onClick={onNew} className="min-h-11">
           <Plus aria-hidden="true" /> New
         </Button>
       </div>

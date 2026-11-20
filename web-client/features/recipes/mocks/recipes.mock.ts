@@ -1,4 +1,4 @@
-import type { FavoriteUpdate, Recipe } from "../types";
+import type { FavoriteUpdate, Recipe } from "./mock.types";
 
 const initialRecipes: Recipe[] = [
   {

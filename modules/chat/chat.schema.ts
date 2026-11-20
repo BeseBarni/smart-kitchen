@@ -167,5 +167,7 @@ export type ConversationItemPayloadDto = z.infer<typeof conversationItemPayloadS
 export type ConversationItemMetadataDto = z.infer<typeof conversationItemMetadataSchema>;
 export type ConversationDto = z.infer<typeof conversationSchema>;
 export type ConversationItemDto = z.infer<typeof conversationItemSchema>;
+export type ListConversationsQuery = z.infer<typeof listConversationsQuerySchema>;
+export type CreateConversationInput = z.input<typeof createConversationInputSchema>;
 export type ConversationStreamInput = z.infer<typeof conversationStreamInputSchema>;
 export type CreateChatInput = z.infer<typeof createChatInputSchema>;

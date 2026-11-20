@@ -1,3 +1,4 @@
+import type { AppDomain } from "@app/shared";
 import type { AppErrorCode } from "@app/shared";
 import type { UiDirective } from "./ui.types";
 
@@ -36,7 +37,7 @@ export type AgentStreamEvent =
       type: "ui_directive";
       callId?: string;
       directive: UiDirective;
-      invalidateDomains: Array<"inventory" | "recipes" | "ingredients" | "meal-logs" | "profile">;
+      invalidateDomains: AppDomain[];
     }
   | {
       type: "turn_completed";
