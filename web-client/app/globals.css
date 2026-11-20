@@ -178,4 +178,31 @@
   html {
     @apply font-sans;
   }
+
+  :where(button:not(:disabled):not([aria-disabled="true"]), a[href]:not([aria-disabled="true"]), summary, select:not(:disabled), input:not(:disabled):not([type="hidden"]), textarea:not(:disabled)) {
+    transition: filter 150ms ease, scale 150ms ease;
+  }
+
+  :where(label:has(input:not(:disabled), select:not(:disabled), textarea:not(:disabled))) {
+    transition: color 150ms ease;
+  }
+
+  @media (hover: hover) {
+    :where(button:not(:disabled):not([aria-disabled="true"]), a[href]:not([aria-disabled="true"]), summary, select:not(:disabled), input:not(:disabled):not([type="hidden"]), textarea:not(:disabled)):hover {
+      filter: brightness(0.94);
+      scale: 1.01;
+    }
+    :where(label:has(input:not(:disabled), select:not(:disabled), textarea:not(:disabled))):hover {
+      color: var(--primary);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    :where(button, a[href], summary, select, input, textarea, label) {
+      transition: none !important;
+    }
+    :where(button, a[href], summary, select, input, textarea):hover {
+      scale: none;
+    }
+  }
 }

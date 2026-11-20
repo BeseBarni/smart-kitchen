@@ -11,6 +11,7 @@ import { useChatStream } from "../hooks/use-chat-stream";
 import { useConversationHistory, useConversationMutations, useConversations } from "../hooks/use-conversations";
 import { useChatUiStore } from "../stores/chat-ui.store";
 import type { QuickPrompt } from "../types";
+import { mergeChatTurns } from "../utils/merge-chat-turns";
 
 const promptText: Record<QuickPrompt["id"], string> = {
   plan: "Help me plan meal prep using my saved recipes and ingredients.",
@@ -25,6 +26,7 @@ export function ChatView(): React.JSX.Element {
   const setActiveConversationId = useChatUiStore((state) => state.setActiveConversationId);
   const draft = useChatUiStore((state) => state.draft);
   const setDraft = useChatUiStore((state) => state.setDraft);
+  const rejectedTurns = useChatUiStore((state) => state.rejectedTurns);
   const initializedSelection = useRef(false);
   const { data: history, isPending, isError, refetch } = useConversationHistory(activeConversationId);
   const { create } = useConversationMutations();
@@ -38,9 +40,9 @@ export function ChatView(): React.JSX.Element {
   }, [activeConversationId, conversations, conversationsPending, setActiveConversationId]);
 
   const turns = useMemo(() => {
-    const savedTurns = history?.turns ?? [];
+    const savedTurns = mergeChatTurns(history?.turns ?? [], activeConversationId ? rejectedTurns[activeConversationId] ?? [] : []);
     return stream.turn ? [...savedTurns, stream.turn] : savedTurns;
-  }, [history?.turns, stream.turn]);
+  }, [activeConversationId, history?.turns, rejectedTurns, stream.turn]);
 
   const submitMessage = (): void => {
     if (!draft.trim() || stream.isStreaming) return;

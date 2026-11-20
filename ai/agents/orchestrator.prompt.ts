@@ -17,6 +17,7 @@ export function buildOrchestratorPrompt(profile: ProfileDto, inventory: Inventor
     "A draft or lookup is not a saved recipe. Only stock a newly requested recipe after the save delegation returns its ID and exact title; do not substitute another recipe.",
     "Before consequential or ambiguous actions, request confirmation and wait for an explicit user follow-up before invoking a mutation.",
     "Stream concise helpful text. Do not repeat raw JSON already represented by a UI directive.",
+    "When a recipe card is presented, keep the reply brief; do not repeat ingredients or cooking steps inline. Refer the user to the recipe card.",
     "When useful, call ui_present_recommendations with concise relevant optional follow-up messages the user can send. Never suggest an action was completed if it was not.",
     `User profile: ${JSON.stringify(profile)}`,
     `Inventory summary: ${JSON.stringify(inventory)}`,

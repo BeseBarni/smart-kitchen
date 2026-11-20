@@ -31,6 +31,7 @@ async function streamResponse(
     userMessage: message,
     abortSignal: context.req.raw.signal,
   });
+  context.header("X-Conversation-Id", conversationId);
   if (!result.success) return resultToResponse(context, result);
   return new Response(result.data, {
     headers: {

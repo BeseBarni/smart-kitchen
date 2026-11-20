@@ -24,6 +24,7 @@ function createTurn(id: string, createdAt: string, text = ""): ChatTurn {
 
 export function mapConversationHistory(items: readonly ConversationItemDto[]): ChatTurn[] {
   const turns: ChatTurn[] = [];
+  const legacyRecipes = new Map<ChatTurn, ChatTurn["uiDirectives"]>();
   let current: ChatTurn | undefined;
   const ensureTurn = (id: string, createdAt: string): ChatTurn => {
     if (!current) {
@@ -66,6 +67,16 @@ export function mapConversationHistory(items: readonly ConversationItemDto[]): C
       turn.toolSteps.push(step);
     } else if (item.type === "tool_result" && item.payload.kind === "tool_result") {
       if (!item.callId || !item.toolName) throw new Error("Persisted tool result is missing its correlation data.");
+      if (item.toolName === "ui_present_recipe_draft" && !item.payload.error) {
+        const recipe = uiDirectiveSchema.safeParse({
+          component: "recipe_preview_card",
+          status: "draft",
+          recipe: item.payload.result,
+          canSave: true,
+          canCookAndStock: false,
+        });
+        if (recipe.success) legacyRecipes.set(turn, [...(legacyRecipes.get(turn) ?? []), recipe.data]);
+      }
       const stepIndex = turn.toolSteps.findIndex((entry) => entry.id === item.callId);
       const resultSummary = item.payload.error
         ? item.payload.error.message
@@ -96,6 +107,11 @@ export function mapConversationHistory(items: readonly ConversationItemDto[]): C
         status: "completed",
         summary: JSON.stringify(item.payload.output),
       });
+    }
+  }
+  for (const turn of turns) {
+    if (turn.assistantMessage.text && !turn.uiDirectives.some((directive) => directive.component === "recipe_preview_card")) {
+      turn.uiDirectives.push(...(legacyRecipes.get(turn) ?? []));
     }
   }
   return turns;

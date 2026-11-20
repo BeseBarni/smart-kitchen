@@ -2,10 +2,11 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Menu, MessageCircle, Plus, Settings, SquarePen, UserRound } from "lucide-react";
+import { Menu, MessageCircle, Plus, Settings, ShoppingCart, SquarePen, UserRound } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { useConversationMutations, useConversations } from "../hooks/use-conversations";
+import { ShoppingListSheet } from "@/features/shopping";
 
 function ConversationTitleEditor({
   id,
@@ -64,10 +65,12 @@ export function ConversationSwitcher({
   disabled: boolean;
 }): React.JSX.Element {
   const [open, setOpen] = useState(false);
+  const [shoppingOpen, setShoppingOpen] = useState(false);
   const { data: conversations = [], isPending, isError } = useConversations();
   const active = conversations.find((conversation) => conversation.id === activeId);
 
   return (
+    <>
     <Sheet open={open} onOpenChange={setOpen}>
       <header className="fixed inset-x-0 top-0 z-40 mx-auto max-w-[430px] border-b border-border bg-background/95 pt-[env(safe-area-inset-top,0px)] backdrop-blur-xl">
         <div className="flex h-16 items-center justify-between px-margin">
@@ -106,9 +109,12 @@ export function ConversationSwitcher({
           )}
         </section>
         <div className="border-t border-border p-3">
+          <button type="button" onClick={() => { setOpen(false); setShoppingOpen(true); }} className="flex min-h-11 w-full items-center gap-2 rounded-lg px-2 text-left text-body-sm"><ShoppingCart size={18} aria-hidden="true" />Shopping list</button>
           <Link href="/account" onClick={() => setOpen(false)} className="flex min-h-11 items-center gap-2 rounded-lg px-2 text-body-sm"><Settings size={18} aria-hidden="true" />Settings</Link>
         </div>
       </SheetContent>
     </Sheet>
+    <ShoppingListSheet open={shoppingOpen} onClose={() => setShoppingOpen(false)} />
+    </>
   );
 }

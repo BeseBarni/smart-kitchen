@@ -25,6 +25,7 @@ export class ApiClientError extends Error {
     message: string,
     readonly status: number,
     readonly code?: AppErrorCode,
+    readonly details?: Record<string, unknown>,
   ) {
     super(message);
     this.name = "ApiClientError";
@@ -46,6 +47,7 @@ function createApiClientError(status: number, body: unknown): ApiClientError {
     error?.message ?? (status === 401 ? "Please sign in again." : "The request failed."),
     status,
     error?.code ?? (status === 401 ? "UNAUTHORIZED" : undefined),
+    error?.details,
   );
 }
 

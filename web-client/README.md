@@ -11,15 +11,22 @@ endpoints and CORS preflights remain public. Signing in does not sync the demo
 inventory, recipes, or chat.
 
 The chat supports streamed messaging, saved conversations, automatic titles,
-quick prompts and assistant-suggested replies. Photo uploads and voice input
-are not currently available. `/inventory` provides a mock-backed
-fridge/freezer list with search, filters, add/edit, and portion controls;
-decreasing the last portion removes the item. `/recipes` provides a mock-backed
-recipe library with search, filters, and favorites. Recipe creation, details,
-Cook & Stock, AI Rescue, and AI Autofill are unavailable; recipe stock labels
-are illustrative and do not reflect the inventory. All data is illustrative and never synced or saved: mock state
-is held in browser memory and resets on reload. Provisional feature contracts
-will need alignment with future shared schemas and Hono endpoints.
+quick prompts and assistant-suggested replies. Structured recipes open in a
+detail sheet with ingredients, instructions, save and cook/stock actions.
+Chat recipe cards also provide quick save and cook/stock controls; stocking
+requires an existing saved recipe and lets you choose portions and storage.
+The Recipes menu uses the same detail sheet and retains edit, delete, and
+cook/stock actions. Older recipe cards are restored when their structured tool
+results are available; text-only historical answers remain unchanged.
+Chat responses are buffered while streaming so recipe details cannot appear
+inline before their cards; the full response remains available in the recipe
+sheet, including any non-recipe information.
+The chat menu opens a persistent shopping list; adding ingredients from a
+recipe first compares inventory and asks you to review uncertain matches.
+Rejected user messages are shown only in the current browser session and are
+not stored in conversation history. Photo uploads and voice input are not
+currently available. The shopping list requires the latest database migration;
+review and apply it to the target database before using the feature.
 
 Assistant messages, confirmation descriptions, recipe drafts, and saved AI
 recipe descriptions and steps support GitHub-flavored Markdown. User messages

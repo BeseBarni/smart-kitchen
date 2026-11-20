@@ -1,0 +1,29 @@
+"use client";
+
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { MarkdownContent } from "@/components/MarkdownContent";
+import { RecipeDetailModal } from "@/features/recipes";
+import { ShoppingReview } from "@/features/shopping";
+import type { ChatRecipeActionsState } from "../hooks/use-chat-recipe-actions";
+import type { UiDirective } from "../types";
+import { ChatRecipeActions } from "./ChatRecipeActions";
+
+type Props = Extract<UiDirective, { component: "recipe_preview_card" }> & {
+  onClose: () => void;
+  assistantResponse: string;
+  actions: ChatRecipeActionsState;
+};
+
+export function ChatRecipeSheet({ recipe, assistantResponse, actions, onClose }: Props): React.JSX.Element {
+  const [review, setReview] = useState(false);
+  return (
+    <RecipeDetailModal open onClose={onClose} recipe={recipe} markdown>
+      {assistantResponse && <details className="rounded-2xl border px-3"><summary className="flex min-h-11 cursor-pointer items-center text-title-sm">Full assistant response</summary><MarkdownContent text={assistantResponse} className="pb-3 text-body-sm" /></details>}
+      <ChatRecipeActions actions={actions} />
+      {recipe.ingredients.length > 0 && (review
+        ? <ShoppingReview items={recipe.ingredients.map(({ name, quantity, unit }) => ({ name, quantity, unit }))} onDone={() => setReview(false)} />
+        : <Button type="button" variant="secondary" className="h-11 w-full" onClick={() => setReview(true)}>Add missing ingredients to list</Button>)}
+    </RecipeDetailModal>
+  );
+}

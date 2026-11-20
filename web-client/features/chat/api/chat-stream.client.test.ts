@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { parseSseStream, streamChatTurn } from "./chat-stream.client";
+import { ApiClientError } from "@/lib/api-client";
 
 function readableChunks(chunks: readonly string[]): ReadableStream<Uint8Array> {
   const encoder = new TextEncoder();
@@ -72,7 +73,28 @@ test("accepts a terminal error event without reporting a second interruption", a
       onConversationId: () => {},
       onEvent: (event) => { events.push(event.type); },
     });
+
     assert.deepEqual(events, ["error"]);
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
+test("reports a rejected message with its reason and conversation id", async () => {
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = async () => new Response(JSON.stringify({
+    error: { code: "VALIDATION_ERROR", message: "Not allowed.", details: { reason: "off_topic" } },
+  }), { status: 422, headers: { "X-Conversation-Id": "conversation-1" } });
+  let id = "";
+  try {
+    await assert.rejects(streamChatTurn({
+      conversationId: null,
+      message: "Test",
+      signal: new AbortController().signal,
+      onConversationId: (value) => { id = value; },
+      onEvent: () => {},
+    }), (error: unknown) => error instanceof ApiClientError && error.details?.reason === "off_topic");
+    assert.equal(id, "conversation-1");
   } finally {
     globalThis.fetch = originalFetch;
   }

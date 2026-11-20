@@ -9,6 +9,7 @@ import { inventoryRoutes } from "./routes/inventory.routes";
 import { mealLogRoutes } from "./routes/meal-logs.routes";
 import { profileRoutes } from "./routes/profile.routes";
 import { recipeRoutes } from "./routes/recipes.routes";
+import { shoppingRoutes } from "./routes/shopping.routes";
 import type { AuthEnvironment } from "./middleware/auth.middleware";
 import { errorResponse } from "./middleware/error-handler";
 
@@ -28,6 +29,7 @@ export const app = new Hono<AuthEnvironment>()
       credentials: true,
       allowMethods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
       allowHeaders: ["Content-Type", "Authorization"],
+      exposeHeaders: ["X-Conversation-Id"],
     }),
   )
   .onError((error, context) => {
@@ -44,6 +46,7 @@ export const app = new Hono<AuthEnvironment>()
   .route("/ingredients", ingredientRoutes)
   .route("/recipes", recipeRoutes)
   .route("/inventory", inventoryRoutes)
+  .route("/shopping", shoppingRoutes)
   .route("/meal-logs", mealLogRoutes)
   .route("/", chatRoutes);
 

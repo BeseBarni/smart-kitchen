@@ -2,7 +2,8 @@ import assert from "node:assert/strict";
 import { mock, test } from "node:test";
 import type { LedgerItem } from "./agent.types";
 import { orchestratorTools } from "./orchestrator.tools";
-import { recipeArchitectAgent } from "./recipe-architect.agent";
+import { mealPrepRecipeDirective, recipeArchitectAgent } from "./recipe-architect.agent";
+import { uiDirectiveSchema } from "../core/stream.schema";
 
 test("save delegation reports success only with an actual saved recipe", async () => {
   const ledgerItems: LedgerItem[] = [];
@@ -39,6 +40,7 @@ test("save delegation reports success only with an actual saved recipe", async (
         result: { id: "00000000-0000-4000-8000-000000000001", title: "Lentil soup" },
       },
     });
+
     const saved = await recipe.execute(input, { ...context, agent: "orchestrator" });
     assert.equal(saved.success, true);
     if (saved.success) {
@@ -46,8 +48,31 @@ test("save delegation reports success only with an actual saved recipe", async (
         summary: "Recipe saved.",
         savedRecipes: [{ id: "00000000-0000-4000-8000-000000000001", title: "Lentil soup" }],
       });
+
     }
   } finally {
     execute.mock.restore();
   }
+});
+
+test("meal prep skill output becomes a complete recipe card", () => {
+  const directive = mealPrepRecipeDirective({
+    input: { goal: "Soup", servings: 2, dietaryPreferences: { allergies: [], dislikes: [] }, currency: "USD" },
+    output: {
+      title: "Lentil soup", description: "A batch.", servings: 2, prepTimeMin: 10, cookTimeMin: 20,
+      isFreezerFriendly: true,
+      ingredients: [{ name: "Lentils", quantity: 200, unit: "g", notes: "rinsed" }],
+      instructions: ["Simmer."],
+      storageGuidance: { fridgeDays: 3, freezerMonths: 2, reheatingTip: "Heat thoroughly." },
+      estimatedMacrosPerServing: { calories: 300, proteinG: 15, carbsG: 40, fatG: 5 },
+      estimatedCostPerServing: 2,
+    },
+  });
+  assert.equal(directive.component, "recipe_preview_card");
+  if (directive.component !== "recipe_preview_card") return;
+  assert.equal(directive.recipe.ingredients[0]?.notes, "rinsed");
+  assert.match(directive.recipe.instructions[1] ?? "", /Heat thoroughly/);
+  assert.equal(directive.recipe.proteinPerServing, 15);
+  assert.equal(directive.recipe.currency, "USD");
+  assert.equal(uiDirectiveSchema.safeParse(directive).success, true);
 });

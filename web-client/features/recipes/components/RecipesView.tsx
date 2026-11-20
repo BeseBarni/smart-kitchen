@@ -75,6 +75,7 @@ export function RecipesView(): React.JSX.Element {
       {query.isError && <div role="alert" className="space-y-2 text-body-sm"><p>Could not refresh recipes. Showing the last loaded results.</p><Button type="button" variant="outline" className="h-11" onClick={() => void query.refetch()}>Try again</Button></div>}
       <RecipesList recipes={filtered} total={counts.total} pending={busy} onView={setSelectedId} onCook={setCookId} />
       <RecipeDetailsSheet
+        key={selectedId ?? "none"}
         recipe={detail.data}
         open={Boolean(selectedId)}
         loading={detail.isPending}

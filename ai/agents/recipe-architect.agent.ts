@@ -9,7 +9,7 @@ import { recipeCreateTool } from "../tools/definitions/recipes.write.tools";
 import { presentRecipeDraftTool } from "../tools/definitions/ui.tools";
 import type { ToolDefinition } from "../tools/definitions/tool.types";
 import { fridgeRescueSkill } from "../skills/fridge-rescue.skill";
-import { mealPrepArchitectSkill } from "../skills/meal-prep-architect.skill";
+import { mealPrepArchitectSkill, type MealPrepInput, type MealPrepOutput } from "../skills/meal-prep-architect.skill";
 import { nutritionCostEstimatorSkill } from "../skills/nutrition-cost-estimator.skill";
 import { runAgentLoop } from "./agent-loop";
 import type { AgentContext, LedgerItem, SubAgent } from "./agent.types";
@@ -19,6 +19,33 @@ function jsonValue(value: unknown) {
   const encoded = JSON.stringify(value);
   if (encoded === undefined) throw new Error("Skill ledger data is not JSON serializable.");
   return chatJsonValueSchema.parse(JSON.parse(encoded));
+}
+
+export function mealPrepRecipeDirective(run: Pick<SkillRun<MealPrepInput, MealPrepOutput>, "input" | "output">): UiDirective {
+  const { output, input } = run;
+  const storage = output.storageGuidance;
+  return {
+    component: "recipe_preview_card",
+    status: "draft",
+    recipe: {
+      title: output.title,
+      description: output.description,
+      servings: output.servings,
+      prepTimeMin: output.prepTimeMin,
+      cookTimeMin: output.cookTimeMin,
+      isFreezerFriendly: output.isFreezerFriendly,
+      ingredients: output.ingredients,
+      instructions: [...output.instructions, `Storage: refrigerate for ${storage.fridgeDays} days; freeze for ${storage.freezerMonths} months. ${storage.reheatingTip}`],
+      caloriesPerServing: output.estimatedMacrosPerServing.calories,
+      proteinPerServing: output.estimatedMacrosPerServing.proteinG,
+      carbsPerServing: output.estimatedMacrosPerServing.carbsG,
+      fatPerServing: output.estimatedMacrosPerServing.fatG,
+      costPerServing: output.estimatedCostPerServing,
+      currency: input.currency,
+    },
+    canSave: true,
+    canCookAndStock: false,
+  };
 }
 
 function skillTool<TInputSchema extends z.ZodType, TOutputSchema extends z.ZodType>(
@@ -87,6 +114,7 @@ export const recipeArchitectAgent: SubAgent = {
           "Generate a structured batch-cookable recipe from validated meal-prep context.",
           mealPrepArchitectSkill,
           context,
+          mealPrepRecipeDirective,
         ),
         skillTool(
           "fridge_rescue_skill",
@@ -124,7 +152,9 @@ export const recipeArchitectAgent: SubAgent = {
         "Present generated recipes as drafts. Save only after explicit user approval.",
         "When an approved save is requested, call recipes_create and report its returned recipe ID; a draft or lookup is not a saved recipe.",
         "Do not claim nutrition or pricing precision when inputs are missing.",
-        "Use ui_present_recipe_draft for generated proposals and stay within kitchen tasks.",
+        "The meal_prep_architect_skill automatically presents its generated recipe as a card. Do not call ui_present_recipe_draft again for the same recipe unless it has changed.",
+        "Use ui_present_recipe_draft for complete generated proposals not already presented by the meal prep skill, and stay within kitchen tasks.",
+        "For a saved recipe requested in detail, use recipes_get_detail so the user can open its recipe card.",
       ].join("\n"),
     }),
 }

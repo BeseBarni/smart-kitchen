@@ -10,8 +10,12 @@ export type RecipeCardPayload = {
   id?: string;
   title: string;
   description: string;
+  imageUrl?: string | null;
+  prepTimeMin?: number | null;
+  cookTimeMin?: number | null;
+  isFreezerFriendly?: boolean;
   servings: number;
-  ingredients: Array<{ name: string; quantity: number; unit: string }>;
+  ingredients: Array<{ name: string; quantity: number; unit: string; notes?: string | null }>;
   instructions: string[];
   caloriesPerServing?: number | null;
   proteinPerServing?: number | null;

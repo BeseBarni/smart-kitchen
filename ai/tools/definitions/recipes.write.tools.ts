@@ -11,11 +11,15 @@ import type { InventoryItemDto, RecipeDto } from "@app/modules";
 import { z } from "zod";
 import { defineTool } from "./tool.types";
 
-function recipeCard(recipe: RecipeDto) {
+export function recipeCard(recipe: RecipeDto) {
   return {
     id: recipe.id,
     title: recipe.title,
     description: recipe.description ?? "",
+    imageUrl: recipe.imageUrl,
+    prepTimeMin: recipe.prepTimeMin,
+    cookTimeMin: recipe.cookTimeMin,
+    isFreezerFriendly: recipe.isFreezerFriendly,
     servings: recipe.servings,
     ingredients: recipe.ingredients.map(({ displayName, quantity, unit }) => ({
       name: displayName,

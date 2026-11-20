@@ -12,6 +12,8 @@ import type { AgentStreamEvent } from "./core/stream.types";
 import type { UiDirective } from "./core/ui.types";
 import { orchestratorAgent } from "./agents/orchestrator.agent";
 import { generateConversationTitle } from "./agents/conversation-title";
+import { isKitchenMessage } from "./agents/chat-restriction";
+import { isSafeKitchenMessage } from "./agents/kitchen-safety";
 import type { AgentContext, LedgerItem } from "./agents/agent.types";
 
 function jsonDirectives(directives: UiDirective[]) {
@@ -45,6 +47,39 @@ export async function runStreamingTurn(input: {
 }): Promise<Result<ReadableStream<Uint8Array>, AppError>> {
   const existing = await chatService.getConversationWithItems(input.userId, input.conversationId, { limit: 1 });
   if (!existing.success) return err(existing.error);
+  const recent = await chatService.getRecentContextItems(input.userId, input.conversationId, { maxItems: 20 });
+  if (!recent.success) return err(recent.error);
+  const recentMessages = recent.data.flatMap((item) =>
+    item.type === "message" && item.payload.kind === "message" &&
+    (item.role === "user" || item.role === "assistant")
+      ? [{ role: item.role, text: item.payload.text.slice(0, 2000) }]
+      : [],
+  ).slice(-4);
+  const allowed = await isKitchenMessage({
+    message: input.userMessage.message,
+    recentMessages,
+    abortSignal: input.abortSignal,
+  });
+  if (!allowed) {
+    return err({
+      code: "VALIDATION_ERROR",
+      message: "Please keep messages related to food, cooking, or your kitchen.",
+      details: { reason: "off_topic" },
+    });
+  }
+  const safe = await isSafeKitchenMessage({
+    message: input.userMessage.message,
+    recentMessages,
+    abortSignal: input.abortSignal,
+  });
+  if (!safe) {
+    return err({
+      code: "VALIDATION_ERROR",
+      message: "This request was rejected because it may involve an unsafe kitchen practice.",
+      details: { reason: "unsafe_kitchen" },
+    });
+  }
+  input.abortSignal.throwIfAborted();
   const userItem = await chatService.appendItems(input.userId, input.conversationId, [{
     type: "message",
     role: "user",

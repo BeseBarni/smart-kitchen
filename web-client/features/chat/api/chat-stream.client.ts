@@ -66,9 +66,9 @@ export async function streamChatTurn(options: StreamTurnOptions): Promise<void> 
     body: JSON.stringify(body),
     signal: options.signal,
   });
-  if (!response.ok) await throwApiResponseError(response);
   const conversationId = response.headers.get("X-Conversation-Id");
   if (conversationId) options.onConversationId(conversationId);
+  if (!response.ok) await throwApiResponseError(response);
   if (!response.body) throw new Error("The streaming response did not contain a body.");
   let terminal = false;
   for await (const event of parseSseStream(response.body)) {

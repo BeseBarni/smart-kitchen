@@ -5,10 +5,12 @@ import { useCallback, useRef, useState } from "react";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 import { invalidateAppDomains } from "@/lib/domain-invalidation";
+import { ApiClientError } from "@/lib/api-client";
 import { chatKeys } from "../api/chat.keys";
 import { streamChatTurn } from "../api/chat-stream.client";
 import { toolStatusLabel } from "../utils/tool-status";
 import type { ChatToolStep, ChatTurn } from "../types";
+import { useChatUiStore } from "../stores/chat-ui.store";
 
 export function useChatStream(
   conversationId: string | null,
@@ -28,6 +30,7 @@ export function useChatStream(
   const [isStreaming, setIsStreaming] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const controller = useRef<AbortController | null>(null);
+  const addRejectedTurn = useChatUiStore((state) => state.addRejectedTurn);
 
   const sendMessage = useCallback(async (value: string): Promise<void> => {
     const message = value.trim();
@@ -40,7 +43,7 @@ export function useChatStream(
     controller.current = abortController;
     let activeConversationId = conversationId;
     setError(null);
-    setTurn({
+    const newTurn: ChatTurn = {
       id: crypto.randomUUID(),
       userMessage: {
         id: crypto.randomUUID(),
@@ -57,7 +60,8 @@ export function useChatStream(
       toolSteps: [],
       uiDirectives: [],
       activeStatus: null,
-    });
+    };
+    setTurn(newTurn);
     setIsStreaming(true);
 
     try {
@@ -154,7 +158,16 @@ export function useChatStream(
       });
     } catch (cause) {
       if (!abortController.signal.aborted) {
-        setError(cause instanceof Error ? cause.message : "The response could not be completed.");
+        const reason = cause instanceof ApiClientError ? cause.details?.reason : undefined;
+        if (cause instanceof ApiClientError && activeConversationId && newTurn.userMessage &&
+          (reason === "off_topic" || reason === "unsafe_kitchen")) {
+          addRejectedTurn(activeConversationId, {
+            ...newTurn,
+            userMessage: { ...newTurn.userMessage, rejectionReason: cause.message },
+          });
+        } else {
+          setError(cause instanceof Error ? cause.message : "The response could not be completed.");
+        }
         abortController.abort();
       }
     } finally {
@@ -172,7 +185,7 @@ export function useChatStream(
         setTurn(null);
       }
     }
-  }, [conversationId, onConversationId, queryClient]);
+  }, [addRejectedTurn, conversationId, onConversationId, queryClient]);
 
   const stopStreaming = useCallback((): void => {
     controller.current?.abort();

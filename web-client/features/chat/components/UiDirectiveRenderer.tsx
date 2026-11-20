@@ -10,10 +10,12 @@ export function UiDirectiveRenderer({
   directive,
   onReply,
   disabled,
+  recipeResponse,
 }: {
   directive: UiDirective;
   onReply: (message: string) => void;
   disabled: boolean;
+  recipeResponse: string;
 }): React.JSX.Element {
   if (directive.component === "recommendation_chips") {
     return (
@@ -31,7 +33,7 @@ export function UiDirectiveRenderer({
     return <InventoryActionCard {...directive} />;
   }
   if (directive.component === "recipe_preview_card") {
-    return <RecipeSuggestionCard {...directive} />;
+    return <RecipeSuggestionCard {...directive} assistantResponse={recipeResponse} />;
   }
   if (directive.component === "expiring_rescue_card") {
     return (
