@@ -3,11 +3,18 @@
 import { SlidersHorizontal, UserRound } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import type { ReactNode } from "react";
+import { useEffect, type ReactNode } from "react";
 import { BottomNav } from "./BottomNav";
 
 export function AppShell({ children }: { children: ReactNode }): React.JSX.Element {
   const pathname = usePathname();
+  useEffect(() => {
+    const revalidateRestoredPage = (event: PageTransitionEvent): void => {
+      if (event.persisted) window.location.reload();
+    };
+    window.addEventListener("pageshow", revalidateRestoredPage);
+    return () => window.removeEventListener("pageshow", revalidateRestoredPage);
+  }, []);
   const section = pathname.startsWith("/inventory") ? "Inventory" :
     pathname.startsWith("/recipes") ? "Recipes" :
     pathname.startsWith("/account") ? "Account" : "Assistant Chat";

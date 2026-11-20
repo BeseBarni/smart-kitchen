@@ -1,7 +1,9 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
+import { useSearchParams } from "next/navigation";
+import { Suspense, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
@@ -15,10 +17,19 @@ const formSchema = z.object({
 });
 type FormValues = z.infer<typeof formSchema>;
 
+function GoogleSignInError(): React.JSX.Element | null {
+  const searchParams = useSearchParams();
+  return searchParams.get("error") === "google"
+    ? <p role="alert" className="text-body-sm text-destructive">Google sign-in failed. Please try again.</p>
+    : null;
+}
+
 export function AccountForm(): React.JSX.Element {
+  const client = useQueryClient();
   const [signup, setSignup] = useState(false);
   const [message, setMessage] = useState("");
   const [failure, setFailure] = useState("");
+  const [googlePending, setGooglePending] = useState(false);
   const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<FormValues>({
     resolver: zodResolver(signup ? formSchema : formSchema.extend({ name: z.string() })),
     defaultValues: { name: "", email: "", password: "" },
@@ -38,9 +49,36 @@ export function AccountForm(): React.JSX.Element {
         setFailure(result.error.message ?? "Authentication failed.");
       } else if (signup && !result.data?.token) {
         setMessage("Account created. Check your email if verification is required, then sign in.");
+      } else {
+        const session = await authClient.getSession();
+        if (session.error) {
+          setFailure(session.error.message ?? "Could not verify your session.");
+        } else if (!session.data?.user) {
+          setFailure("Could not verify your session. Please try signing in again.");
+        } else {
+          client.clear();
+          window.location.replace("/chat");
+        }
       }
     } catch (error) {
       setFailure(error instanceof Error ? error.message : "Authentication request failed.");
+    }
+  };
+  const signInWithGoogle = async (): Promise<void> => {
+    setFailure("");
+    setMessage("");
+    setGooglePending(true);
+    try {
+      const result = await authClient.signIn.social({
+        provider: "google",
+        callbackURL: `${window.location.origin}/chat`,
+        errorCallbackURL: `${window.location.origin}/auth/sign-in?error=google`,
+      });
+      if (result.error) setFailure(result.error.message ?? "Google sign-in failed.");
+    } catch (error) {
+      setFailure(error instanceof Error ? error.message : "Google sign-in failed.");
+    } finally {
+      setGooglePending(false);
     }
   };
   return (
@@ -53,9 +91,13 @@ export function AccountForm(): React.JSX.Element {
       <label className="block space-y-1 text-body-md">Password<Input className="h-11" type="password" autoComplete={signup ? "new-password" : "current-password"} {...register("password")} /></label>
       {errors.password && <p role="alert" className="text-body-sm text-destructive">{errors.password.message}</p>}
       {failure && <p role="alert" className="text-body-sm text-destructive">{failure}</p>}
+      {!failure && <Suspense><GoogleSignInError /></Suspense>}
       {message && <p role="status" className="text-body-sm">{message}</p>}
-      <Button className="h-12 w-full" type="submit" disabled={isSubmitting}>{isSubmitting ? "Please wait..." : signup ? "Create account" : "Sign in"}</Button>
-      <Button className="h-11 w-full" type="button" variant="outline" onClick={() => { setSignup(!signup); setFailure(""); setMessage(""); }}>
+      <Button className="h-12 w-full" type="submit" disabled={isSubmitting || googlePending}>{isSubmitting ? "Please wait..." : signup ? "Create account" : "Sign in"}</Button>
+      <Button className="h-11 w-full" type="button" variant="outline" disabled={isSubmitting || googlePending} onClick={() => void signInWithGoogle()}>
+        {googlePending ? "Connecting to Google..." : "Continue with Google"}
+      </Button>
+      <Button className="h-11 w-full" type="button" variant="outline" disabled={isSubmitting || googlePending} onClick={() => { setSignup(!signup); setFailure(""); setMessage(""); }}>
         {signup ? "Already have an account? Sign in" : "New here? Create an account"}
       </Button>
     </form>
