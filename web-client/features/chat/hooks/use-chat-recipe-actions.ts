@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type Dispatch, type SetStateAction } from "react";
+import { useEffect, useState, type Dispatch, type SetStateAction } from "react";
 import type { CreateRecipeInput } from "@app/modules/schemas";
 import { toast } from "sonner";
 import { useRecipeMutations, useRecipes } from "@/features/recipes";
@@ -12,8 +12,6 @@ export type ChatRecipeActionsState = {
   showSave: boolean;
   savePending: boolean;
   saveDisabled: boolean;
-  saveError: Error | null;
-  lookupError: Error | null;
   save: () => void;
   existingId: string | null;
   quantity: string;
@@ -22,13 +20,15 @@ export type ChatRecipeActionsState = {
   setLocation: Dispatch<SetStateAction<StorageLocation>>;
   cookPending: boolean;
   cookDisabled: boolean;
-  cookError: Error | null;
   cook: (id: string) => void;
 };
 
 export function useChatRecipeActions({ recipe, status, canSave }: RecipeDirective): ChatRecipeActionsState {
   const { create, cookAndStock } = useRecipeMutations();
   const savedRecipes = useRecipes({ search: recipe.title, limit: 100 });
+  useEffect(() => {
+    if (savedRecipes.error) toast.error("Could not check saved recipes. Please try again.", { id: "chat-recipe-lookup-error" });
+  }, [savedRecipes.error]);
   const [savedId, setSavedId] = useState<string | null>(recipe.id ?? null);
   const [location, setLocation] = useState<StorageLocation>("fridge");
   const [quantity, setQuantity] = useState(String(recipe.servings));
@@ -53,9 +53,10 @@ export function useChatRecipeActions({ recipe, status, canSave }: RecipeDirectiv
     showSave: canSave && status === "draft" && !existingId,
     savePending: create.isPending,
     saveDisabled: create.isPending || savedRecipes.isPending || savedRecipes.isError,
-    saveError: create.error,
-    lookupError: savedRecipes.error,
-    save: () => create.mutate(createInput, { onSuccess: (saved) => { setSavedId(saved.id); toast.success("Recipe saved."); } }),
+    save: () => create.mutate(createInput, {
+      onSuccess: (saved) => { setSavedId(saved.id); toast.success("Recipe saved."); },
+      onError: () => toast.error("Could not save this recipe. Please try again."),
+    }),
     existingId,
     quantity,
     setQuantity,
@@ -63,7 +64,9 @@ export function useChatRecipeActions({ recipe, status, canSave }: RecipeDirectiv
     setLocation,
     cookPending: cookAndStock.isPending,
     cookDisabled: cookAndStock.isPending || !Number.isFinite(parsedQuantity) || parsedQuantity <= 0,
-    cookError: cookAndStock.error,
-    cook: (id: string) => cookAndStock.mutate({ id, input: { batches: [{ storageLocation: location, quantity: parsedQuantity, unit: "portions" }] } }, { onSuccess: () => toast.success("Recipe cooked and added to inventory.") }),
+    cook: (id: string) => cookAndStock.mutate({ id, input: { batches: [{ storageLocation: location, quantity: parsedQuantity, unit: "portions" }] } }, {
+      onSuccess: () => toast.success("Recipe cooked and added to inventory."),
+      onError: () => toast.error("Could not stock this recipe. Please try again."),
+    }),
   };
 }

@@ -47,8 +47,6 @@ function ConversationTitleEditor({
         <Button type="button" variant="outline" className="h-11" disabled={disabled || !title.trim() || updateTitle.isPending} onClick={rename}>Rename</Button>
         <Button type="button" variant="destructive" className="h-11" disabled={disabled || remove.isPending} onClick={deleteConversation}>Delete</Button>
       </div>
-      {updateTitle.isError && <p role="alert" className="text-label-md text-destructive">Could not rename this conversation: {updateTitle.error.message}</p>}
-      {remove.isError && <p role="alert" className="text-label-md text-destructive">Could not delete this conversation: {remove.error.message}</p>}
     </>
   );
 }
@@ -66,7 +64,7 @@ export function ConversationSwitcher({
 }): React.JSX.Element {
   const [open, setOpen] = useState(false);
   const [shoppingOpen, setShoppingOpen] = useState(false);
-  const { data: conversations = [], isPending, isError } = useConversations();
+  const { data: conversations = [], isPending, isError, refetch } = useConversations();
   const active = conversations.find((conversation) => conversation.id === activeId);
 
   return (
@@ -96,7 +94,7 @@ export function ConversationSwitcher({
         <section aria-label="Recent conversations" className="flex-1 space-y-2 overflow-y-auto p-3">
           <h2 className="px-2 text-label-sm uppercase tracking-wide text-muted-foreground">Recent conversations</h2>
           {isPending && <p role="status" className="px-2 text-body-sm">Loading conversations...</p>}
-          {isError && <p role="alert" className="px-2 text-label-md text-destructive">Could not load conversations.</p>}
+          {isError && <Button type="button" variant="outline" className="h-11" onClick={() => void refetch()}>Retry loading conversations</Button>}
           {conversations.map((conversation) => (
             <button key={conversation.id} type="button" disabled={disabled} aria-current={conversation.id === activeId ? "true" : undefined}
               onClick={() => { onSelect(conversation.id); setOpen(false); }}

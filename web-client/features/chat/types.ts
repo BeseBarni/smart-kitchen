@@ -9,7 +9,7 @@ export interface ChatMessage {
   role: "user" | "assistant";
   text: string;
   createdAt: string;
-  rejectionReason?: string;
+  rejected?: boolean;
 }
 
 export interface ChatToolStep {

@@ -8,8 +8,6 @@ export function ChatRecipeActions({ actions }: { actions: ChatRecipeActionsState
   return (
     <div className="space-y-2">
       {actions.showSave && <Button type="button" className="h-11 w-full" disabled={actions.saveDisabled} onClick={actions.save}><BookmarkPlus aria-hidden="true" />{actions.savePending ? "Saving..." : "Save recipe"}</Button>}
-      {actions.lookupError && <p role="alert" className="text-destructive">Could not check saved recipes: {actions.lookupError.message}</p>}
-      {actions.saveError && <p role="alert" className="text-destructive">Could not save this recipe: {actions.saveError.message}</p>}
       {actions.existingId && (
         <div className="space-y-2 rounded-xl bg-muted p-3">
           <h3 className="text-title-sm">Cook and stock</h3>
@@ -21,7 +19,6 @@ export function ChatRecipeActions({ actions }: { actions: ChatRecipeActionsState
             }} className="h-11 w-full rounded-lg border bg-card px-3"><option value="fridge">Fridge</option><option value="freezer">Freezer</option><option value="pantry">Pantry</option></select></label>
           </div>
           <Button type="button" className="h-11 w-full" disabled={actions.cookDisabled} onClick={() => { if (actions.existingId) actions.cook(actions.existingId); }}><CookingPot aria-hidden="true" />{actions.cookPending ? "Stocking..." : "Cook & stock"}</Button>
-          {actions.cookError && <p role="alert" className="text-destructive">Could not stock this recipe: {actions.cookError.message}</p>}
         </div>
       )}
     </div>

@@ -21,14 +21,12 @@ export function useChatStream(
   toolSteps: ChatToolStep[];
   activeStatus: ChatTurn["activeStatus"];
   isStreaming: boolean;
-  error: string | null;
   sendMessage: (text: string) => Promise<void>;
   stopStreaming: () => void;
 } {
   const queryClient = useQueryClient();
   const [turn, setTurn] = useState<ChatTurn | null>(null);
   const [isStreaming, setIsStreaming] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const controller = useRef<AbortController | null>(null);
   const addRejectedTurn = useChatUiStore((state) => state.addRejectedTurn);
 
@@ -36,13 +34,12 @@ export function useChatStream(
     const message = value.trim();
     if (!message) return;
     if (controller.current) {
-      setError("A response is already streaming.");
+      toast.error("A response is already streaming.");
       return;
     }
     const abortController = new AbortController();
     controller.current = abortController;
     let activeConversationId = conversationId;
-    setError(null);
     const newTurn: ChatTurn = {
       id: crypto.randomUUID(),
       userMessage: {
@@ -149,7 +146,7 @@ export function useChatStream(
             }
           } else if (event.type === "error") {
             setTurn((current) => current ? { ...current, activeStatus: null } : current);
-            setError(event.message);
+            toast.error(event.message);
           } else if (event.type === "turn_completed") {
             activeConversationId = event.conversationId;
             onConversationId(event.conversationId);
@@ -163,11 +160,12 @@ export function useChatStream(
           (reason === "off_topic" || reason === "unsafe_kitchen")) {
           addRejectedTurn(activeConversationId, {
             ...newTurn,
-            userMessage: { ...newTurn.userMessage, rejectionReason: cause.message },
+            userMessage: { ...newTurn.userMessage, rejected: true },
           });
-        } else {
-          setError(cause instanceof Error ? cause.message : "The response could not be completed.");
         }
+        toast.error(cause instanceof ApiClientError && cause.code !== "INTERNAL_ERROR"
+          ? cause.message
+          : "The response could not be completed. Please try again.");
         abortController.abort();
       }
     } finally {
@@ -197,7 +195,6 @@ export function useChatStream(
     toolSteps: turn?.toolSteps ?? [],
     activeStatus: turn?.activeStatus ?? null,
     isStreaming,
-    error,
     sendMessage,
     stopStreaming,
   };

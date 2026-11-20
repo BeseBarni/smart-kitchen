@@ -1,7 +1,7 @@
 "use client";
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { Toaster } from "sonner";
 
 export function AppProviders({ children }: { children: ReactNode }): React.JSX.Element {
@@ -11,10 +11,16 @@ export function AppProviders({ children }: { children: ReactNode }): React.JSX.E
       mutations: { retry: 0 },
     },
   }));
+  useEffect(() => {
+    if ("serviceWorker" in navigator) {
+      void navigator.serviceWorker.register("/sw.js", { scope: "/", updateViaCache: "none" })
+        .catch((error: unknown) => console.error("Service worker registration failed:", error));
+    }
+  }, []);
   return (
     <QueryClientProvider client={queryClient}>
       {children}
-      <Toaster />
+      <Toaster position="top-right" mobileOffset={{ top: "max(1rem, env(safe-area-inset-top))", right: "1rem", left: "1rem" }} />
     </QueryClientProvider>
   );
 }

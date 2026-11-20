@@ -37,8 +37,10 @@ loading external images.
 The UI follows the PrepPilot Meal Assistant PWA Stitch project. Its narrative
 design-system colors take precedence over the conflicting rendered screen
 palette. The neutral app icon is a local placeholder, not an official logo.
-The manifest supports standalone installation on compatible browsers; offline
-support is not provided.
+Install PrepPilot using the browser's install or add-to-home-screen option on
+localhost or HTTPS. After the first online visit, offline navigation shows a
+reconnection page. Conversations, recipes, inventory, and API responses are
+not cached or available offline.
 
 Run `pnpm typecheck` and `pnpm --filter @app/web-client build` from the root.
 

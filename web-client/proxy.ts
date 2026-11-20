@@ -34,5 +34,5 @@ export default async function proxy(request: NextRequest): Promise<NextResponse>
 }
 
 export const config = {
-  matcher: ["/((?!api(?:/|$)|_next/static|_next/image|favicon.ico|manifest.webmanifest|icons/|recipes/.*\\.).*)"],
+  matcher: ["/((?!api(?:/|$)|_next/static|_next/image|favicon.ico|manifest.webmanifest|sw\\.js$|offline\\.html$|icons/|recipes/.*\\.).*)"],
 };

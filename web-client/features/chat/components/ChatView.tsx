@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef } from "react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ConversationSwitcher } from "./ConversationSwitcher";
@@ -21,17 +22,24 @@ const promptText: Record<QuickPrompt["id"], string> = {
 };
 
 export function ChatView(): React.JSX.Element {
-  const { data: conversations = [], isPending: conversationsPending } = useConversations();
+  const { data: conversations = [], isPending: conversationsPending, error: conversationsError } = useConversations();
   const activeConversationId = useChatUiStore((state) => state.activeConversationId);
   const setActiveConversationId = useChatUiStore((state) => state.setActiveConversationId);
   const draft = useChatUiStore((state) => state.draft);
   const setDraft = useChatUiStore((state) => state.setDraft);
   const rejectedTurns = useChatUiStore((state) => state.rejectedTurns);
   const initializedSelection = useRef(false);
-  const { data: history, isPending, isError, refetch } = useConversationHistory(activeConversationId);
+  const { data: history, isPending, isError, error: historyError, refetch } = useConversationHistory(activeConversationId);
   const { create } = useConversationMutations();
   const onConversationId = useCallback((id: string) => setActiveConversationId(id), [setActiveConversationId]);
   const stream = useChatStream(activeConversationId, onConversationId);
+
+  useEffect(() => {
+    if (conversationsError) toast.error("Could not load conversations. Please try again.", { id: "conversations-error" });
+  }, [conversationsError]);
+  useEffect(() => {
+    if (historyError) toast.error("Could not load this conversation. Please try again.", { id: "conversation-history-error" });
+  }, [historyError]);
 
   useEffect(() => {
     if (initializedSelection.current || conversationsPending) return;
@@ -71,14 +79,12 @@ export function ChatView(): React.JSX.Element {
         onCreate={createConversation}
         disabled={stream.isStreaming || create.isPending}
       />
-      {create.isError && <p role="alert" className="py-2 text-label-md text-destructive">Could not create a conversation: {create.error.message}</p>}
       {isPending && activeConversationId ? (
         <div role="status" aria-label="Loading conversation" className="space-y-3 pt-4">
           <Skeleton className="ml-auto h-20 w-3/4" /><Skeleton className="h-36 w-5/6" /><Skeleton className="h-32 w-5/6" />
         </div>
       ) : isError ? (
-        <div role="alert" className="space-y-3 py-8 text-body-md">
-          <p>Could not load this conversation.</p>
+        <div className="space-y-3 py-8 text-body-md">
           <Button type="button" className="h-11" onClick={() => void refetch()}>Try again</Button>
         </div>
       ) : (
@@ -92,7 +98,6 @@ export function ChatView(): React.JSX.Element {
           )}
         </>
       )}
-      {stream.error && <p role="alert" className="fixed bottom-[calc(8rem+env(safe-area-inset-bottom,0px))] z-30 mx-margin max-w-[390px] rounded-lg bg-destructive p-3 text-label-md text-destructive-foreground">{stream.error}</p>}
       <ChatComposer
         draft={draft}
         streaming={stream.isStreaming}

@@ -56,3 +56,15 @@ test("saved recipe cards show stocking controls without another save action", ()
 test("preserves completed text-only messages", () => {
   assert.ok(render(false, false).includes("secret test ingredient"));
 });
+
+test("shows a rejected message without displaying an error in the conversation", () => {
+  const rejected = turn(false);
+  rejected.userMessage = {
+    id: "rejected", role: "user", text: "My message", createdAt: "2026-01-01T10:00:00Z", rejected: true,
+  };
+  rejected.assistantMessage.text = "";
+  const markup = renderToStaticMarkup(<QueryClientProvider client={new QueryClient()}><ChatMessageList turns={[rejected]} activeStatus={null} onReply={() => {}} streaming={false} /></QueryClientProvider>);
+  assert.match(markup, /My message/);
+  assert.match(markup, /Message rejected/);
+  assert.doesNotMatch(markup, /role="alert"/);
+});

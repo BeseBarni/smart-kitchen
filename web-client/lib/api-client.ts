@@ -52,12 +52,22 @@ function createApiClientError(status: number, body: unknown): ApiClientError {
 }
 
 export async function throwApiResponseError(response: Response): Promise<never> {
-  throw createApiClientError(response.status, await response.json());
+  throw createApiClientError(response.status, await readErrorBody(response));
+}
+
+async function readErrorBody(response: Response): Promise<unknown> {
+  try {
+    return await response.json();
+  } catch (error) {
+    if (error instanceof SyntaxError) return undefined;
+    throw error;
+  }
 }
 
 export async function unwrapApiResponse<T>(response: Response, schema: z.ZodType<T>): Promise<T> {
+  if (!response.ok) await throwApiResponseError(response);
   const body: unknown = await response.json();
-  if (!response.ok || isApiErrorBody(body)) {
+  if (isApiErrorBody(body)) {
     throw createApiClientError(response.status, body);
   }
   return schema.parse(body);
