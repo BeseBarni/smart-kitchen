@@ -2,7 +2,7 @@ import { z } from "zod";
 import { err, ok, type AppError, type Result } from "@app/shared";
 import { generateStructuredMultimodal } from "../core/llm.client";
 import type { SkillRun } from "./skill.types";
-import { estimatedMacrosPerUnitSchema, type ConversationStreamInput } from "@app/modules/schemas";
+import { estimatedMacrosPerUnitSchema, generatedShelfLifeDaysSchema, type ConversationStreamInput } from "@app/modules/schemas";
 
 const confidenceSchema = z.enum(["high", "medium", "low"]);
 const suggestedTagSchema = z.object({
@@ -10,12 +10,6 @@ const suggestedTagSchema = z.object({
   label: z.string().min(1),
   category: z.enum(["dietary", "nutrition", "prep", "flavor", "custom"]).optional(),
 }).strict();
-const shelfLifeSchema = z.object({
-  fridge: z.number().int().positive().nullable().optional(),
-  freezer: z.number().int().positive().nullable().optional(),
-  pantry: z.number().int().positive().nullable().optional(),
-}).strict();
-
 export const visionExtractorInputSchema = z
   .object({
     images: z.array(z.object({
@@ -44,12 +38,13 @@ export const visionExtractorOutputSchema = z.discriminatedUnion("kind", [
       unitPrice: z.number().nonnegative().nullable(),
       suggestedStorageLocation: z.enum(["fridge", "freezer", "pantry"]),
       estimatedShelfLifeDays: z.number().positive().nullable(),
+      expiresAt: z.iso.datetime().nullable().describe("Explicitly visible, unambiguous expiration timestamp, or null; never infer a label date."),
       estimatedMacrosPerUnit: estimatedMacrosPerUnitSchema.nullable()
         .describe("Estimated nutrition for exactly one of the line item's quantity units, or null if not reasonably estimable."),
       isFoodItem: z.boolean(),
       confidence: confidenceSchema,
       suggestedTags: z.array(suggestedTagSchema).max(3).optional(),
-      shelfLifeDays: shelfLifeSchema.optional(),
+      shelfLifeDays: generatedShelfLifeDaysSchema,
     }).strict()),
     ambiguities: z.array(z.string()),
   }).strict(),
@@ -70,7 +65,7 @@ export const visionExtractorOutputSchema = z.discriminatedUnion("kind", [
     }).strict(),
     confidence: confidenceSchema,
     suggestedTags: z.array(suggestedTagSchema).max(3).optional(),
-    shelfLifeDays: shelfLifeSchema.optional(),
+    shelfLifeDays: generatedShelfLifeDaysSchema,
   }).strict(),
   z.object({
     kind: z.literal("ingredients_or_fridge"),
@@ -80,9 +75,10 @@ export const visionExtractorOutputSchema = z.discriminatedUnion("kind", [
       estimatedQuantity: z.number().positive(),
       unit: z.string(),
       freshnessHint: z.string().nullable(),
+      expiresAt: z.iso.datetime().nullable().describe("Explicitly visible, unambiguous expiration timestamp, or null; never infer a label date."),
       confidence: confidenceSchema,
       suggestedTags: z.array(suggestedTagSchema).max(3).optional(),
-      shelfLifeDays: shelfLifeSchema.optional(),
+      shelfLifeDays: generatedShelfLifeDaysSchema,
     }).strict()),
   }).strict(),
   z.object({
@@ -129,6 +125,8 @@ function prompt(input: z.output<typeof visionExtractorInputSchema>): string {
     "Exclude bags, toiletries, cleaning supplies, and other non-food rows from receipt import.",
     "For each identifiable food receipt row, estimate calories, protein, carbs, fat and fiber per ONE of its stated quantity units, not per 100g or per entire purchase unless that is the unit. For example, for grams divide typical per-100g nutrition by 100. Use null for values that cannot be reasonably estimated, especially when package size is unknown. These are estimates, not label measurements.",
     "Estimate prepared-dish portion macros conservatively and distinguish visible ingredients from likely hidden staples.",
+    "For every detected food or prepared dish provide conservative shelfLifeDays estimates in days for fridge, freezer, and pantry. Use null for unsuitable or unknown storage methods; estimates are not proof of freshness or safety. For receipt rows estimatedShelfLifeDays must match the suggested storage method.",
+    "Only provide expiresAt when an unambiguous expiration date is explicitly visible; otherwise use null. Never guess a printed date or use a purchase date as an expiry.",
     "</rules>",
     `<context>Caption: ${input.userCaption ?? "No caption was provided."}\nLocale: ${input.userLocale}\nCurrency: ${input.defaultCurrency}</context>`,
     "<output_format>Return exactly the structured VisionExtractionResultSchema JSON. Use null for unsupported or illegible values.</output_format>",

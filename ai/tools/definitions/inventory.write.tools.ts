@@ -1,5 +1,5 @@
 import { inventoryService } from "@app/modules";
-import { batchCreateInventoryInputSchema, batchCreateInventoryOutputSchema, inventoryItemSchema, mealLogSchema, type InventoryItemDto } from "@app/modules";
+import { batchCreateInventoryInputSchema, batchCreateInventoryOutputSchema, generatedShelfLifeDaysSchema, inventoryItemSchema, mealLogSchema, type InventoryItemDto } from "@app/modules";
 import { z } from "zod";
 import { defineTool } from "./tool.types";
 
@@ -22,7 +22,7 @@ const addInput = z.object({
   remainingQuantity: z.number().nonnegative().describe("Quantity currently available."),
   unit: z.string().min(1).describe("Quantity unit."),
   preparedAt: z.iso.datetime().nullable().describe("Preparation time or null."),
-  expiresAt: z.iso.datetime().nullable().describe("Expiry time or null."),
+  expiresAt: z.iso.datetime().nullable().describe("Known label or user-provided expiry time; null to estimate from shelf life."),
   imageUrl: z.string().url().nullable().describe("Image URL or null."),
   caloriesPerUnit: z.number().nonnegative().nullable().describe("Calories per unit or null."),
   proteinPerUnit: z.number().nonnegative().nullable().describe("Protein grams per unit or null."),
@@ -36,11 +36,7 @@ const addInput = z.object({
     label: z.string().min(1).describe("Tag label."),
     category: z.enum(["dietary", "nutrition", "prep", "flavor", "custom"]).optional(),
   }).strict()).max(3).optional().describe("Max three attribute chips; existing slugs are preferred."),
-  shelfLifeDays: z.object({
-    fridge: z.number().int().positive().nullable().optional(),
-    freezer: z.number().int().positive().nullable().optional(),
-    pantry: z.number().int().positive().nullable().optional(),
-  }).strict().optional().describe("Typical days by storage method; use null for unsuitable methods."),
+  shelfLifeDays: generatedShelfLifeDaysSchema,
 }).strict().refine(
   (value) => value.itemType !== "meal_prep" || value.fiberPerUnit != null,
   { message: "Fiber per unit is required for prepared meals." },
@@ -115,7 +111,11 @@ export const inventoryConsumeTool = defineTool({
 export const inventoryAddBatchTool = defineTool({
   name: "inventory_add_batch",
   description: "Atomically add confirmed receipt or photo items to inventory after the user reviewed them.",
-  inputSchema: batchCreateInventoryInputSchema,
+  inputSchema: batchCreateInventoryInputSchema.extend({
+    items: batchCreateInventoryInputSchema.shape.items.element.extend({
+      shelfLifeDays: generatedShelfLifeDaysSchema,
+    }).array().min(1).max(100),
+  }),
   outputSchema: batchCreateInventoryOutputSchema,
   annotations: { destructiveHint: false, idempotentHint: false },
   invalidateDomains: ["inventory"],

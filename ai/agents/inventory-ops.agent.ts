@@ -26,6 +26,7 @@ export const inventoryOpsAgent: SubAgent = {
         "Stay within kitchen inventory, meal logging, and cooking-and-stocking tasks.",
         "Before assigning chips, call tags_list_available and strongly prefer existing canonical or user slugs.",
         "Maximum three attribute tags plus one item-type chip. Always provide realistic fridge/freezer/pantry shelfLifeDays with null where unsuitable.",
+        "Shelf lives are estimates from fresh purchase or preparation, not safety guarantees. Give a known label or user-provided expiry when available; otherwise use null so the service estimates it. Do not invent a purchase or preparation date.",
       ].join("\n"),
     }),
 };

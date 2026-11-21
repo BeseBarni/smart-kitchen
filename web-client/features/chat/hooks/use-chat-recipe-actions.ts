@@ -24,17 +24,8 @@ export type ChatRecipeActionsState = {
   cook: (id: string) => void;
 };
 
-export function useChatRecipeActions({ recipe, status, canSave }: RecipeDirective): ChatRecipeActionsState {
-  const { create, cookAndStock } = useRecipeMutations();
-  const savedRecipes = useRecipes({ search: recipe.title, limit: 100 });
-  useEffect(() => {
-    if (savedRecipes.error) toast.error(getText("chat.savedRecipeLookupError"), { id: "chat-recipe-lookup-error" });
-  }, [savedRecipes.error]);
-  const [savedId, setSavedId] = useState<string | null>(recipe.id ?? null);
-  const [location, setLocation] = useState<StorageLocation>("fridge");
-  const [quantity, setQuantity] = useState(String(recipe.servings));
-  const existingId = savedId ?? savedRecipes.data?.find((saved) => saved.title === recipe.title)?.id ?? null;
-  const createInput: CreateRecipeInput = {
+export function recipeDraftCreateInput(recipe: RecipeDirective["recipe"]): CreateRecipeInput {
+  return {
     title: recipe.title, description: recipe.description, instructions: recipe.instructions,
     imageUrl: recipe.imageUrl ?? null, prepTimeMin: recipe.prepTimeMin ?? null, cookTimeMin: recipe.cookTimeMin ?? null, servings: recipe.servings,
     isFreezerFriendly: recipe.isFreezerFriendly ?? false, source: "ai_skill",
@@ -49,7 +40,22 @@ export function useChatRecipeActions({ recipe, status, canSave }: RecipeDirectiv
     fiberPerServing: recipe.fiberPerServing ?? null,
     costPerServing: recipe.currency ? recipe.costPerServing ?? null : null,
     currency: recipe.currency ?? "USD",
+    shelfLifeDays: recipe.shelfLifeDays,
+    tags: recipe.tags,
   };
+}
+
+export function useChatRecipeActions({ recipe, status, canSave }: RecipeDirective): ChatRecipeActionsState {
+  const { create, cookAndStock } = useRecipeMutations();
+  const savedRecipes = useRecipes({ search: recipe.title, limit: 100 });
+  useEffect(() => {
+    if (savedRecipes.error) toast.error(getText("chat.savedRecipeLookupError"), { id: "chat-recipe-lookup-error" });
+  }, [savedRecipes.error]);
+  const [savedId, setSavedId] = useState<string | null>(recipe.id ?? null);
+  const [location, setLocation] = useState<StorageLocation>("fridge");
+  const [quantity, setQuantity] = useState(String(recipe.servings));
+  const existingId = savedId ?? savedRecipes.data?.find((saved) => saved.title === recipe.title)?.id ?? null;
+  const createInput = recipeDraftCreateInput(recipe);
   const parsedQuantity = Number(quantity);
   return {
     showSave: canSave && status === "draft" && !existingId,

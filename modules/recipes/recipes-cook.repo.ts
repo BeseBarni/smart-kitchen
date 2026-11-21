@@ -1,5 +1,6 @@
 import { getDatabase, inventoryItems, inventoryItemTags, recipeTags, recipes } from "@app/db";
 import { and, eq } from "drizzle-orm";
+import { estimatedExpiry } from "@app/shared";
 import type { CookRecipeInput } from "./recipes.schema";
 
 export async function cookRecipeRows(
@@ -17,7 +18,9 @@ export async function cookRecipeRows(
       userId, name: recipe.title, itemType: "meal_prep" as const, recipeId,
       storageLocation: batch.storageLocation, initialQuantity: String(batch.quantity),
       remainingQuantity: String(batch.quantity), unit: batch.unit ?? "portion",
-      preparedAt: preparedDate, expiresAt: batch.expiresAt ? new Date(batch.expiresAt) : null,
+      preparedAt: preparedDate, expiresAt: batch.expiresAt
+        ? new Date(batch.expiresAt)
+        : estimatedExpiry(recipe.shelfLifeDays ?? undefined, batch.storageLocation, preparedDate),
       imageUrl: recipe.imageUrl, caloriesPerUnit: recipe.caloriesPerServing,
       proteinPerUnit: recipe.proteinPerServing, carbsPerUnit: recipe.carbsPerServing,
       fatPerUnit: recipe.fatPerServing, fiberPerUnit: recipe.fiberPerServing,

@@ -1,4 +1,4 @@
-import { err, ok, type AppError, type Result } from "@app/shared";
+import { err, estimatedExpiry, ok, type AppError, type Result } from "@app/shared";
 import { requireAuthUser } from "../shared/user.service";
 import { numericToNumber } from "../shared/numeric";
 import { getById as getIngredientById } from "../ingredients/ingredients.service";
@@ -161,7 +161,10 @@ export async function create(
   if (validationError) return err(validationError);
   const user = await requireAuthUser(userId);
   if (!user.success) return user;
-  const row = await insertInventoryItem(userId, input);
+  const expiry = input.expiresAt ?? estimatedExpiry(
+    input.shelfLifeDays, input.storageLocation, input.preparedAt ? new Date(input.preparedAt) : new Date(),
+  )?.toISOString() ?? null;
+  const row = await insertInventoryItem(userId, { ...input, expiresAt: expiry });
   if (!row) return err({ code: "INTERNAL_ERROR", message: "Item was not created." });
   const resolved = await resolveOrCreateTags(userId, input.tags ?? []);
   if (!resolved.success) return err(resolved.error);
@@ -179,7 +182,13 @@ export async function createBatch(
   const user = await requireAuthUser(userId);
   if (!user.success) return user;
   try {
-    const rows = await insertInventoryBatch(userId, input);
+    const now = new Date();
+    const rows = await insertInventoryBatch(userId, {
+      items: input.items.map((item) => ({
+        ...item,
+        expiresAt: item.expiresAt ?? estimatedExpiry(item.shelfLifeDays, item.storageLocation, now)?.toISOString() ?? null,
+      })),
+    });
     const items: InventoryItemDto[] = [];
     for (const [index, row] of rows.entries()) {
       const resolved = await resolveOrCreateTags(userId, input.items[index]?.tags ?? []);

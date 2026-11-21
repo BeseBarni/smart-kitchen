@@ -6,6 +6,7 @@ import type {
   UpdateRecipeInput,
 } from "@app/modules/schemas";
 import type { QueryClient } from "@tanstack/react-query";
+import { estimatedExpiry } from "@app/shared";
 import { inventoryKeys } from "@/features/inventory";
 import type { InventorySummary } from "@/features/inventory";
 import { createOptimisticId } from "@/lib/optimistic";
@@ -144,7 +145,9 @@ export function insertCookedBatches(
     remainingQuantity: batch.quantity,
     unit: batch.unit ?? "portions",
     preparedAt: input.preparedAt ?? now,
-    expiresAt: batch.expiresAt ?? null,
+    expiresAt: batch.expiresAt ?? estimatedExpiry(
+      recipe.shelfLifeDays, batch.storageLocation, new Date(input.preparedAt ?? now),
+    )?.toISOString() ?? null,
     imageUrl: recipe.imageUrl,
     caloriesPerUnit: recipe.caloriesPerServing,
     proteinPerUnit: recipe.proteinPerServing,

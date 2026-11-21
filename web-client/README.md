@@ -33,6 +33,12 @@ estimates are not label measurements. When a user reports eating a clearly
 identified amount of tracked food, chat deducts it and records a meal together;
 ambiguous items or amounts require clarification. Unknown fiber does not block
 chat consumption and remains unknown in the meal log.
+AI-generated ingredients and recipes include estimated shelf life by storage
+method when reasonably known. New inventory and cooked batches use an explicit
+expiry date when supplied; otherwise they estimate it from the selected storage
+method and preparation time (or the time the item is recorded). Estimates assume
+fresh food and proper storage, are not safety guarantees, and do not update
+existing records. Unsuitable or unknown storage methods remain unknown.
 The shopping list requires the latest database migration;
 review and apply it to the target database before using the feature.
 

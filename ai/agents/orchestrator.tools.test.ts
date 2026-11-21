@@ -77,5 +77,10 @@ test("meal prep skill output becomes a complete recipe card", () => {
   assert.deepEqual(directive.recipe.instructions, ["Forrald ossze.", "Hutes utan alaposan melegitsd at."]);
   assert.equal(directive.recipe.proteinPerServing, 15);
   assert.equal(directive.recipe.currency, "USD");
-  assert.equal(uiDirectiveSchema.safeParse(directive).success, true);
+  const parsed = uiDirectiveSchema.parse(directive);
+  assert.equal(parsed.component, "recipe_preview_card");
+  if (parsed.component === "recipe_preview_card") {
+    assert.deepEqual(parsed.recipe.shelfLifeDays, { fridge: 3, freezer: 60, pantry: null });
+    assert.deepEqual(parsed.recipe.tags, directive.recipe.tags);
+  }
 });

@@ -1,4 +1,4 @@
-import { chatJsonValueSchema, estimatedMacrosPerUnitSchema } from "@app/modules";
+import { chatJsonValueSchema, estimatedMacrosPerUnitSchema, generatedShelfLifeDaysSchema } from "@app/modules";
 import { z } from "zod";
 import { defineTool, toolOk } from "./tool.types";
 
@@ -19,6 +19,7 @@ const recipeDraft = z.object({
   fiberPerServing: z.number().nonnegative().describe("Estimated fiber grams per serving."),
   costPerServing: z.number().nullable().optional().describe("Cost per serving."),
   currency: z.string().optional().describe("Currency code."),
+  shelfLifeDays: generatedShelfLifeDaysSchema,
 }).strict();
 
 export const presentRecipeDraftTool = defineTool({
@@ -89,6 +90,8 @@ const receiptImportSchema = z.object({
     priceAmount: z.number().nonnegative().nullable(),
     storageLocation: z.enum(["fridge", "freezer", "pantry"]),
     estimatedShelfLifeDays: z.number().positive().nullable(),
+    expiresAt: z.iso.datetime().nullable().describe("Explicitly known expiry, or null."),
+    shelfLifeDays: generatedShelfLifeDaysSchema,
     estimatedMacrosPerUnit: estimatedMacrosPerUnitSchema.nullable().optional()
       .describe("Estimated nutrition per quantity unit, if available."),
     isFoodItem: z.boolean(),

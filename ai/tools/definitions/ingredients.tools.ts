@@ -1,4 +1,4 @@
-import { ingredientService, createIngredientSchema } from "@app/modules";
+import { ingredientService, createIngredientSchema, generatedShelfLifeDaysSchema } from "@app/modules";
 import { z } from "zod";
 import { defineTool } from "./tool.types";
 
@@ -15,7 +15,7 @@ export const ingredientsSearchTool = defineTool({
 export const ingredientsCreateTool = defineTool({
   name: "ingredients_create",
   description: "Add a catalog ingredient only when a matching ingredient is not already present.",
-  inputSchema: createIngredientSchema.strict(),
+  inputSchema: createIngredientSchema.extend({ shelfLifeDays: generatedShelfLifeDaysSchema }).strict(),
   annotations: { destructiveHint: false, idempotentHint: false },
   invalidateDomains: ["ingredients"],
   execute: (input, context) => ingredientService.create(context.userId, input),

@@ -115,6 +115,8 @@ export type UiDirective =
         priceAmount: number | null;
         storageLocation: "fridge" | "freezer" | "pantry";
         estimatedShelfLifeDays: number | null;
+        expiresAt?: string | null;
+        shelfLifeDays?: { fridge?: number | null; freezer?: number | null; pantry?: number | null };
         estimatedMacrosPerUnit?: {
           calories: number | null;
           proteinG: number | null;

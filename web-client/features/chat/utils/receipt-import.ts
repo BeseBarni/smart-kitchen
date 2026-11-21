@@ -13,9 +13,16 @@ export function receiptBatchInput(
       quantity: item.quantity,
       unit: item.unit,
       storageLocation: item.storageLocation,
+      expiresAt: item.expiresAt,
       costPerUnit: item.priceAmount,
       currency: directive.currency,
       estimatedMacrosPerUnit: item.estimatedMacrosPerUnit,
+      shelfLifeDays: item.shelfLifeDays ?? (
+        item.storageLocation === directive.items.find((entry) => entry.tempId === item.tempId)?.storageLocation &&
+        item.estimatedShelfLifeDays != null && Number.isInteger(item.estimatedShelfLifeDays)
+          ? { [item.storageLocation]: item.estimatedShelfLifeDays }
+          : undefined
+      ),
     })),
   };
 }

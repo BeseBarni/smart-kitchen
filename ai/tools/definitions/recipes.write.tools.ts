@@ -6,6 +6,7 @@ import {
   inventoryItemSchema,
   recipeIngredientSchema,
   recipeSchema,
+  generatedShelfLifeDaysSchema,
 } from "@app/modules";
 import type { InventoryItemDto, RecipeDto } from "@app/modules";
 import { z } from "zod";
@@ -34,11 +35,14 @@ export function recipeCard(recipe: RecipeDto) {
     fiberPerServing: recipe.fiberPerServing,
     costPerServing: recipe.costPerServing,
     currency: recipe.currency,
+    shelfLifeDays: recipe.shelfLifeDays,
+    tags: recipe.tags?.map(({ slug, label, category }) => ({ slug, label, category })),
   };
 }
 
 const strictCreateRecipeSchema = createRecipeSchema.extend({
   fiberPerServing: z.number().nonnegative().describe("Fiber grams per serving, estimated when necessary."),
+  shelfLifeDays: generatedShelfLifeDaysSchema,
   ingredients: z.array(
     recipeIngredientSchema
       .omit({ id: true, recipeId: true, linkedIngredient: true })

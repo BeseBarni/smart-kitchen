@@ -29,6 +29,12 @@ export const shelfLifeDaysSchema = z.object({
   pantry: z.number().int().positive().nullable().optional(),
 }).strict().describe("Typical shelf life in days by storage method.");
 
+export const generatedShelfLifeDaysSchema = z.object({
+  fridge: z.number().int().positive().nullable().describe("Estimated refrigerated days, or null if unsuitable or unknown."),
+  freezer: z.number().int().positive().nullable().describe("Estimated frozen days, or null if unsuitable or unknown."),
+  pantry: z.number().int().positive().nullable().describe("Estimated pantry days, or null if unsuitable or unknown."),
+}).strict().describe("Conservative estimates from fresh preparation or purchase, not guarantees of safety.");
+
 export const tagAttributeListSchema = z.array(rawTagSchema).max(3)
   .describe("Up to three attribute chips; item type is an additional fourth chip.");
 

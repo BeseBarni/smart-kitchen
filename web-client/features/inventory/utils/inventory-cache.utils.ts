@@ -7,6 +7,7 @@ import type {
 import { dailyMealSummarySchema } from "@app/modules/schemas";
 import { z } from "zod";
 import type { QueryClient } from "@tanstack/react-query";
+import { estimatedExpiry } from "@app/shared";
 import { createOptimisticId } from "@/lib/optimistic";
 import { inventoryKeys } from "../api/inventory.keys";
 import type { InventoryInput, InventoryListFilters, InventoryUpdate } from "../types";
@@ -45,6 +46,9 @@ export function optimisticInventoryItem(input: InventoryInput): InventoryItemDto
   const now = new Date().toISOString();
   return {
     ...input,
+    expiresAt: input.expiresAt ?? estimatedExpiry(
+      input.shelfLifeDays, input.storageLocation, new Date(input.preparedAt ?? now),
+    )?.toISOString() ?? null,
     fiberPerUnit: input.fiberPerUnit ?? null,
     id: createOptimisticId(),
     userId: "",

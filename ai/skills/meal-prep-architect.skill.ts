@@ -1,4 +1,4 @@
-import { dietaryPreferencesSchema } from "@app/modules";
+import { dietaryPreferencesSchema, generatedShelfLifeDaysSchema } from "@app/modules";
 import { z } from "zod";
 import { defineSkill } from "./skill.types";
 
@@ -50,11 +50,7 @@ const outputSchema = z.object({
     label: z.string().min(1),
     category: z.enum(["dietary", "nutrition", "prep", "flavor", "custom"]).optional(),
   }).strict()).max(3).describe("At most three attribute chips; prefer availableTagSlugs."),
-  shelfLifeDays: z.object({
-    fridge: z.number().int().positive().nullable().optional(),
-    freezer: z.number().int().positive().nullable().optional(),
-    pantry: z.number().int().positive().nullable().optional(),
-  }).strict().describe("Realistic storage shelf life; null for unsuitable methods."),
+  shelfLifeDays: generatedShelfLifeDaysSchema,
 }).strict();
 
 export const mealPrepArchitectSkill = defineSkill({
@@ -62,7 +58,7 @@ export const mealPrepArchitectSkill = defineSkill({
   inputSchema,
   outputSchema,
   modelTier: "reasoning",
-  system: "<role>Design practical batch-cookable recipes.</role><rules>Respect allergies and dislikes. Nutrition including fiber is an estimate, never a measured value. Do not invent precise nutrition or prices when context is insufficient; label estimates conservatively. Scale ingredient quantities to servings. When storage or reheating advice is relevant, include it naturally in the instructions, consistent with storageGuidance. Do not recommend freezing a recipe that is not freezer-friendly.</rules><context>Use only the supplied structured context.</context><output_format>Return only the schema-conforming recipe.</output_format>",
+  system: "<role>Design practical batch-cookable recipes.</role><rules>Respect allergies and dislikes. Nutrition including fiber is an estimate, never a measured value. Do not invent precise nutrition or prices when context is insufficient; label estimates conservatively. Scale ingredient quantities to servings. Give conservative shelfLifeDays estimates for all storage methods in days, using null when unsuitable or unknown. Keep storageGuidance consistent with shelfLifeDays. When storage or reheating advice is relevant, include it naturally in the instructions. Do not recommend freezing a recipe that is not freezer-friendly.</rules><context>Use only the supplied structured context.</context><output_format>Return only the schema-conforming recipe.</output_format>",
   prompt: (input) => `<context>${JSON.stringify(input)}</context>`,
 });
 

@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { estimatedMacrosPerUnitSchema, nutritionTargetChangesSchema } from "@app/modules/schemas";
+import { estimatedMacrosPerUnitSchema, nutritionTargetChangesSchema, rawTagSchema, shelfLifeDaysSchema } from "@app/modules/schemas";
 import type { AgentStreamEvent } from "./stream.types";
 
 const agentNameSchema = z.enum(["orchestrator", "inventory_ops", "recipe_architect", "kitchen_advisor", "vision_extractor"]);
@@ -29,6 +29,8 @@ const recipePayloadSchema = z.object({
   fiberPerServing: z.number().nullable().optional(),
   costPerServing: z.number().nullable().optional(),
   currency: z.string().optional(),
+  tags: z.array(rawTagSchema).max(3).optional(),
+  shelfLifeDays: shelfLifeDaysSchema.optional(),
 });
 export const uiDirectiveSchema = z.discriminatedUnion("component", [
   z.object({ component: z.literal("profile_targets_updated") }),
@@ -107,6 +109,8 @@ export const uiDirectiveSchema = z.discriminatedUnion("component", [
       priceAmount: z.number().nonnegative().nullable(),
       storageLocation: z.enum(["fridge", "freezer", "pantry"]),
       estimatedShelfLifeDays: z.number().positive().nullable(),
+      expiresAt: z.iso.datetime().nullable().optional(),
+      shelfLifeDays: shelfLifeDaysSchema.optional(),
       estimatedMacrosPerUnit: estimatedMacrosPerUnitSchema.nullable().optional(),
       isFoodItem: z.boolean(),
       confidence: z.enum(["high", "medium", "low"]),

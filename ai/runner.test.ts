@@ -44,7 +44,9 @@ test("receipt review preserves per-unit nutrition estimates and excludes non-foo
   const line = {
     rawText: "APPLES", normalizedName: "Apples", quantity: 500, unit: "g",
     totalPrice: 4, unitPrice: null, suggestedStorageLocation: "fridge",
-    estimatedShelfLifeDays: 7, estimatedMacrosPerUnit: macros, isFoodItem: true, confidence: "high",
+    estimatedShelfLifeDays: 7, expiresAt: "2026-03-01T00:00:00.000Z",
+    estimatedMacrosPerUnit: macros, isFoodItem: true, confidence: "high",
+    shelfLifeDays: { fridge: 7, freezer: 90, pantry: null },
   };
   const output = visionExtractorOutputSchema.parse({
     kind: "receipt", merchant: "Shop", purchasedAt: null, currency: "USD", totalAmount: 5,
@@ -56,10 +58,15 @@ test("receipt review preserves per-unit nutrition estimates and excludes non-foo
   const directive = receiptImportDirective(output);
   assert.equal(directive.items.length, 1);
   assert.deepEqual(directive.items[0]?.estimatedMacrosPerUnit, macros);
+  assert.deepEqual(directive.items[0]?.shelfLifeDays, line.shelfLifeDays);
+  assert.equal(directive.items[0]?.expiresAt, line.expiresAt);
   assert.equal(directive.items[0]?.priceAmount, 4 / 500);
   assert.deepEqual(uiDirectiveSchema.parse(directive), directive);
   assert.equal(visionExtractorOutputSchema.safeParse({
     ...output, lineItems: [{ ...line, estimatedMacrosPerUnit: { ...macros, proteinG: -1 } }],
+  }).success, false);
+  assert.equal(visionExtractorOutputSchema.safeParse({
+    ...output, lineItems: [{ ...line, shelfLifeDays: { fridge: 7 } }],
   }).success, false);
 });
 

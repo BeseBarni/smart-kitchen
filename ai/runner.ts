@@ -78,6 +78,8 @@ export function receiptImportDirective(
       priceAmount: item.unitPrice ?? (item.totalPrice != null ? item.totalPrice / item.quantity : null),
       storageLocation: item.suggestedStorageLocation,
       estimatedShelfLifeDays: item.estimatedShelfLifeDays,
+      expiresAt: item.expiresAt,
+      shelfLifeDays: item.shelfLifeDays,
       estimatedMacrosPerUnit: item.estimatedMacrosPerUnit,
       isFoodItem: item.isFoodItem,
       confidence: item.confidence,
