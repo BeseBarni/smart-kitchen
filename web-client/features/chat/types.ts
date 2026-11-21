@@ -15,6 +15,7 @@ export interface ChatMessage {
 
 export interface ChatAttachment {
   id: string;
+  assetId?: string;
   name: string;
   mimeType: "image/jpeg" | "image/png" | "image/webp" | "image/heic" | "image/heif";
   base64Data?: string;

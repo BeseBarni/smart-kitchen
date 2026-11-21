@@ -20,6 +20,8 @@ export const profileSchema = z
     dietaryPreferences: dietaryPreferencesSchema.nullable().describe("Dietary preferences, if set."),
     currency: z.string().describe("ISO currency code used for prices."),
     unitSystem: z.enum(["metric", "imperial"]).describe("Preferred measurement system."),
+    avatarAssetId: z.string().uuid().nullable().optional().describe("Uploaded avatar media asset."),
+    avatarUrl: z.string().min(1).nullable().optional().describe("Resolved avatar URL."),
     createdAt: z.iso.datetime().describe("Profile creation time in ISO-8601 format."),
     updatedAt: z.iso.datetime().describe("Profile update time in ISO-8601 format."),
   })

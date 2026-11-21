@@ -1,5 +1,5 @@
 import { eq } from "drizzle-orm";
-import { getDatabase, userProfiles } from "@app/db";
+import { authUsers, getDatabase, userProfiles } from "@app/db";
 import type { UpdateProfileInput } from "./profile.schema";
 
 export async function findProfile(userId: string) {
@@ -21,10 +21,18 @@ export async function insertDefaultProfile(userId: string) {
 }
 
 export async function updateProfileRow(userId: string, input: UpdateProfileInput) {
+  const { avatarUrl: _avatarUrl, ...profileInput } = input;
   const [profile] = await getDatabase()
     .update(userProfiles)
-    .set({ ...input, updatedAt: new Date() })
+    .set({ ...profileInput, updatedAt: new Date() })
     .where(eq(userProfiles.userId, userId))
     .returning();
   return profile;
+}
+
+export async function updateAuthUserImage(userId: string, image: string | null): Promise<void> {
+  await getDatabase()
+    .update(authUsers)
+    .set({ image })
+    .where(eq(authUsers.id, userId));
 }

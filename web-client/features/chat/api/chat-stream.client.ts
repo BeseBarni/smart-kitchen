@@ -62,7 +62,12 @@ export async function streamChatTurn(options: StreamTurnOptions): Promise<void> 
   const body = {
     message: options.message,
     ...(options.attachments?.length ? {
-      attachments: options.attachments.map((attachment) => ({
+      attachmentAssetIds: options.attachments.flatMap((attachment) =>
+        attachment.assetId ? [attachment.assetId] : []
+      ),
+      attachments: options.attachments.filter((attachment) =>
+        !attachment.assetId && attachment.base64Data
+      ).map((attachment) => ({
         name: attachment.name,
         mimeType: attachment.mimeType,
         base64Data: attachment.base64Data,

@@ -1,5 +1,6 @@
 import { pgSchema, pgTable, text, integer, jsonb, timestamp, uuid } from "drizzle-orm/pg-core";
 import { unitSystemEnum } from "./enums";
+import { mediaAssets } from "./media";
 
 const neonAuth = pgSchema("neon_auth");
 
@@ -12,6 +13,7 @@ export interface DietaryPreferences {
 
 export const authUsers = neonAuth.table("user", {
   id: uuid("id").primaryKey(),
+  image: text("image"),
 });
 
 export const userProfiles = pgTable("user_profiles", {
@@ -26,6 +28,7 @@ export const userProfiles = pgTable("user_profiles", {
   dietaryPreferences: jsonb("dietary_preferences").$type<DietaryPreferences>(),
   currency: text("currency").default("HUF").notNull(),
   unitSystem: unitSystemEnum("unit_system").default("metric").notNull(),
+  avatarAssetId: uuid("avatar_asset_id").references(() => mediaAssets.id, { onDelete: "set null" }),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
 });

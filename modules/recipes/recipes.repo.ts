@@ -18,6 +18,7 @@ function insertValues(input: CreateRecipeInput, computed: RecipeComputed) {
     description: input.description,
     instructions: input.instructions,
     imageUrl: input.imageUrl,
+    imageAssetId: input.imageAssetId ?? null,
     prepTimeMin: input.prepTimeMin,
     cookTimeMin: input.cookTimeMin,
     servings: String(input.servings),
@@ -43,6 +44,7 @@ function updateValues(
   if (input.description !== undefined) values.description = input.description;
   if (input.instructions !== undefined) values.instructions = input.instructions;
   if (input.imageUrl !== undefined) values.imageUrl = input.imageUrl;
+  if (input.imageAssetId !== undefined) values.imageAssetId = input.imageAssetId;
   if (input.prepTimeMin !== undefined) values.prepTimeMin = input.prepTimeMin;
   if (input.cookTimeMin !== undefined) values.cookTimeMin = input.cookTimeMin;
   if (input.servings !== undefined) values.servings = String(input.servings);

@@ -18,6 +18,7 @@ import type {
 } from "./ingredients.schema";
 import { resolveOrCreateTags } from "../tags/tags.service";
 import { replaceIngredientTags } from "../tags/tags.repo";
+import { assertOwnedUploadedAssets, softDeleteAndPurge } from "../media/media.service";
 
 function toDto(row: Awaited<ReturnType<typeof findIngredient>> & object): IngredientDto {
   return {
@@ -59,7 +60,14 @@ export async function create(
 ): Promise<Result<IngredientDto, AppError>> {
   const user = await requireAuthUser(userId);
   if (!user.success) return user;
-  const row = await insertIngredient(userId, input);
+  if (input.imageAssetId) {
+    const media = await assertOwnedUploadedAssets(userId, [input.imageAssetId], "ingredient_photo");
+    if (!media.success) return err(media.error);
+  }
+  const persistedInput: CreateIngredientInput = input.imageAssetId
+    ? { ...input, imageUrl: `/api/media/${input.imageAssetId}/file` }
+    : input;
+  const row = await insertIngredient(userId, persistedInput);
   if (!row) return err({ code: "INTERNAL_ERROR", message: "Ingredient was not created." });
   if (input.tags) {
     const resolved = await resolveOrCreateTags(userId, input.tags);
@@ -74,20 +82,38 @@ export async function update(
   id: string,
   input: UpdateIngredientInput,
 ): Promise<Result<IngredientDto, AppError>> {
-  const row = await updateIngredientRow(userId, id, input);
+  const existing = await findIngredient(userId, id);
+  if (!existing) return err(notFound());
+  if (input.imageAssetId) {
+    const media = await assertOwnedUploadedAssets(userId, [input.imageAssetId], "ingredient_photo");
+    if (!media.success) return err(media.error);
+  }
+  const oldAssetId = existing.imageAssetId;
+  const persistedInput: UpdateIngredientInput =
+    input.imageAssetId !== undefined && input.imageAssetId !== oldAssetId
+      ? input.imageAssetId
+        ? { ...input, imageUrl: `/api/media/${input.imageAssetId}/file` }
+        : { ...input, imageUrl: null }
+      : input;
+  const row = await updateIngredientRow(userId, id, persistedInput);
   if (!row) return err(notFound());
   if (input.tags !== undefined) {
     const resolved = await resolveOrCreateTags(userId, input.tags);
     if (!resolved.success) return err(resolved.error);
     await replaceIngredientTags(row.id, resolved.data.map((tag) => tag.id));
   }
+  if (oldAssetId && input.imageAssetId !== undefined && input.imageAssetId !== oldAssetId) {
+    await softDeleteAndPurge(userId, oldAssetId);
+  }
   return ok(toDto(row));
 }
 
 export async function remove(userId: string, id: string): Promise<Result<{ deleted: true }, AppError>> {
-  return (await deleteIngredientRow(userId, id))
-    ? ok({ deleted: true })
-    : err(notFound());
+  const existing = await findIngredient(userId, id);
+  if (!existing) return err(notFound());
+  if (!(await deleteIngredientRow(userId, id))) return err(notFound());
+  if (existing.imageAssetId) await softDeleteAndPurge(userId, existing.imageAssetId);
+  return ok({ deleted: true });
 }
 
 export async function findByIds(

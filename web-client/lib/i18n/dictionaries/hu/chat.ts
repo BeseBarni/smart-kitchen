@@ -52,4 +52,5 @@ export const chat = {
   storageFridge: "Hűtő", storageFreezer: "Fagyasztó", storagePantry: "Kamra",
   addSelectedInventory: "Kijelöltek hozzáadása", importingReceipt: "Kijelölt tételek hozzáadása...",
   receiptImported: "A blokk tételei hozzáadva a készlethez.", receiptImportError: "A blokk tételeit nem sikerült hozzáadni.",
+  uploadFailed: "A fotót nem sikerült feltölteni. Próbáld újra.", uploading: "Feltöltés",
 } satisfies WidenStrings<typeof english>;

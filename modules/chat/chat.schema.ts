@@ -26,9 +26,10 @@ export const chatJsonObjectSchema = z
 
 export const conversationAttachmentSchema = z
   .object({
-    name: z.string().describe("Attachment file name."),
+    assetId: z.string().uuid().optional().describe("Persisted media asset identifier."),
+    name: z.string().optional().describe("Optional attachment file name."),
     mimeType: z.string().describe("Attachment media type."),
-    url: z.string().url().optional().describe("Optional URL for the attachment."),
+    url: z.string().optional().describe("Optional resolved URL for the attachment."),
     width: z.number().int().positive().optional().describe("Optional attachment width."),
     height: z.number().int().positive().optional().describe("Optional attachment height."),
     sizeBytes: z.number().int().nonnegative().optional().describe("Optional attachment byte size."),
@@ -182,10 +183,14 @@ export const conversationStreamInputSchema = z
   .object({
     message: z.string().trim().max(4000).optional().describe("Optional message sent by the user."),
     attachments: z.array(chatImageAttachmentSchema).min(1).max(3).optional().describe("Optional compressed photo attachments."),
+    attachmentAssetIds: z.array(z.string().uuid()).min(1).max(3).optional()
+      .describe("Persisted media asset identifiers uploaded directly to R2."),
     locale: z.enum(["en", "hu", "es"]).optional().describe("Selected application language."),
   })
   .superRefine((value, context) => {
-    if (!value.message?.trim() && (!value.attachments || value.attachments.length === 0)) {
+    if (!value.message?.trim() &&
+      (!value.attachments || value.attachments.length === 0) &&
+      (!value.attachmentAssetIds || value.attachmentAssetIds.length === 0)) {
       context.addIssue({
         code: "custom",
         path: ["message"],

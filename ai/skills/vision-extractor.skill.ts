@@ -14,7 +14,7 @@ const suggestedTagSchema = z.object({
 export const visionExtractorInputSchema = z
   .object({
     images: z.array(z.object({
-      mimeType: z.enum(["image/jpeg", "image/png", "image/webp", "image/heic", "image/heif"]),
+      mimeType: z.enum(["image/jpeg", "image/png", "image/webp", "image/avif", "image/heic", "image/heif"]),
       base64Data: z.string().min(1),
     }).strict()).min(1).max(3),
     userCaption: z.string().trim().max(4000).optional(),

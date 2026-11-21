@@ -43,6 +43,20 @@
       "when": 1795295143569,
       "tag": "0005_messy_romulus",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1795299615835,
+      "tag": "0006_abandoned_roland_deschain",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1795299633996,
+      "tag": "0007_perpetual_la_nuit",
+      "breakpoints": true
     }
   ]
 }

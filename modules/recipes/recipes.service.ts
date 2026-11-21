@@ -28,6 +28,7 @@ import {
 } from "./recipes.mapper";
 import { resolveOrCreateTags } from "../tags/tags.service";
 import { replaceRecipeTags } from "../tags/tags.repo";
+import { assertOwnedUploadedAssets, softDeleteAndPurge } from "../media/media.service";
 
 async function loadLinked(userId: string, lines: RecipeLineInput[]) {
   const ids = [...new Set(lines.flatMap((line) => (line.ingredientId ? [line.ingredientId] : [])))];
@@ -62,13 +63,20 @@ export async function create(
 ): Promise<Result<RecipeDto, AppError>> {
   const linked = await loadLinked(userId, input.ingredients);
   if (!linked.success) return err(linked.error);
+  if (input.imageAssetId) {
+    const media = await assertOwnedUploadedAssets(userId, [input.imageAssetId], "recipe_cover");
+    if (!media.success) return err(media.error);
+  }
   const user = await requireAuthUser(userId);
   if (!user.success) return user;
   const computed = withRecipeOverrides(
     input,
     calculateRecipeValues(input.ingredients, linked.data, input.servings),
   );
-  const id = await insertRecipe(userId, input, computed);
+  const persistedInput: CreateRecipeInput = input.imageAssetId
+    ? { ...input, imageUrl: `/api/media/${input.imageAssetId}/file` }
+    : input;
+  const id = await insertRecipe(userId, persistedInput, computed);
   if (!id) return err({ code: "INTERNAL_ERROR", message: "Recipe was not created." });
   if (input.tags) {
     const resolved = await resolveOrCreateTags(userId, input.tags);
@@ -85,6 +93,18 @@ export async function update(
 ): Promise<Result<RecipeDto, AppError>> {
   const existing = await findRecipe(userId, id);
   if (!existing) return err({ code: "ITEM_NOT_FOUND", message: "Recipe not found." });
+  if (input.imageAssetId) {
+    const media = await assertOwnedUploadedAssets(userId, [input.imageAssetId], "recipe_cover");
+    if (!media.success) return err(media.error);
+  }
+  const oldAssetId = existing.recipe.imageAssetId;
+  if (input.imageAssetId !== undefined && input.imageAssetId !== oldAssetId) {
+    if (input.imageAssetId) {
+      input = { ...input, imageUrl: `/api/media/${input.imageAssetId}/file` };
+    } else if (input.imageUrl === undefined) {
+      input = { ...input, imageUrl: null };
+    }
+  }
   const lines: RecipeLineInput[] = input.ingredients ?? existing.lines.map(({ line }) => ({
     displayName: line.displayName,
     ingredientId: line.ingredientId,
@@ -134,13 +154,22 @@ export async function update(
     if (!resolved.success) return err(resolved.error);
     await replaceRecipeTags(id, resolved.data.map((tag) => tag.id));
   }
+  if (oldAssetId && input.imageAssetId !== undefined && input.imageAssetId !== oldAssetId) {
+    await softDeleteAndPurge(userId, oldAssetId);
+  }
   return getById(userId, id);
 }
 
 export async function remove(userId: string, id: string): Promise<Result<{ deleted: true }, AppError>> {
-  return (await deleteRecipeRow(userId, id))
-    ? ok({ deleted: true })
-    : err({ code: "ITEM_NOT_FOUND", message: "Recipe not found." });
+  const existing = await findRecipe(userId, id);
+  if (!existing) return err({ code: "ITEM_NOT_FOUND", message: "Recipe not found." });
+  if (!(await deleteRecipeRow(userId, id))) {
+    return err({ code: "ITEM_NOT_FOUND", message: "Recipe not found." });
+  }
+  if (existing.recipe.imageAssetId) {
+    await softDeleteAndPurge(userId, existing.recipe.imageAssetId);
+  }
+  return ok({ deleted: true });
 }
 
 export async function cookAndStock(

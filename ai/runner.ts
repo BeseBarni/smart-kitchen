@@ -3,6 +3,7 @@ import {
   chatJsonValueSchema,
   type ConversationItemPayloadDto,
   type ConversationStreamInput,
+  mediaService,
 } from "@app/modules";
 import { err, ok, type AppError, type Result } from "@app/shared";
 import { FAST_MODEL } from "./core/llm.client";
@@ -94,9 +95,58 @@ export async function runStreamingTurn(input: {
   abortSignal: AbortSignal;
 }): Promise<Result<ReadableStream<Uint8Array>, AppError>> {
   const userCaption = input.userMessage.message?.trim() ?? "";
-  const taskText = userCaption || (input.userMessage.attachments?.length
+  const hasAssetAttachments = Boolean(input.userMessage.attachmentAssetIds?.length);
+  const taskText = userCaption || (input.userMessage.attachments?.length || hasAssetAttachments
     ? "Analyze the attached kitchen photo."
     : "");
+  let assetVisionAttachments: ReturnType<typeof visionSkillImages> = [];
+  const assetAttachmentMetadata: Array<{
+    assetId: string;
+    name: string;
+    mimeType: string;
+    url: string;
+    width?: number;
+    height?: number;
+    sizeBytes?: number;
+  }> = [];
+  if (input.userMessage.attachmentAssetIds?.length) {
+    for (const assetId of input.userMessage.attachmentAssetIds) {
+      const confirmed = await mediaService.confirmUpload(input.userId, assetId);
+      if (!confirmed.success) return err(confirmed.error);
+    }
+    const owned = await mediaService.assertOwnedUploadedAssets(
+      input.userId,
+      input.userMessage.attachmentAssetIds,
+      "chat_attachment",
+    );
+    if (!owned.success) return err(owned.error);
+    for (const asset of owned.data) {
+      const bytes = await mediaService.getObjectBufferForAsset(input.userId, asset.id);
+      if (!bytes.success) return err(bytes.error);
+      const supportedMime = bytes.data.mimeType === "image/jpeg" ||
+        bytes.data.mimeType === "image/png" ||
+        bytes.data.mimeType === "image/webp" ||
+        bytes.data.mimeType === "image/avif" ||
+        bytes.data.mimeType === "image/heic" ||
+        bytes.data.mimeType === "image/heif";
+      if (!supportedMime) {
+        return err({ code: "VALIDATION_ERROR", message: "The chat image format is not supported." });
+      }
+      assetVisionAttachments.push({
+        mimeType: bytes.data.mimeType as ReturnType<typeof visionSkillImages>[number]["mimeType"],
+        base64Data: Buffer.from(bytes.data.bytes).toString("base64"),
+      });
+      assetAttachmentMetadata.push({
+        assetId: asset.id,
+        name: `photo-${asset.id.slice(0, 8)}`,
+        mimeType: asset.mimeType,
+        url: `/api/media/${asset.id}/file`,
+        ...(asset.width ? { width: asset.width } : {}),
+        ...(asset.height ? { height: asset.height } : {}),
+        sizeBytes: asset.sizeBytes,
+      });
+    }
+  }
   const existing = await chatService.getConversationWithItems(input.userId, input.conversationId, { limit: 1 });
   if (!existing.success) return err(existing.error);
   const recent = await chatService.getRecentContextItems(input.userId, input.conversationId, { maxItems: 20 });
@@ -139,13 +189,17 @@ export async function runStreamingTurn(input: {
     ...(attachment.height ? { height: attachment.height } : {}),
     ...(attachment.sizeBytes ? { sizeBytes: attachment.sizeBytes } : {}),
   }));
+  const persistedAttachmentMetadata = [
+    ...(attachmentMetadata ?? []),
+    ...assetAttachmentMetadata,
+  ];
   const userItem = await chatService.appendItems(input.userId, input.conversationId, [{
     type: "message",
     role: "user",
     payload: {
       kind: "message",
       text: userCaption,
-      attachments: attachmentMetadata,
+      attachments: persistedAttachmentMetadata,
     },
   }]);
   if (!userItem.success) return err(userItem.error);
@@ -187,7 +241,7 @@ export async function runStreamingTurn(input: {
       }
     })() : Promise.resolve();
     try {
-      if (input.userMessage.attachments?.length) {
+      if (input.userMessage.attachments?.length || assetVisionAttachments.length > 0) {
         emit({
           type: "agent_status",
           agent: "vision_extractor",
@@ -195,7 +249,9 @@ export async function runStreamingTurn(input: {
           label: "Analyzing photo...",
         });
         const extraction = await executeVisionExtractor({
-          images: visionSkillImages(input.userMessage.attachments),
+          images: assetVisionAttachments.length > 0
+            ? assetVisionAttachments
+            : visionSkillImages(input.userMessage.attachments ?? []),
           userCaption: userCaption || undefined,
           userLocale: context.locale,
           defaultCurrency: "HUF",
@@ -205,8 +261,8 @@ export async function runStreamingTurn(input: {
         context.usage.inputTokens += extraction.data.usage.inputTokens;
         context.usage.outputTokens += extraction.data.usage.outputTokens;
         const ledgerInput = chatJsonValueSchema.parse({
-          count: input.userMessage.attachments.length,
-          mimeTypes: input.userMessage.attachments.map((attachment) => attachment.mimeType),
+          count: persistedAttachmentMetadata.length,
+          mimeTypes: persistedAttachmentMetadata.map((attachment) => attachment.mimeType),
           caption: userCaption || null,
         });
         const ledgerOutput = chatJsonValueSchema.parse(JSON.parse(JSON.stringify(output)));

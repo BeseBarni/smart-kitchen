@@ -37,7 +37,8 @@ export const recipeSchema = z
     instructions: z
       .array(z.string().describe("A preparation step."))
       .describe("Ordered recipe steps."),
-    imageUrl: z.string().url().nullable().describe("Image URL, if available."),
+    imageUrl: z.string().min(1).nullable().describe("Image URL, if available."),
+    imageAssetId: z.string().uuid().nullable().optional().describe("Uploaded media asset, if available."),
     prepTimeMin: z
       .number()
       .int()

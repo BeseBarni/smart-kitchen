@@ -17,7 +17,8 @@ export type ConversationItemPayload =
       kind: "message";
       text: string;
       attachments?: {
-        name: string;
+        assetId?: string;
+        name?: string;
         mimeType: string;
         url?: string;
         width?: number;

@@ -52,4 +52,5 @@ export const chat = {
   storageFridge: "Frigorífico", storageFreezer: "Congelador", storagePantry: "Despensa",
   addSelectedInventory: "Añadir seleccionados", importingReceipt: "Añadiendo artículos seleccionados...",
   receiptImported: "Los artículos del ticket se han añadido al inventario.", receiptImportError: "No se han podido añadir los artículos del ticket.",
+  uploadFailed: "No se ha podido subir la foto. Inténtalo de nuevo.", uploading: "Subiendo",
 } satisfies WidenStrings<typeof english>;

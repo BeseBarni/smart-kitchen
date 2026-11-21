@@ -10,3 +10,4 @@ export * as chatMapper from "./chat/chat.mapper";
 export * as shoppingService from "./shopping/shopping.service";
 export * as mealSuggestionsService from "./meal-suggestions/meal-suggestions.service";
 export * as tagsService from "./tags/tags.service";
+export * as mediaService from "./media/media.service";

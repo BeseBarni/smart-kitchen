@@ -8,6 +8,7 @@ import { ingredientRoutes } from "./routes/ingredients.routes";
 import { inventoryRoutes } from "./routes/inventory.routes";
 import { mealLogRoutes } from "./routes/meal-logs.routes";
 import { mealSuggestionsRoutes } from "./routes/meal-suggestions.routes";
+import { mediaRoutes } from "./routes/media.routes";
 import { profileRoutes } from "./routes/profile.routes";
 import { recipeRoutes } from "./routes/recipes.routes";
 import { shoppingRoutes } from "./routes/shopping.routes";
@@ -45,6 +46,7 @@ export const app = new Hono<AuthEnvironment>()
   .route("/", accountRoutes)
   .route("/", healthRoutes)
   .route("/profile", profileRoutes)
+  .route("/media", mediaRoutes)
   .route("/ingredients", ingredientRoutes)
   .route("/recipes", recipeRoutes)
   .route("/inventory", inventoryRoutes)

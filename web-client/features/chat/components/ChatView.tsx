@@ -14,8 +14,9 @@ import { useChatUiStore } from "../stores/chat-ui.store";
 import type { QuickPrompt } from "../types";
 import { mergeChatTurns } from "../utils/merge-chat-turns";
 import { getText, useText, type TranslationKey } from "@/lib/i18n";
-import { compressImageFiles, revokeAttachmentPreviews } from "../utils/image-capture.utils";
+import { revokeAttachmentPreviews } from "../utils/image-capture.utils";
 import type { ChatAttachment } from "../types";
+import { uploadImageToR2 } from "@/lib/media/media-upload.client";
 
 const promptText: Record<QuickPrompt["id"], TranslationKey> = {
   plan: "chat.promptPlanText",
@@ -70,6 +71,10 @@ export function ChatView(): React.JSX.Element {
 
   const submitMessage = (): void => {
     if ((!draft.trim() && attachments.length === 0) || stream.isStreaming) return;
+    if (attachments.some((attachment) => !attachment.assetId)) {
+      toast.message(getText("chat.uploading"));
+      return;
+    }
     const message = draft;
     const sendingAttachments = [...attachments];
     setDraft("");
@@ -78,18 +83,44 @@ export function ChatView(): React.JSX.Element {
   };
 
   const onFiles = (files: readonly File[]): void => {
-    void compressImageFiles(files)
-      .then((prepared) => setAttachments([...attachments, ...prepared].slice(0, 3)))
-      .catch((error: unknown) => {
-        let key: TranslationKey = "chat.compressionFailed";
-        if (error instanceof Error) {
-          if (error.message === "chat.tooManyAttachments") key = "chat.tooManyAttachments";
-          if (error.message === "chat.unsupportedAttachment") key = "chat.unsupportedAttachment";
-          if (error.message === "chat.imageUnsupported") key = "chat.imageUnsupported";
-          if (error.message === "chat.attachmentTooLarge") key = "chat.attachmentTooLarge";
-        }
-        toast.error(getText(key));
-      });
+    if (attachments.length + files.length > 3) {
+      toast.error(getText("chat.tooManyAttachments"));
+      return;
+    }
+    for (const file of files) {
+      const id = crypto.randomUUID();
+      const optimistic: ChatAttachment = {
+        id,
+        name: file.name || `photo-${attachments.length + 1}`,
+        mimeType: "image/jpeg",
+        previewUrl: URL.createObjectURL(file),
+      };
+      setAttachments([...(useChatUiStore.getState().attachments), optimistic].slice(0, 3));
+      void uploadImageToR2(file, { purpose: "chat_attachment" })
+        .then((uploaded) => {
+          setAttachments(useChatUiStore.getState().attachments.map((attachment) =>
+            attachment.id === id
+              ? {
+                  ...attachment,
+                  id: uploaded.assetId,
+                  assetId: uploaded.assetId,
+                  mimeType: uploaded.mimeType,
+                  previewUrl: uploaded.previewUrl,
+                  width: uploaded.width,
+                  height: uploaded.height,
+                  sizeBytes: uploaded.sizeBytes,
+                }
+              : attachment,
+          ));
+        })
+        .catch((error: unknown) => {
+          setAttachments(useChatUiStore.getState().attachments.filter((attachment) => attachment.id !== id));
+          const key: TranslationKey = error instanceof Error && error.message === "chat.attachmentTooLarge"
+            ? "chat.attachmentTooLarge"
+            : "chat.uploadFailed";
+          toast.error(getText(key));
+        });
+    }
   };
   const onAttachmentsChange = (next: ChatAttachment[]): void => {
     const removed = attachments.filter((item) => !next.some((entry) => entry.id === item.id));

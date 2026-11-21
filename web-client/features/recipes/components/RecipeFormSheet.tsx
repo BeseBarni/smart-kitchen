@@ -9,6 +9,9 @@ import { Input } from "@/components/ui/input";
 import { Sheet, SheetContent, SheetDescription, SheetTitle } from "@/components/ui/sheet";
 import { recipeFormValues } from "../utils/recipe-form.mapper";
 import { useText } from "@/lib/i18n";
+import { ImageUploadField } from "@/components/media/ImageUploadField";
+import type { UploadedImage } from "@/lib/media/media-upload.client";
+import { useState } from "react";
 
 interface Props {
   recipe?: RecipeDto;
@@ -19,6 +22,7 @@ interface Props {
 
 export function RecipeFormSheet({ recipe, busy, onClose, onSave }: Props): React.JSX.Element {
   const { t } = useText();
+  const [coverUrl, setCoverUrl] = useState<string | null>(recipe?.imageUrl ?? null);
   const form = useForm<CreateRecipeInput>({
     resolver: zodResolver(createRecipeSchema),
     defaultValues: recipeFormValues(recipe),
@@ -42,6 +46,29 @@ export function RecipeFormSheet({ recipe, busy, onClose, onSave }: Props): React
         <SheetTitle>{t(recipe ? "recipes.editTitle" : "recipes.newTitle")}</SheetTitle>
         <SheetDescription>{t("recipes.formDescription")}</SheetDescription>
         <form onSubmit={(event) => void submit(event)} className="mt-4 space-y-4">
+          <ImageUploadField
+            purpose="recipe_cover"
+            variant="cover"
+            labels={{
+              choose: t("chat.chooseLibrary"),
+              camera: t("chat.takePhoto"),
+              replace: t("chat.chooseLibrary"),
+              remove: t("chat.removePhoto"),
+              uploading: t("chat.uploading"),
+            }}
+            valueUrl={coverUrl}
+            disabled={busy}
+            onUploaded={(image: UploadedImage) => {
+              setCoverUrl(image.previewUrl);
+              form.setValue("imageAssetId", image.assetId);
+              form.setValue("imageUrl", image.url);
+            }}
+            onRemoved={() => {
+              setCoverUrl(null);
+              form.setValue("imageAssetId", null);
+              form.setValue("imageUrl", null);
+            }}
+          />
           <label className="block space-y-1 text-label-md">{t("recipes.name")}
             <Input {...form.register("title")} disabled={busy} className="h-11 bg-card" />
           </label>

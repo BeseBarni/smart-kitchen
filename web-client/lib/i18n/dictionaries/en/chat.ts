@@ -50,4 +50,5 @@ export const chat = {
   storageFridge: "Fridge", storageFreezer: "Freezer", storagePantry: "Pantry",
   addSelectedInventory: "Add Selected to Inventory", importingReceipt: "Adding selected items...",
   receiptImported: "Receipt items added to inventory.", receiptImportError: "The receipt items could not be added.",
+  uploadFailed: "The photo could not be uploaded. Please try again.", uploading: "Uploading",
 } as const;

@@ -52,9 +52,13 @@ export function mapConversationHistory(items: readonly ConversationItemDto[]): C
           current.userMessage = {
             ...current.userMessage!,
             attachments: item.payload.attachments.map((attachment, index) => ({
-              id: `${item.id}-attachment-${index}`,
-              name: attachment.name,
+              id: attachment.assetId ?? `${item.id}-attachment-${index}`,
+              assetId: attachment.assetId,
+              name: attachment.name ?? "photo",
               mimeType: persistedAttachmentMime(attachment.mimeType),
+              previewUrl: attachment.assetId
+                ? `/api/media/${attachment.assetId}/file`
+                : attachment.url,
               width: attachment.width,
               height: attachment.height,
               sizeBytes: attachment.sizeBytes,

@@ -10,6 +10,7 @@ import {
   uuid,
 } from "drizzle-orm/pg-core";
 import { authUsers } from "./users";
+import { mediaAssets } from "./media";
 import { baseUnitEnum, recipeSourceEnum } from "./enums";
 
 export const ingredients = pgTable(
@@ -23,6 +24,7 @@ export const ingredients = pgTable(
     brand: text("brand"),
     category: text("category"),
     imageUrl: text("image_url"),
+    imageAssetId: uuid("image_asset_id").references(() => mediaAssets.id, { onDelete: "set null" }),
     defaultUnit: baseUnitEnum("default_unit").default("g").notNull(),
     baseQuantity: numeric("base_quantity", { precision: 10, scale: 2 }).default("100.00").notNull(),
     calories: numeric("calories", { precision: 10, scale: 2 }),
@@ -56,6 +58,7 @@ export const recipes = pgTable(
     description: text("description"),
     instructions: jsonb("instructions").$type<string[]>().default([]).notNull(),
     imageUrl: text("image_url"),
+    imageAssetId: uuid("image_asset_id").references(() => mediaAssets.id, { onDelete: "set null" }),
     prepTimeMin: integer("prep_time_min"),
     cookTimeMin: integer("cook_time_min"),
     servings: numeric("servings", { precision: 10, scale: 2 }).notNull(),
