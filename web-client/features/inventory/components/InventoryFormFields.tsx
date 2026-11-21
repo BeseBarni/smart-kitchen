@@ -41,7 +41,7 @@ export function InventoryFormFields({ form, disabled }: { form: UseFormReturn<In
       </div>
       {errors.remainingQuantity && <p role="alert" className="text-body-sm text-destructive">{t("inventory.invalidField")}</p>}
       <label className="block space-y-1.5 text-label-md">{t("inventory.fiber")} {watch("itemType") === "meal_prep" ? "*" : ""}
-        <Input type="number" min="0" step="0.01" className="h-12 bg-card" disabled={disabled} {...register("fiberPerUnit", { setValueAs: (value: string) => value === "" ? null : Number(value) })} />
+        <Input type="number" min="0" step="0.0001" className="h-12 bg-card" disabled={disabled} {...register("fiberPerUnit", { setValueAs: (value: string) => value === "" ? null : Number(value) })} />
       </label>
       {errors.fiberPerUnit && <p role="alert" className="text-body-sm text-destructive">{t(errors.fiberPerUnit.type === "required" ? "inventory.fiberRequired" : "inventory.invalidField")}</p>}
       <div className="space-y-1.5">

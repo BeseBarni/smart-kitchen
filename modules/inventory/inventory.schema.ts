@@ -76,6 +76,14 @@ export const adjustInventoryInputSchema = z
   .object({ delta: z.number().finite().refine((value) => value !== 0).describe("Quantity adjustment.") })
   .describe("Inventory quantity adjustment.");
 
+export const estimatedMacrosPerUnitSchema = z.object({
+  calories: z.number().nonnegative().nullable().describe("Estimated calories per inventory unit."),
+  proteinG: z.number().nonnegative().nullable().describe("Estimated protein grams per inventory unit."),
+  carbsG: z.number().nonnegative().nullable().describe("Estimated carbohydrate grams per inventory unit."),
+  fatG: z.number().nonnegative().nullable().describe("Estimated fat grams per inventory unit."),
+  fiberG: z.number().nonnegative().nullable().describe("Estimated fiber grams per inventory unit."),
+}).strict().describe("Estimated nutrition for one unit of the recorded quantity; null when unknown.");
+
 export const batchInventoryItemSchema = z
   .object({
     name: z.string().trim().min(1).describe("Inventory item name."),
@@ -85,6 +93,8 @@ export const batchInventoryItemSchema = z
     expiresAt: z.iso.datetime().nullable().optional().describe("Optional expiration timestamp."),
     costPerUnit: z.number().nonnegative().nullable().optional().describe("Optional unit cost."),
     currency: z.string().trim().min(1).max(8).optional().describe("Optional ISO-style currency code."),
+    estimatedMacrosPerUnit: estimatedMacrosPerUnitSchema.nullable().optional()
+      .describe("Estimated nutrition per recorded unit, if available."),
   })
   .strict()
   .describe("One item in a receipt or photo inventory batch.");

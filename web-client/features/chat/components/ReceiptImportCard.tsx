@@ -9,6 +9,7 @@ import { useText } from "@/lib/i18n";
 import { inventoryApi, inventoryKeys } from "@/features/inventory";
 import type { UiDirective } from "../types";
 import { useChatUiStore } from "../stores/chat-ui.store";
+import { receiptBatchInput } from "../utils/receipt-import";
 
 type ReceiptDirective = Extract<UiDirective, { component: "receipt_import_card" }>;
 
@@ -26,16 +27,7 @@ export function ReceiptImportCard({ directive }: { directive: ReceiptDirective }
   const [confirmed, setConfirmed] = useState(alreadyImported);
   const [items, setItems] = useState(directive.items.map((item) => ({ ...item, selected: true })));
   const mutation = useMutation({
-    mutationFn: () => inventoryApi.batchCreate({
-      items: items.filter((item) => item.selected).map((item) => ({
-        name: item.name,
-        quantity: item.quantity,
-        unit: item.unit,
-        storageLocation: item.storageLocation,
-        costPerUnit: item.priceAmount,
-        currency: directive.currency,
-      })),
-    }),
+    mutationFn: () => inventoryApi.batchCreate(receiptBatchInput(directive, items)),
     onSuccess: async () => {
       setConfirmed(true);
       markReceiptImported(receiptKey);

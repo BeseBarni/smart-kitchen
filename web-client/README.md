@@ -26,8 +26,14 @@ while working; a localized standard status is shown until one is available.
 The chat menu opens a persistent shopping list; adding ingredients from a
 recipe first compares inventory and asks you to review uncertain matches.
 Rejected user messages are shown only in the current browser session and are
-not stored in conversation history. Photo uploads and voice input are not
-currently available. The shopping list requires the latest database migration;
+not stored in conversation history. Voice input is not currently available.
+Receipt photos can be reviewed and imported into inventory with estimated
+nutrition per recorded unit; uncertain nutrition remains unknown. Nutrition
+estimates are not label measurements. When a user reports eating a clearly
+identified amount of tracked food, chat deducts it and records a meal together;
+ambiguous items or amounts require clarification. Unknown fiber does not block
+chat consumption and remains unknown in the meal log.
+The shopping list requires the latest database migration;
 review and apply it to the target database before using the feature.
 
 Assistant messages, confirmation descriptions, recipe drafts, and saved AI
@@ -67,6 +73,9 @@ older records may have unknown fiber and are marked incomplete. Recipe fiber is
 carried into cooked stock and meal logs. Before using these features, review and
 apply `0003_tracker_fiber.sql` to the target database using the standard
 migration workflow; test it on an isolated development branch first.
+Receipt nutrition estimates also require `0004_green_wilson_fisk.sql` for
+per-unit precision; review and test that migration on an isolated branch before
+applying it to the target database.
 
 Today's advisory suggestions are generated from available stock and dietary
 preferences, including allergy information and dietary notes, using the

@@ -2,7 +2,7 @@ import { z } from "zod";
 import { err, ok, type AppError, type Result } from "@app/shared";
 import { generateStructuredMultimodal } from "../core/llm.client";
 import type { SkillRun } from "./skill.types";
-import type { ConversationStreamInput } from "@app/modules/schemas";
+import { estimatedMacrosPerUnitSchema, type ConversationStreamInput } from "@app/modules/schemas";
 
 const confidenceSchema = z.enum(["high", "medium", "low"]);
 
@@ -34,6 +34,8 @@ export const visionExtractorOutputSchema = z.discriminatedUnion("kind", [
       unitPrice: z.number().nonnegative().nullable(),
       suggestedStorageLocation: z.enum(["fridge", "freezer", "pantry"]),
       estimatedShelfLifeDays: z.number().positive().nullable(),
+      estimatedMacrosPerUnit: estimatedMacrosPerUnitSchema.nullable()
+        .describe("Estimated nutrition for exactly one of the line item's quantity units, or null if not reasonably estimable."),
       isFoodItem: z.boolean(),
       confidence: confidenceSchema,
     }).strict()),
@@ -109,6 +111,7 @@ function prompt(input: z.output<typeof visionExtractorInputSchema>): string {
     "Handle English and Hungarian grocery receipts, including common abbreviations.",
     "Expand product names when clear; preserve raw receipt text and never invent illegible numbers.",
     "Exclude bags, toiletries, cleaning supplies, and other non-food rows from receipt import.",
+    "For each identifiable food receipt row, estimate calories, protein, carbs, fat and fiber per ONE of its stated quantity units, not per 100g or per entire purchase unless that is the unit. For example, for grams divide typical per-100g nutrition by 100. Use null for values that cannot be reasonably estimated, especially when package size is unknown. These are estimates, not label measurements.",
     "Estimate prepared-dish portion macros conservatively and distinguish visible ingredients from likely hidden staples.",
     "</rules>",
     `<context>Caption: ${input.userCaption ?? "No caption was provided."}\nLocale: ${input.userLocale}\nCurrency: ${input.defaultCurrency}</context>`,

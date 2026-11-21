@@ -113,6 +113,13 @@ export type UiDirective =
         priceAmount: number | null;
         storageLocation: "fridge" | "freezer" | "pantry";
         estimatedShelfLifeDays: number | null;
+        estimatedMacrosPerUnit?: {
+          calories: number | null;
+          proteinG: number | null;
+          carbsG: number | null;
+          fatG: number | null;
+          fiberG: number | null;
+        } | null;
         isFoodItem: boolean;
         confidence: "high" | "medium" | "low";
       }>;

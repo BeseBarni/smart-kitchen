@@ -14,7 +14,7 @@ import { generateConversationTitle } from "./agents/conversation-title";
 import { isKitchenMessage } from "./agents/chat-restriction";
 import { isSafeKitchenMessage } from "./agents/kitchen-safety";
 import type { AgentContext, LedgerItem } from "./agents/agent.types";
-import { executeVisionExtractor, visionSkillImages } from "./skills/vision-extractor.skill";
+import { executeVisionExtractor, visionSkillImages, type VisionExtractorOutput } from "./skills/vision-extractor.skill";
 
 function jsonDirectives(directives: UiDirective[]) {
   const encoded = JSON.stringify(directives);
@@ -58,6 +58,30 @@ export function assistantMessagePayload(
     kind: "message",
     text,
     ...(directives.length > 0 ? { uiDirectives } : {}),
+  };
+}
+
+export function receiptImportDirective(
+  output: Extract<VisionExtractorOutput, { kind: "receipt" }>,
+): Extract<UiDirective, { component: "receipt_import_card" }> {
+  return {
+    component: "receipt_import_card",
+    merchant: output.merchant,
+    purchasedAt: output.purchasedAt,
+    currency: output.currency,
+    totalAmount: output.totalAmount,
+    items: output.lineItems.filter((item) => item.isFoodItem).map((item, index) => ({
+      tempId: `receipt-${index}`,
+      name: item.normalizedName,
+      quantity: item.quantity,
+      unit: item.unit,
+      priceAmount: item.unitPrice ?? (item.totalPrice != null ? item.totalPrice / item.quantity : null),
+      storageLocation: item.suggestedStorageLocation,
+      estimatedShelfLifeDays: item.estimatedShelfLifeDays,
+      estimatedMacrosPerUnit: item.estimatedMacrosPerUnit,
+      isFoodItem: item.isFoodItem,
+      confidence: item.confidence,
+    })),
   };
 }
 
@@ -203,29 +227,7 @@ export async function runStreamingTurn(input: {
         emit({ type: "skill_completed", skillName: "vision_extractor", latencyMs: extraction.data.latencyMs });
 
         if (output.kind === "receipt") {
-          const directive: Extract<UiDirective, { component: "receipt_import_card" }> = {
-            component: "receipt_import_card",
-            merchant: output.merchant,
-            purchasedAt: output.purchasedAt,
-            currency: output.currency,
-            totalAmount: output.totalAmount,
-            items: output.lineItems
-              .filter((item) => item.isFoodItem)
-              .map((item, index) => ({
-                tempId: `receipt-${index}`,
-                name: item.normalizedName,
-                quantity: item.quantity,
-                unit: item.unit,
-                priceAmount: item.unitPrice ?? (
-                  item.totalPrice != null ? item.totalPrice / item.quantity : null
-                ),
-                storageLocation: item.suggestedStorageLocation,
-                estimatedShelfLifeDays: item.estimatedShelfLifeDays,
-                isFoodItem: item.isFoodItem,
-                confidence: item.confidence,
-              })),
-          };
-          emitReceipt(directive);
+          emitReceipt(receiptImportDirective(output));
         }
       }
       const result = await orchestratorAgent.execute(

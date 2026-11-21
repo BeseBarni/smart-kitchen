@@ -1,4 +1,4 @@
-import { chatJsonValueSchema } from "@app/modules";
+import { chatJsonValueSchema, estimatedMacrosPerUnitSchema } from "@app/modules";
 import { z } from "zod";
 import { defineTool, toolOk } from "./tool.types";
 
@@ -89,6 +89,8 @@ const receiptImportSchema = z.object({
     priceAmount: z.number().nonnegative().nullable(),
     storageLocation: z.enum(["fridge", "freezer", "pantry"]),
     estimatedShelfLifeDays: z.number().positive().nullable(),
+    estimatedMacrosPerUnit: estimatedMacrosPerUnitSchema.nullable().optional()
+      .describe("Estimated nutrition per quantity unit, if available."),
     isFoodItem: z.boolean(),
     confidence: z.enum(["high", "medium", "low"]),
   }).strict()).describe("Editable extracted receipt food lines."),

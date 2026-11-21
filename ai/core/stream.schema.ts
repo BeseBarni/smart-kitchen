@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { nutritionTargetChangesSchema } from "@app/modules/schemas";
+import { estimatedMacrosPerUnitSchema, nutritionTargetChangesSchema } from "@app/modules/schemas";
 import type { AgentStreamEvent } from "./stream.types";
 
 const agentNameSchema = z.enum(["orchestrator", "inventory_ops", "recipe_architect", "kitchen_advisor", "vision_extractor"]);
@@ -107,6 +107,7 @@ export const uiDirectiveSchema = z.discriminatedUnion("component", [
       priceAmount: z.number().nonnegative().nullable(),
       storageLocation: z.enum(["fridge", "freezer", "pantry"]),
       estimatedShelfLifeDays: z.number().positive().nullable(),
+      estimatedMacrosPerUnit: estimatedMacrosPerUnitSchema.nullable().optional(),
       isFoodItem: z.boolean(),
       confidence: z.enum(["high", "medium", "low"]),
     })),

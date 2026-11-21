@@ -3,9 +3,10 @@ import { test } from "node:test";
 import { MockLanguageModelV4 } from "ai/test";
 import { generateConversationTitle } from "./agents/conversation-title";
 import { isKitchenMessage } from "./agents/chat-restriction";
-import { assistantMessagePayload, createTurnEmitter } from "./runner";
+import { assistantMessagePayload, createTurnEmitter, receiptImportDirective } from "./runner";
 import { toModelMessages } from "./agents/orchestrator.agent";
-import { visionExtractorInputSchema, visionSkillImages } from "./skills/vision-extractor.skill";
+import { visionExtractorInputSchema, visionExtractorOutputSchema, visionSkillImages } from "./skills/vision-extractor.skill";
+import { uiDirectiveSchema } from "./core/stream.schema";
 import type { ConversationItemDto } from "@app/modules";
 import type { AgentStreamEvent } from "./core/stream.types";
 import type { UiDirective } from "./core/ui.types";
@@ -36,6 +37,30 @@ test("allows a receipt review tool on a turn without an automatic receipt", () =
   turn.emit({ type: "ui_directive", directive, invalidateDomains: [] });
   assert.deepEqual(turn.directives, [directive]);
   assert.equal(events.length, 1);
+});
+
+test("receipt review preserves per-unit nutrition estimates and excludes non-food", () => {
+  const macros = { calories: 0.82, proteinG: 0.017, carbsG: 0.23, fatG: 0.003, fiberG: null };
+  const line = {
+    rawText: "APPLES", normalizedName: "Apples", quantity: 500, unit: "g",
+    totalPrice: 4, unitPrice: null, suggestedStorageLocation: "fridge",
+    estimatedShelfLifeDays: 7, estimatedMacrosPerUnit: macros, isFoodItem: true, confidence: "high",
+  };
+  const output = visionExtractorOutputSchema.parse({
+    kind: "receipt", merchant: "Shop", purchasedAt: null, currency: "USD", totalAmount: 5,
+    lineItems: [line, { ...line, normalizedName: "Bag", isFoodItem: false, estimatedMacrosPerUnit: null }],
+    ambiguities: [],
+  });
+  assert.equal(output.kind, "receipt");
+  if (output.kind !== "receipt") return;
+  const directive = receiptImportDirective(output);
+  assert.equal(directive.items.length, 1);
+  assert.deepEqual(directive.items[0]?.estimatedMacrosPerUnit, macros);
+  assert.equal(directive.items[0]?.priceAmount, 4 / 500);
+  assert.deepEqual(uiDirectiveSchema.parse(directive), directive);
+  assert.equal(visionExtractorOutputSchema.safeParse({
+    ...output, lineItems: [{ ...line, estimatedMacrosPerUnit: { ...macros, proteinG: -1 } }],
+  }).success, false);
 });
 
 test("projects uploaded attachment metadata into strict vision input", () => {

@@ -72,7 +72,7 @@ export const inventoryAdjustTool = defineTool({
 
 export const inventoryConsumeTool = defineTool({
   name: "inventory_consume_portion",
-  description: "Consume stock and atomically record the corresponding meal log.",
+  description: "When the user says they ate tracked food, consume the identified quantity and atomically record the corresponding meal log. Never use a quantity adjustment for food eaten.",
   inputSchema: z.object({
     itemId: z.string().uuid().describe("Inventory item ID."),
     quantity: z.number().positive().describe("Quantity consumed."),
@@ -83,14 +83,8 @@ export const inventoryConsumeTool = defineTool({
   outputSchema: z.object({ updatedItem: inventoryItemSchema, mealLog: mealLogSchema }).strict(),
   annotations: { destructiveHint: true, idempotentHint: false },
   invalidateDomains: ["inventory", "meal-logs"],
-  execute: async ({ itemId, ...input }, context) => {
-    const item = await inventoryService.getById(context.userId, itemId);
-    if (!item.success) return item;
-    if (item.data.fiberPerUnit === null && input.fiberG === undefined) {
-      return { success: false, error: { code: "VALIDATION_ERROR", message: "Fiber is unknown. Ask for the fiber amount or provide a clearly labeled estimate before logging." } };
-    }
-    return inventoryService.consumePortion(context.userId, itemId, { ...input, requireFiber: true });
-  },
+  execute: ({ itemId, ...input }, context) =>
+    inventoryService.consumePortion(context.userId, itemId, input),
   toUiDirective: ({ mealLog }) => ({
     component: "consumption_summary_card",
     loggedMeal: {

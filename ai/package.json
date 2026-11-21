@@ -13,7 +13,7 @@
   },
   "scripts": {
     "typecheck": "tsc --noEmit",
-    "test": "tsx --test agents/agent-loop.test.ts agents/orchestrator.tools.test.ts core/sse.encoder.test.ts tools/adapters/vercel.adapter.test.ts runner.test.ts",
+    "test": "node --experimental-test-module-mocks --import tsx --test agents/agent-loop.test.ts agents/orchestrator.tools.test.ts core/sse.encoder.test.ts tools/adapters/vercel.adapter.test.ts tools/definitions/inventory.write.tools.test.ts runner.test.ts",
     "smoke-test": "tsx scripts/smoke-test.ts"
   },
   "dependencies": {

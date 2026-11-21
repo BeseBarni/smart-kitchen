@@ -3,6 +3,7 @@ import { getDatabase, inventoryItems } from "@app/db";
 import { numberToNumeric } from "../shared/numeric";
 import type {
   BatchCreateInventoryInput,
+  BatchInventoryItemInput,
   CreateInventoryItemInput,
   ListInventoryQuery,
   UpdateInventoryItemInput,
@@ -95,34 +96,38 @@ export async function insertInventoryItem(userId: string, input: CreateInventory
   return row;
 }
 
+export function batchInventoryValues(userId: string, item: BatchInventoryItemInput): typeof inventoryItems.$inferInsert {
+  return {
+    userId,
+    name: item.name,
+    itemType: "ingredient",
+    recipeId: null,
+    ingredientId: null,
+    storageLocation: item.storageLocation,
+    status: "in_stock",
+    initialQuantity: String(item.quantity),
+    remainingQuantity: String(item.quantity),
+    unit: item.unit,
+    preparedAt: null,
+    expiresAt: item.expiresAt ? new Date(item.expiresAt) : null,
+    imageUrl: null,
+    caloriesPerUnit: numberToNumeric(item.estimatedMacrosPerUnit?.calories ?? null),
+    proteinPerUnit: numberToNumeric(item.estimatedMacrosPerUnit?.proteinG ?? null),
+    carbsPerUnit: numberToNumeric(item.estimatedMacrosPerUnit?.carbsG ?? null),
+    fatPerUnit: numberToNumeric(item.estimatedMacrosPerUnit?.fatG ?? null),
+    fiberPerUnit: numberToNumeric(item.estimatedMacrosPerUnit?.fiberG ?? null),
+    costPerUnit: numberToNumeric(item.costPerUnit ?? null),
+    currency: item.currency ?? "HUF",
+  };
+}
+
 export async function insertInventoryBatch(userId: string, input: BatchCreateInventoryInput) {
   return getDatabase().transaction(async (tx) => {
     const rows = [];
     for (const item of input.items) {
       const [row] = await tx
         .insert(inventoryItems)
-        .values({
-          userId,
-          name: item.name,
-          itemType: "ingredient",
-          recipeId: null,
-          ingredientId: null,
-          storageLocation: item.storageLocation,
-          status: "in_stock",
-          initialQuantity: String(item.quantity),
-          remainingQuantity: String(item.quantity),
-          unit: item.unit,
-          preparedAt: null,
-          expiresAt: item.expiresAt ? new Date(item.expiresAt) : null,
-          imageUrl: null,
-          caloriesPerUnit: null,
-          proteinPerUnit: null,
-          carbsPerUnit: null,
-          fatPerUnit: null,
-          fiberPerUnit: null,
-          costPerUnit: numberToNumeric(item.costPerUnit ?? null),
-          currency: item.currency ?? "HUF",
-        })
+        .values(batchInventoryValues(userId, item))
         .returning();
       if (!row) throw new Error("Inventory batch insert returned no row.");
       rows.push(row);
