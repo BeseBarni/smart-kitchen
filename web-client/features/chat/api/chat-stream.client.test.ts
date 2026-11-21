@@ -99,3 +99,46 @@ test("reports a rejected message with its reason and conversation id", async () 
     globalThis.fetch = originalFetch;
   }
 });
+
+test("delivers the persisted turn identity before activating a successful new conversation", async () => {
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = async () => new Response(readableChunks([
+    'event: turn_started\ndata: {"type":"turn_started","conversationId":"conversation-1","turnId":"user-item-1"}\n\n',
+    'event: turn_completed\ndata: {"type":"turn_completed","conversationId":"conversation-1","usage":{"inputTokens":0,"outputTokens":0},"latencyMs":1}\n\n',
+  ]), { headers: { "X-Conversation-Id": "conversation-1" } });
+  const calls: string[] = [];
+  try {
+    await streamChatTurn({
+      conversationId: null,
+      message: "Soup",
+      signal: new AbortController().signal,
+      onConversationId: () => { calls.push("header"); },
+      onEvent: (event) => {
+        if (event.type === "turn_started") calls.push(event.turnId);
+      },
+    });
+    assert.deepEqual(calls, ["user-item-1"]);
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
+test("retains the conversation id if the stream fails before the turn starts", async () => {
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = async () => new Response(readableChunks([]), {
+    headers: { "X-Conversation-Id": "conversation-1" },
+  });
+  let id = "";
+  try {
+    await assert.rejects(streamChatTurn({
+      conversationId: null,
+      message: "Soup",
+      signal: new AbortController().signal,
+      onConversationId: (value) => { id = value; },
+      onEvent: () => {},
+    }), /response was interrupted/i);
+    assert.equal(id, "conversation-1");
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});

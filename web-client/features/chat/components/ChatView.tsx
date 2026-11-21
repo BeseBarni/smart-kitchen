@@ -50,8 +50,7 @@ export function ChatView(): React.JSX.Element {
   }, [activeConversationId, conversations, conversationsPending, setActiveConversationId]);
 
   const turns = useMemo(() => {
-    const savedTurns = mergeChatTurns(history?.turns ?? [], activeConversationId ? rejectedTurns[activeConversationId] ?? [] : []);
-    return stream.turn ? [...savedTurns, stream.turn] : savedTurns;
+    return mergeChatTurns(history?.turns ?? [], activeConversationId ? rejectedTurns[activeConversationId] ?? [] : [], stream.turn);
   }, [activeConversationId, history?.turns, rejectedTurns, stream.turn]);
 
   const submitMessage = (): void => {

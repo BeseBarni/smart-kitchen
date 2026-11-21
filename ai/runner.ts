@@ -1,4 +1,3 @@
-import { randomUUID } from "node:crypto";
 import {
   chatService,
   chatJsonValueSchema,
@@ -90,9 +89,11 @@ export async function runStreamingTurn(input: {
     },
   }]);
   if (!userItem.success) return err(userItem.error);
+  const persistedUserItem = userItem.data[0];
+  if (!persistedUserItem) throw new Error("The user message was not persisted.");
 
-  const isFirstMessage = existing.data.conversation.title === null && userItem.data[0]?.sequence === 1;
-  const turnId = randomUUID();
+  const isFirstMessage = existing.data.conversation.title === null && persistedUserItem.sequence === 1;
+  const turnId = persistedUserItem.id;
   return ok(createSseStream(async (send, signal) => {
     const startedAt = Date.now();
     const directives: UiDirective[] = [];

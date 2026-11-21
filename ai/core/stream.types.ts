@@ -9,6 +9,7 @@ export type AgentName =
   | "kitchen_advisor";
 
 export type AgentStreamEvent =
+  // turnId is the persisted user message's ID, shared with conversation history.
   | { type: "turn_started"; conversationId: string; turnId: string }
   | { type: "conversation_title_updated"; conversationId: string }
   | {

@@ -67,15 +67,23 @@ export async function streamChatTurn(options: StreamTurnOptions): Promise<void> 
     signal: options.signal,
   });
   const conversationId = response.headers.get("X-Conversation-Id");
-  if (conversationId) options.onConversationId(conversationId);
-  if (!response.ok) await throwApiResponseError(response);
-  if (!response.body) throw new Error("The streaming response did not contain a body.");
-  let terminal = false;
-  for await (const event of parseSseStream(response.body)) {
-    if (event.type === "turn_completed" || event.type === "error") terminal = true;
-    await options.onEvent(event);
+  if (!response.ok) {
+    if (conversationId) options.onConversationId(conversationId);
+    await throwApiResponseError(response);
   }
-  if (!terminal && !options.signal.aborted) {
-    throw new Error("The response was interrupted. Please try again.");
+  let started = false;
+  try {
+    if (!response.body) throw new Error("The streaming response did not contain a body.");
+    let terminal = false;
+    for await (const event of parseSseStream(response.body)) {
+      if (event.type === "turn_started") started = true;
+      if (event.type === "turn_completed" || event.type === "error") terminal = true;
+      await options.onEvent(event);
+    }
+    if (!terminal && !options.signal.aborted) {
+      throw new Error("The response was interrupted. Please try again.");
+    }
+  } finally {
+    if (!started && conversationId) options.onConversationId(conversationId);
   }
 }

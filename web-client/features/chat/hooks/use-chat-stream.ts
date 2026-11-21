@@ -75,6 +75,7 @@ export function useChatStream(
         onEvent: async (event: AgentStreamEvent) => {
           if (event.type === "turn_started") {
             activeConversationId = event.conversationId;
+            setTurn((current) => current ? { ...current, id: event.turnId } : current);
             onConversationId(event.conversationId);
           } else if (event.type === "conversation_title_updated") {
             await queryClient.invalidateQueries({ queryKey: chatKeys.conversations() });
