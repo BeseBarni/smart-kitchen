@@ -9,6 +9,7 @@ import {
   createConversationInputSchema,
   listConversationsQuerySchema,
   updateConversationTitleSchema,
+  type ConversationStreamInput,
 } from "@app/modules";
 import { runStreamingTurn } from "@app/ai";
 import { Hono, type Context } from "hono";
@@ -23,7 +24,7 @@ async function streamResponse(
   context: Context<AuthEnvironment>,
   userId: string,
   conversationId: string,
-  message: { message: string; attachments?: Array<{ name: string; mimeType: string; url?: string }> },
+  message: ConversationStreamInput,
 ): Promise<Response> {
   const result = await runStreamingTurn({
     userId,

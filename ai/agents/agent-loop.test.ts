@@ -5,6 +5,44 @@ import { ok } from "@app/shared";
 import { z } from "zod";
 import { defineTool } from "../tools/definitions/tool.types";
 import { runAgentLoop } from "./agent-loop";
+import type { AgentStreamEvent } from "../core/stream.types";
+
+test("passes the selected language to the model and streams AI progress", async () => {
+  let calls = 0;
+  const events: AgentStreamEvent[] = [];
+  const usage = {
+    inputTokens: { total: 1, noCache: 1, cacheRead: undefined, cacheWrite: undefined },
+    outputTokens: { total: 1, text: 1, reasoning: undefined },
+  };
+  const model = new MockLanguageModelV4({
+    doStream: async () => {
+      calls++;
+      if (calls === 1) return { stream: simulateReadableStream({ chunks: [
+        { type: "stream-start", warnings: [] },
+        { type: "tool-call", toolCallId: "progress-1", toolName: "report_progress", input: '{"label":"Dagasztom a tésztát 🍞"}' },
+        { type: "finish", finishReason: { unified: "tool-calls", raw: undefined }, usage },
+      ] }) };
+      return { stream: simulateReadableStream({ chunks: [
+        { type: "stream-start", warnings: [] },
+        { type: "text-start", id: "text-1" },
+        { type: "text-delta", id: "text-1", delta: "Kész." },
+        { type: "text-end", id: "text-1" },
+        { type: "finish", finishReason: { unified: "stop", raw: undefined }, usage },
+      ] }) };
+    },
+  });
+  const result = await runAgentLoop({
+    agent: "inventory_ops", system: "Test", request: { task: "Soup" }, tools: [], model,
+    context: {
+      userId: "user-1", conversationId: "conversation-1", locale: "hu",
+      abortSignal: new AbortController().signal, emit: (event) => events.push(event),
+      recordLedger: async () => {}, ledgerItems: [], usage: { inputTokens: 0, outputTokens: 0 },
+    },
+  });
+  assert.match(JSON.stringify(model.doStreamCalls[0]?.prompt), /Respond in Hungarian/);
+  assert.ok(events.some((event) => event.type === "agent_status" && event.source === "ai" && event.label === "Dagasztom a tésztát 🍞"));
+  assert.equal(result.summary, "Kész.");
+});
 
 test("propagates unexpected tool failures instead of completing the turn", async () => {
   const model = new MockLanguageModelV4({
@@ -42,6 +80,7 @@ test("propagates unexpected tool failures instead of completing the turn", async
     context: {
       userId: "user-1",
       conversationId: "conversation-1",
+      locale: "en",
       abortSignal: new AbortController().signal,
       emit: () => {},
       recordLedger: async () => {},
@@ -107,6 +146,7 @@ test("allows the model to correct invalid tool arguments and finish", async () =
     context: {
       userId: "user-1",
       conversationId: "conversation-1",
+      locale: "en",
       abortSignal: new AbortController().signal,
       emit: () => {},
       recordLedger: async () => {},
@@ -165,6 +205,7 @@ test("finishes a workflow requiring more than five model steps", async () => {
     context: {
       userId: "user-1",
       conversationId: "conversation-1",
+      locale: "en",
       abortSignal: new AbortController().signal,
       emit: () => {},
       recordLedger: async () => {},

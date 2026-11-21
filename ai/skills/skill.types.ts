@@ -2,6 +2,8 @@ import { err, ok, type AppError, type Result } from "@app/shared";
 import type { z } from "zod";
 import { generateStructuredWithUsage } from "../core/llm.client";
 import type { AgentStreamEvent } from "../core/stream.types";
+import type { AgentContext } from "../agents/agent.types";
+import { languageReminder } from "../agents/language";
 
 export type SkillRun<TInput, TOutput> = {
   input: TInput;
@@ -20,6 +22,7 @@ export type SkillDefinition<
   execute(
     input: unknown,
     emit: (event: AgentStreamEvent) => void,
+    locale?: AgentContext["locale"],
   ): Promise<Result<SkillRun<z.output<TInputSchema>, z.output<TOutputSchema>>, AppError>>;
 };
 
@@ -37,7 +40,7 @@ export function defineSkill<TInputSchema extends z.ZodType, TOutputSchema extend
     name: spec.name,
     inputSchema: spec.inputSchema,
     outputSchema: spec.outputSchema,
-    execute: async (input, emit) => {
+    execute: async (input, emit, locale) => {
       const parsed = spec.inputSchema.safeParse(input);
       if (!parsed.success) {
         return err({
@@ -54,7 +57,7 @@ export function defineSkill<TInputSchema extends z.ZodType, TOutputSchema extend
       });
       const generated = await generateStructuredWithUsage({
         schema: spec.outputSchema,
-        system: spec.system,
+        system: locale ? `${spec.system}\n${languageReminder(locale)}` : spec.system,
         prompt: spec.prompt(parsed.data),
         modelTier: spec.modelTier,
       });

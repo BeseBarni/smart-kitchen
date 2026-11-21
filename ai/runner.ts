@@ -104,6 +104,7 @@ export async function runStreamingTurn(input: {
     const context: AgentContext = {
       userId: input.userId,
       conversationId: input.conversationId,
+      locale: input.userMessage.locale ?? "en",
       abortSignal: signal,
       emit,
       usage: { inputTokens: 0, outputTokens: 0 },
@@ -118,7 +119,7 @@ export async function runStreamingTurn(input: {
     emit({ type: "turn_started", conversationId: input.conversationId, turnId });
     const titleUpdate = isFirstMessage ? (async () => {
       try {
-        const title = await generateConversationTitle(input.userMessage.message);
+        const title = await generateConversationTitle(input.userMessage.message, undefined, context.locale);
         const updated = await chatService.updateTitleIfUntitled(input.userId, input.conversationId, title);
         if (!updated.success) {
           console.error("Conversation title update failed:", updated.error.message);

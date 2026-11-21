@@ -1,6 +1,7 @@
 import { agentStreamEventSchema } from "@app/ai/stream-schema";
 import type { AgentStreamEvent } from "@app/ai/types";
 import { throwApiResponseError } from "@/lib/api-client";
+import { languageStore } from "@/lib/i18n/language.store";
 
 export interface StreamTurnOptions {
   conversationId: string | null;
@@ -56,9 +57,7 @@ export async function streamChatTurn(options: StreamTurnOptions): Promise<void> 
   const endpoint = options.conversationId
     ? `/api/conversations/${encodeURIComponent(options.conversationId)}/stream`
     : "/api/chat";
-  const body = options.conversationId
-    ? { message: options.message }
-    : { message: options.message };
+  const body = { message: options.message, locale: languageStore.getState().locale };
   const response = await fetch(`${baseUrl}${endpoint}`, {
     method: "POST",
     credentials: "include",

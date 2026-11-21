@@ -103,6 +103,7 @@ export const agentStreamEventSchema: z.ZodType<AgentStreamEvent> = z.discriminat
     agent: agentNameSchema,
     status: z.enum(["thinking", "delegating", "running_tool", "running_skill"]),
     label: z.string(),
+    source: z.literal("ai").optional(),
   }),
   z.object({ type: z.literal("text_delta"), delta: z.string() }),
   z.object({

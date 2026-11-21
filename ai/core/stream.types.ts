@@ -17,6 +17,7 @@ export type AgentStreamEvent =
       agent: AgentName;
       status: "thinking" | "delegating" | "running_tool" | "running_skill";
       label: string;
+      source?: "ai";
     }
   | { type: "text_delta"; delta: string }
   | {

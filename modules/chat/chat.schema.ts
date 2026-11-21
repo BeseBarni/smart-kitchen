@@ -156,6 +156,7 @@ export const conversationStreamInputSchema = z
   .object({
     message: z.string().trim().min(1).describe("Message sent by the user."),
     attachments: z.array(conversationAttachmentSchema).optional().describe("Optional message attachments."),
+    locale: z.enum(["en", "hu", "es"]).optional().describe("Selected application language."),
   })
   .describe("Input for streaming a conversation turn.");
 

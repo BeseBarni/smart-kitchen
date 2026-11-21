@@ -17,6 +17,7 @@ test("save delegation reports success only with an actual saved recipe", async (
     const context = {
       userId: "user-1",
       conversationId: "conversation-1",
+      locale: "en" as const,
       abortSignal: new AbortController().signal,
       emit: () => {},
       recordLedger: async () => {},

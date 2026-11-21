@@ -20,7 +20,9 @@ cook/stock actions. Older recipe cards are restored when their structured tool
 results are available; text-only historical answers remain unchanged.
 Chat responses are buffered while streaming so recipe details cannot appear
 inline before their cards; the full response remains available in the recipe
-sheet, including any non-recipe information.
+sheet, including any non-recipe information. Chat agents and recipe skills
+receive the selected app language, and may show AI-generated progress messages
+while working; a localized standard status is shown until one is available.
 The chat menu opens a persistent shopping list; adding ingredients from a
 recipe first compares inventory and asks you to review uncertain matches.
 Rejected user messages are shown only in the current browser session and are

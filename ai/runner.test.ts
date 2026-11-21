@@ -38,8 +38,9 @@ test("generates a short title using low-effort model settings", async () => {
     },
   });
 
-  assert.equal(await generateConversationTitle("How do I make soup?", model), "Tomato Soup");
+  assert.equal(await generateConversationTitle("How do I make soup?", model, "es"), "Tomato Soup");
   assert.deepEqual(model.doGenerateCalls[0]?.providerOptions?.google, { thinkingConfig: { thinkingLevel: "low" } });
+  assert.match(JSON.stringify(model.doGenerateCalls[0]?.prompt), /Respond in Spanish/);
 });
 
 test("rejects a title that does not meet the output schema", async () => {

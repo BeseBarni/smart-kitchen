@@ -82,7 +82,9 @@ export function useChatStream(
           } else if (event.type === "agent_status") {
             setTurn((current) => current ? {
               ...current,
-              activeStatus: { ...event, label: event.status === "running_skill"
+              activeStatus: event.source === "ai" ? event : current.activeStatus?.source === "ai"
+                ? { ...event, label: current.activeStatus.label, source: "ai" }
+                : { ...event, label: event.status === "running_skill"
                 ? current.activeStatus?.label ?? getText("chat.preparingSuggestion")
                 : event.status === "delegating"
                   ? getText("chat.delegating")
@@ -104,7 +106,8 @@ export function useChatStream(
                 type: "agent_status",
                 agent: event.agent,
                 status: "running_tool",
-                label: toolStatusLabel(event.toolName),
+                label: current.activeStatus?.source === "ai" ? current.activeStatus.label : toolStatusLabel(event.toolName),
+                ...(current.activeStatus?.source === "ai" ? { source: "ai" as const } : {}),
               },
               toolSteps: [...current.toolSteps, {
                 id: event.callId,

@@ -1,12 +1,14 @@
 import type { AgentName, AgentStreamEvent } from "../core/stream.types";
 import type { UiDirective } from "../core/ui.types";
 import type { LedgerItem } from "../tools/definitions/tool.types";
+import type { ConversationStreamInput } from "@app/modules";
 
 export type { LedgerItem } from "../tools/definitions/tool.types";
 
 export type AgentContext = {
   userId: string;
   conversationId: string;
+  locale: NonNullable<ConversationStreamInput["locale"]>;
   abortSignal: AbortSignal;
   emit: (event: AgentStreamEvent) => void;
   recordLedger: (items: LedgerItem[]) => Promise<void>;

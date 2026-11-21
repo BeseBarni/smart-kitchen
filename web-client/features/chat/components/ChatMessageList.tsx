@@ -28,7 +28,7 @@ export function ChatMessageList({
           {!isActive && !hasRecipe && turn.assistantMessage.text && <MessageBubble message={turn.assistantMessage} />}
           {isActive && !activeStatus && turn.assistantMessage.text && <p role="status" className="text-label-md text-muted-foreground">{t("chat.preparingResponse")}</p>}
           {turn === turns[turns.length - 1] && activeStatus && (
-            <p role="status" className="text-label-md text-muted-foreground">{activeStatus.status === "running_tool" ? toolStatusLabel(turn.toolSteps.findLast((step) => step.status === "running")?.toolName ?? "", locale) : t(activeStatus.status === "running_skill" ? "chat.preparingSuggestion" : activeStatus.status === "delegating" ? "chat.delegating" : "chat.thinking")}</p>
+            <p role="status" className="text-label-md text-muted-foreground">{activeStatus.source === "ai" ? activeStatus.label : activeStatus.status === "running_tool" ? toolStatusLabel(turn.toolSteps.findLast((step) => step.status === "running")?.toolName ?? "", locale) : t(activeStatus.status === "running_skill" ? "chat.preparingSuggestion" : activeStatus.status === "delegating" ? "chat.delegating" : "chat.thinking")}</p>
           )}
           {turn.uiDirectives.map((directive, index) => (
             <UiDirectiveRenderer key={`${turn.id}-directive-${index}`} directive={directive} onReply={onReply} disabled={streaming} recipeResponse={turn.assistantMessage.text} />

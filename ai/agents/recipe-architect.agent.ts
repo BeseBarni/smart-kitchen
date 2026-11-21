@@ -64,7 +64,7 @@ function skillTool<TInputSchema extends z.ZodType, TOutputSchema extends z.ZodTy
     inputSchema: skill.inputSchema,
     annotations: { readOnlyHint: true, idempotentHint: true },
     execute: async (input, toolContext) => {
-      const result = await skill.execute(input, toolContext.emit);
+      const result = await skill.execute(input, toolContext.emit, context.locale);
       if (!result.success) return { success: false, error: result.error };
       context.usage.inputTokens += result.data.usage.inputTokens;
       context.usage.outputTokens += result.data.usage.outputTokens;

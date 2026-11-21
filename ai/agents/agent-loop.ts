@@ -1,9 +1,11 @@
-import { stepCountIs, type LanguageModel, type ModelMessage, type ToolSet } from "ai";
+import { stepCountIs, tool, type LanguageModel, type ModelMessage, type ToolSet } from "ai";
+import { z } from "zod";
 import type { AgentName } from "../core/stream.types";
 import { getFastModel, getReasoningModel, streamWithTools } from "../core/llm.client";
 import { toVercelTools } from "../tools/adapters/vercel.adapter";
 import type { ToolDefinition } from "../tools/definitions/tool.types";
 import type { AgentContext, SubAgentRequest, SubAgentResult } from "./agent.types";
+import { languageReminder } from "./language";
 
 export async function runAgentLoop(input: {
   agent: AgentName;
@@ -19,6 +21,16 @@ export async function runAgentLoop(input: {
   const ledgerStart = input.context.ledgerItems.length;
   const toolContext = { ...input.context, agent: input.agent };
   const tools: ToolSet = toVercelTools(input.tools, toolContext);
+  tools.report_progress = tool({
+    description: "Show a brief, friendly kitchen-themed progress message to the user.",
+    inputSchema: z.object({
+      label: z.string().trim().min(1).max(100).describe("Short, varied progress message in the selected app language, optionally with an emoji."),
+    }).strict(),
+    execute: async ({ label }) => {
+      input.context.emit({ type: "agent_status", agent: input.agent, status: "thinking", label, source: "ai" });
+      return { reported: true };
+    },
+  });
   input.context.emit({
     type: "agent_status",
     agent: input.agent,
@@ -29,7 +41,11 @@ export async function runAgentLoop(input: {
     model: input.model ?? (
       input.modelTier === "reasoning" ? getReasoningModel() : getFastModel()
     ),
-    system: input.system,
+    system: [
+      input.system,
+      "At the start of your work, call report_progress with a short, playful kitchen-themed status relevant to the task, optionally including an emoji. Update it when work changes substantially. Do not reveal private reasoning or claim actions have completed.",
+      languageReminder(input.context.locale),
+    ].join("\n"),
     messages: input.messages ?? [{
       role: "user",
       content: [input.request.task, input.request.contextHint].filter(Boolean).join("\n\n"),

@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { conversationItemSchema } from "./chat.schema";
+import { conversationItemSchema, conversationStreamInputSchema } from "./chat.schema";
 
 const item = {
   id: "00000000-0000-4000-8000-000000000001",
@@ -43,4 +43,12 @@ test("conversation item rejects mismatched type and payload discriminators", () 
     }).success,
     false,
   );
+});
+
+test("chat stream accepts supported languages and rejects unsupported values", () => {
+  for (const locale of ["en", "hu", "es"]) {
+    assert.equal(conversationStreamInputSchema.parse({ message: "Soup", locale }).locale, locale);
+  }
+  assert.equal(conversationStreamInputSchema.safeParse({ message: "Soup", locale: "invalid" }).success, false);
+  assert.equal(conversationStreamInputSchema.safeParse({ message: "Soup" }).success, true);
 });

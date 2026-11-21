@@ -57,6 +57,15 @@ test("preserves completed text-only messages", () => {
   assert.ok(render(false, false).includes("secret test ingredient"));
 });
 
+test("shows AI-generated progress instead of generic tool status", () => {
+  const activeStatus = {
+    type: "agent_status" as const, agent: "orchestrator" as const,
+    status: "running_tool" as const, label: "Kneading the dough 🍞", source: "ai" as const,
+  };
+  const markup = renderToStaticMarkup(<QueryClientProvider client={new QueryClient()}><ChatMessageList turns={[turn(false)]} activeStatus={activeStatus} onReply={() => {}} streaming /></QueryClientProvider>);
+  assert.match(markup, /Kneading the dough 🍞/);
+});
+
 test("shows a rejected message without displaying an error in the conversation", () => {
   const rejected = turn(false);
   rejected.userMessage = {

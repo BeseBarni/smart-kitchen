@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { parseSseStream, streamChatTurn } from "./chat-stream.client";
 import { ApiClientError } from "@/lib/api-client";
+import { languageStore } from "@/lib/i18n/language.store";
 
 function readableChunks(chunks: readonly string[]): ReadableStream<Uint8Array> {
   const encoder = new TextEncoder();
@@ -12,6 +13,32 @@ function readableChunks(chunks: readonly string[]): ReadableStream<Uint8Array> {
     },
   });
 }
+
+test("sends the selected language to both chat endpoints", async () => {
+  const originalFetch = globalThis.fetch;
+  const previous = languageStore.getState().locale;
+  const requests: Array<{ url: string; body: unknown }> = [];
+  globalThis.fetch = async (url, init) => {
+    requests.push({ url: String(url), body: JSON.parse(String(init?.body)) });
+    return new Response(readableChunks([
+      'event: turn_completed\ndata: {"type":"turn_completed","conversationId":"c","usage":{"inputTokens":0,"outputTokens":0},"latencyMs":1}\n\n',
+    ]));
+  };
+  try {
+    languageStore.getState().setLocale("hu");
+    for (const conversationId of [null, "conversation-1"]) {
+      await streamChatTurn({ conversationId, message: "Soup", signal: new AbortController().signal, onConversationId: () => {}, onEvent: () => {} });
+    }
+    assert.deepEqual(requests.map((request) => request.body), [
+      { message: "Soup", locale: "hu" }, { message: "Soup", locale: "hu" },
+    ]);
+    assert.match(requests[0]?.url ?? "", /\/api\/chat$/);
+    assert.match(requests[1]?.url ?? "", /\/api\/conversations\/conversation-1\/stream$/);
+  } finally {
+    languageStore.getState().setLocale(previous);
+    globalThis.fetch = originalFetch;
+  }
+});
 
 test("parses chunked SSE frames and normalizes CRLF boundaries", async () => {
   const stream = readableChunks([
