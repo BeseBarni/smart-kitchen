@@ -46,8 +46,8 @@ export function StockLogForm({ date, mealType, onClose }: {
     if (Number.isNaN(eaten.getTime()) || localDate(eaten) !== date || `${String(eaten.getHours()).padStart(2, "0")}:${String(eaten.getMinutes()).padStart(2, "0")}` !== selectedTime) {
       form.setError("time", { type: "validate" }); return;
     }
-    try { await consume.mutateAsync({ id: itemId, input: { ...input, ...(selected.fiberPerUnit === null ? { fiberG } : {}), requireFiber: true, eatenAt: eaten.toISOString() } }); onClose(); }
-    catch { /* Mutation reports the error and keeps the form open. */ }
+    consume.mutate({ id: itemId, input: { ...input, ...(selected.fiberPerUnit === null ? { fiberG } : {}), requireFiber: true, eatenAt: eaten.toISOString() } });
+    onClose();
   });
   if (stock.isPending) return <p role="status">{t("mealTracker.loadingStock")}</p>;
   if (stock.isError) return <div role="alert">{t("mealTracker.loadStockError")} <Button type="button" onClick={() => void stock.refetch()}>{t("common.retry")}</Button></div>;

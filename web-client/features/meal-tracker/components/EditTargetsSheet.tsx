@@ -28,8 +28,8 @@ export function EditTargetsSheet({ profile, onClose }: { profile: ProfileDto; on
     dailyCarbsG: profile.dailyCarbsG, dailyFatG: profile.dailyFatG, dailyFiberG: profile.dailyFiberG,
   } });
   const submit = form.handleSubmit(async (input) => {
-    try { await targets.mutateAsync(input); onClose(); }
-    catch { /* Mutation reports the error and keeps the form open. */ }
+    targets.mutate(input);
+    onClose();
   });
   return <Sheet open onOpenChange={(open) => { if (!open && !targets.isPending) onClose(); }}>
     <SheetContent side="bottom" className="mx-auto max-h-[90dvh] w-full max-w-[430px] overflow-y-auto rounded-t-2xl pb-[env(safe-area-inset-bottom,0px)]">

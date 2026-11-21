@@ -2,13 +2,19 @@
 
 import type { ConversationDto } from "@app/modules/schemas";
 import { useMutation, useQuery, useQueryClient, type UseMutationResult, type UseQueryResult } from "@tanstack/react-query";
-import { toast } from "sonner";
-import { getText } from "@/lib/i18n";
 import type { CreateConversationInput } from "../api/chat.api";
 import { chatApi } from "../api/chat.api";
 import { chatKeys } from "../api/chat.keys";
 import { mapConversationHistory } from "../utils/chat-history.mapper";
 import type { MappedConversationHistory } from "../types";
+import { rollbackOptimisticMutation, settleDomainQueries, snapshotQueryCaches } from "@/lib/optimistic";
+import {
+  insertOptimisticConversation,
+  removeOptimisticConversation,
+  renameOptimisticConversation,
+  replaceOptimisticConversation,
+} from "../utils/conversation-cache.utils";
+import { useChatUiStore } from "../stores/chat-ui.store";
 
 export function useConversations(): UseQueryResult<ConversationDto[], Error> {
   return useQuery({
@@ -36,23 +42,51 @@ interface ConversationMutations {
 
 export function useConversationMutations(): ConversationMutations {
   const client = useQueryClient();
-  const refreshList = async (): Promise<void> => {
-    await client.invalidateQueries({ queryKey: chatKeys.conversations() });
-  };
-  const create = useMutation({ mutationFn: chatApi.createConversation, onSuccess: refreshList, onError: () => toast.error(getText("chat.createError")) });
+  const create = useMutation({
+    mutationFn: chatApi.createConversation,
+    mutationKey: ["chat", "create"],
+    onMutate: async (input) => {
+      const context = await snapshotQueryCaches(client, [chatKeys.all]);
+      const conversation = insertOptimisticConversation(client, input);
+      return { ...context, optimisticId: conversation.id };
+    },
+    onSuccess: (conversation, _input, context) =>
+      replaceOptimisticConversation(client, context.optimisticId, conversation),
+    onError: (_error, _input, context) => rollbackOptimisticMutation(context),
+    onSettled: async () => {
+      await settleDomainQueries(client, ["chat", "create"], [chatKeys.all]);
+    },
+  });
   const updateTitle = useMutation({
     mutationFn: ({ id, title }: { id: string; title: string }) => chatApi.updateTitle(id, title),
-    onSuccess: refreshList,
-    onError: () => toast.error(getText("chat.renameError")),
+    mutationKey: ["chat", "rename"],
+    onMutate: async ({ id, title }) => {
+      const context = await snapshotQueryCaches(client, [chatKeys.all]);
+      renameOptimisticConversation(client, id, title);
+      return context;
+    },
+    onSuccess: (conversation, { id }) => replaceOptimisticConversation(client, id, conversation),
+    onError: (_error, _variables, context) => rollbackOptimisticMutation(context),
+    onSettled: async () => {
+      await settleDomainQueries(client, ["chat", "rename"], [chatKeys.all]);
+    },
   });
   const remove = useMutation({
     mutationFn: chatApi.removeConversation,
-    onError: () => toast.error(getText("chat.deleteError")),
-    onSuccess: async (_result, id) => {
-      await Promise.all([
-        client.invalidateQueries({ queryKey: chatKeys.conversations() }),
-        client.removeQueries({ queryKey: chatKeys.conversation(id) }),
-      ]);
+    mutationKey: ["chat", "remove"],
+    onMutate: async (id) => {
+      const context = await snapshotQueryCaches(client, [chatKeys.all]);
+      const activeId = useChatUiStore.getState().activeConversationId;
+      if (activeId === id) useChatUiStore.getState().setActiveConversationId(null);
+      removeOptimisticConversation(client, id);
+      return { ...context, activeId };
+    },
+    onError: (_error, _id, context) => {
+      if (context?.activeId) useChatUiStore.getState().setActiveConversationId(context.activeId);
+      rollbackOptimisticMutation(context);
+    },
+    onSettled: async () => {
+      await settleDomainQueries(client, ["chat", "remove"], [chatKeys.all]);
     },
   });
   return { create, updateTitle, remove };

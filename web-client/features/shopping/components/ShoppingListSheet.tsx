@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetDescription, SheetTitle } from "@/components/ui/sheet";
 import { shoppingApi } from "../api/shopping.api";
 import { useText } from "@/lib/i18n";
+import { rollbackOptimisticMutation, settleDomainQueries, snapshotQueryCaches } from "@/lib/optimistic";
+import { removeOptimisticShopping } from "../utils/shopping-cache.utils";
 
 export function ShoppingListSheet({ open, onClose }: { open: boolean; onClose: () => void }): React.JSX.Element {
   const { t, formatNumber } = useText();
@@ -13,7 +15,16 @@ export function ShoppingListSheet({ open, onClose }: { open: boolean; onClose: (
   const list = useQuery({ queryKey: ["shopping"], queryFn: shoppingApi.list, enabled: open });
   const remove = useMutation({
     mutationFn: shoppingApi.remove,
-    onSuccess: async () => { await client.invalidateQueries({ queryKey: ["shopping"] }); },
+    mutationKey: ["shopping", "remove"],
+    onMutate: async (id) => {
+      const context = await snapshotQueryCaches(client, [["shopping"]]);
+      removeOptimisticShopping(client, id);
+      return context;
+    },
+    onError: (_error, _id, context) => rollbackOptimisticMutation(context),
+    onSettled: async () => {
+      await settleDomainQueries(client, ["shopping", "remove"], [["shopping"]]);
+    },
   });
   return (
     <Sheet open={open} onOpenChange={(next) => { if (!next) onClose(); }}>

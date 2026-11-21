@@ -5,6 +5,7 @@ import { RecipeIngredients } from "./RecipeIngredients";
 import { RecipeMetrics } from "./RecipeMetrics";
 import { RecipeCardImage } from "./RecipeCardImage";
 import { useText } from "@/lib/i18n";
+import { isOptimisticId } from "@/lib/optimistic";
 
 interface RecipeCardProps {
   recipe: Recipe;
@@ -15,18 +16,20 @@ interface RecipeCardProps {
 
 export function RecipeCard({ recipe, pending, onView, onCook }: RecipeCardProps): React.JSX.Element {
   const { t } = useText();
+  const syncing = isOptimisticId(recipe.id);
   return (
-    <article className="overflow-hidden rounded-stitch-xl border border-border bg-card shadow-[0_1px_3px_rgba(17,24,39,0.04)]">
+    <article className={`overflow-hidden rounded-stitch-xl border border-border bg-card shadow-[0_1px_3px_rgba(17,24,39,0.04)] ${syncing ? "opacity-70" : ""}`}>
       <RecipeCardImage recipe={recipe} />
       <div className="flex flex-col gap-2 p-3">
         <div className="flex items-start justify-between gap-2">
           <h2 className="pt-2 text-headline-md">{recipe.title}</h2>
+          {syncing && <span className="pt-2 text-label-sm text-muted-foreground">{t("common.syncing")}</span>}
         </div>
         <RecipeMetrics recipe={recipe} />
         <RecipeIngredients ingredients={recipe.ingredients.map((ingredient) => ingredient.displayName)} />
         <div className="flex gap-2 pt-1">
-          <Button type="button" variant="outline" onClick={() => onView(recipe.id)} className="min-h-11 min-w-0 flex-1"><Eye aria-hidden="true" />{t("recipes.details")}</Button>
-          <Button type="button" disabled={pending} onClick={() => onCook(recipe.id)} className="min-h-11 min-w-0 flex-1"><Zap aria-hidden="true" />{t("recipes.cookStock")}</Button>
+          <Button type="button" variant="outline" disabled={syncing} onClick={() => onView(recipe.id)} className="min-h-11 min-w-0 flex-1"><Eye aria-hidden="true" />{t("recipes.details")}</Button>
+          <Button type="button" disabled={pending || syncing} onClick={() => onCook(recipe.id)} className="min-h-11 min-w-0 flex-1"><Zap aria-hidden="true" />{t("recipes.cookStock")}</Button>
         </div>
       </div>
     </article>

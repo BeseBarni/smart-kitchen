@@ -20,9 +20,11 @@ export function ProfileTargetsConfirmation({ targets, disabled }: {
   const { t, formatNumber } = useText();
   const { targets: mutation } = useMealLogMutations();
   const [applied, setApplied] = useState(false);
-  const confirm = async (): Promise<void> => {
-    try { await mutation.mutateAsync(targets); setApplied(true); }
-    catch { /* The mutation reports the error and the user can retry. */ }
+  const confirm = (): void => {
+    setApplied(true);
+    mutation.mutate(targets, {
+      onError: () => setApplied(false),
+    });
   };
   return <section aria-label={t("chat.confirmTargets")} className="space-y-2 rounded-xl border border-primary/20 bg-secondary p-3">
     <h2 className="text-title-sm">{t("chat.confirmTargets")}</h2>

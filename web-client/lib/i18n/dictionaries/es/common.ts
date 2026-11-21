@@ -14,4 +14,6 @@ export const common = {
   error: "Algo ha salido mal. Inténtalo de nuevo.",
   notFound: "No se ha encontrado esta página.",
   backToChat: "Volver al chat",
+  syncing: "Sincronizando...",
+  optimisticRollback: "No se ha podido guardar el cambio. Se ha restaurado.",
 } satisfies WidenStrings<typeof english>;

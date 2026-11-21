@@ -40,8 +40,8 @@ export function RecipesView(): React.JSX.Element {
   const busy = mutations.create.isPending || mutations.update.isPending || mutations.remove.isPending || mutations.cookAndStock.isPending;
 
   const saveRecipe = async (input: CreateRecipeInput): Promise<void> => {
-    if (formRecipe) await mutations.update.mutateAsync({ id: formRecipe.id, input });
-    else await mutations.create.mutateAsync(input);
+    if (formRecipe) mutations.update.mutate({ id: formRecipe.id, input });
+    else mutations.create.mutate(input);
     toast.success(getText("recipes.saved"));
     setFormOpen(false);
     setFormRecipe(undefined);
@@ -49,7 +49,7 @@ export function RecipesView(): React.JSX.Element {
   const deleteRecipe = async (): Promise<void> => {
     if (!selectedId) return;
     try {
-      await mutations.remove.mutateAsync(selectedId);
+      mutations.remove.mutate(selectedId);
       toast.success(getText("recipes.deleted"));
       setSelectedId(null);
     } catch (error) {
@@ -58,10 +58,13 @@ export function RecipesView(): React.JSX.Element {
   };
   const cookRecipe = async (input: CookRecipeInput): Promise<void> => {
     if (!cookId) throw new Error("No recipe selected.");
-    const stocked = await mutations.cookAndStock.mutateAsync({ id: cookId, input });
-    const locale = languageStore.getState().locale;
-    const key = new Intl.PluralRules(LOCALE_META[locale].tag).select(stocked.length) === "one" ? "recipes.batchesOne" : "recipes.batchesOther";
-    toast.success(getText(key, { count: new Intl.NumberFormat(LOCALE_META[locale].tag).format(stocked.length) }));
+    mutations.cookAndStock.mutate({ id: cookId, input }, {
+      onSuccess: (stocked) => {
+        const locale = languageStore.getState().locale;
+        const key = new Intl.PluralRules(LOCALE_META[locale].tag).select(stocked.length) === "one" ? "recipes.batchesOne" : "recipes.batchesOther";
+        toast.success(getText(key, { count: new Intl.NumberFormat(LOCALE_META[locale].tag).format(stocked.length) }));
+      },
+    });
     setCookId(null);
   };
   const editSelectedRecipe = (): void => {

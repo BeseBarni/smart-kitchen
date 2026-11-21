@@ -11,4 +11,6 @@ export const common = {
   error: "Something went wrong. Please try again.",
   notFound: "This page could not be found.",
   backToChat: "Back to chat",
+  syncing: "Syncing...",
+  optimisticRollback: "The change could not be saved. It was restored.",
 } as const;

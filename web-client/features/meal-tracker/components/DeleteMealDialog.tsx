@@ -11,8 +11,8 @@ export function DeleteMealDialog({ candidate, onClose }: { candidate: { id: stri
   const [restore, setRestore] = useState(false);
   const { remove } = useMealLogMutations();
   const submit = async (): Promise<void> => {
-    try { await remove.mutateAsync({ id: candidate.id, restore }); onClose(); }
-    catch { /* Mutation reports the error and keeps the dialog open. */ }
+    remove.mutate({ id: candidate.id, restore });
+    onClose();
   };
   return <Sheet open onOpenChange={(open) => { if (!open && !remove.isPending) onClose(); }}>
     <SheetContent side="bottom" className="mx-auto w-full max-w-[430px] rounded-t-2xl pb-[env(safe-area-inset-bottom,0px)]">

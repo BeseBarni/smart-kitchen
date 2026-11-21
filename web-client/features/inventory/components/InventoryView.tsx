@@ -15,7 +15,6 @@ import { InventoryItemSheet } from "./InventoryItemSheet";
 import { InventoryList } from "./InventoryList";
 import { InventoryTip } from "./InventoryTip";
 import { getText, useText } from "@/lib/i18n";
-import { getErrorText } from "@/lib/i18n/error-text";
 
 function subscribeToDate(callback: () => void): () => void {
   const timer = window.setInterval(callback, 60_000);
@@ -43,25 +42,16 @@ export function InventoryView(): React.JSX.Element {
   const asOf = useSyncExternalStore(subscribeToDate, todayLocal, serverDate);
   const selected = items.find((item) => item.id === ui.selectedId);
   const save = async (input: InventoryInput): Promise<void> => {
-    try {
-      if (ui.sheet === "edit") {
-        if (!ui.selectedId) throw new Error("No item selected.");
-        await update.mutateAsync({ id: ui.selectedId, input });
-      } else {
-        await create.mutateAsync(input);
-      }
-      toast.success(getText("inventory.updated"));
-    } catch (error) {
-      toast.error(getErrorText(error, "inventory.saveError"));
-      throw error;
+    if (ui.sheet === "edit") {
+      if (!ui.selectedId) return;
+      update.mutate({ id: ui.selectedId, input });
+    } else {
+      create.mutate(input);
     }
+    toast.success(getText("inventory.updated"));
   };
   const changePortions = async (id: string, delta: 1 | -1): Promise<void> => {
-    try {
-      await adjust.mutateAsync({ id, delta });
-    } catch (error) {
-      toast.error(getErrorText(error, "inventory.updateError"));
-    }
+    adjust.mutate({ id, delta });
   };
   const logEaten = async (id: string): Promise<void> => {
     const item = items.find((entry) => entry.id === id);
@@ -74,30 +64,17 @@ export function InventoryView(): React.JSX.Element {
       ui.openEdit(id);
       return;
     }
-    try {
-      await consume.mutateAsync({ id, quantity: 1 });
-      toast.success(getText("inventory.mealLogged"));
-    } catch (error) {
-      toast.error(getErrorText(error, "inventory.logError"));
-    }
+    consume.mutate({ id, quantity: 1 });
+    toast.success(getText("inventory.mealLogged"));
   };
   const discardItem = async (id: string): Promise<void> => {
-    try {
-      await discard.mutateAsync(id);
-      toast.success(getText("inventory.discarded"));
-    } catch (error) {
-      toast.error(getErrorText(error, "inventory.discardError"));
-    }
+    discard.mutate(id);
+    toast.success(getText("inventory.discarded"));
   };
   const deleteItem = async (id: string): Promise<void> => {
-    try {
-      await remove.mutateAsync(id);
-      toast.success(getText("inventory.deleted"));
-      ui.closeSheet();
-    } catch (error) {
-      toast.error(getErrorText(error, "inventory.deleteError"));
-      throw error;
-    }
+    remove.mutate(id);
+    toast.success(getText("inventory.deleted"));
+    ui.closeSheet();
   };
   const retry = (): void => {
     void query.refetch();

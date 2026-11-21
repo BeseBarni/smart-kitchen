@@ -35,10 +35,8 @@ export function ManualLogForm({ date, profile, mealType, onClose }: {
     if (Number.isNaN(eaten.getTime()) || localDate(eaten) !== date || `${String(eaten.getHours()).padStart(2, "0")}:${String(eaten.getMinutes()).padStart(2, "0")}` !== selectedTime) {
       form.setError("time", { type: "validate" }); return;
     }
-    try {
-      await create.mutateAsync({ ...values, inventoryItemId: null, recipeId: null, currency: profile.currency, eatenAt: eaten.toISOString() });
-      onClose();
-    } catch { /* Mutation reports the error and keeps the form open. */ }
+    create.mutate({ ...values, inventoryItemId: null, recipeId: null, currency: profile.currency, eatenAt: eaten.toISOString() });
+    onClose();
   });
   const optionalNumber = (value: string): number | null => value === "" ? null : Number(value);
   return <form onSubmit={(event) => void submit(event)} className="space-y-3">

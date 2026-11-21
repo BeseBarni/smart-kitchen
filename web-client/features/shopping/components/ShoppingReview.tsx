@@ -7,6 +7,8 @@ import { shoppingItemInputSchema, type ShoppingItemInput, type ShoppingSuggestio
 import { Button } from "@/components/ui/button";
 import { shoppingApi } from "../api/shopping.api";
 import { getText, useText } from "@/lib/i18n";
+import { rollbackOptimisticMutation, settleDomainQueries, snapshotQueryCaches } from "@/lib/optimistic";
+import { insertOptimisticShopping, replaceOptimisticShopping } from "../utils/shopping-cache.utils";
 
 function ReviewForm({ suggestions, onDone }: { suggestions: ShoppingSuggestion[]; onDone: () => void }): React.JSX.Element {
   const { t, formatNumber } = useText();
@@ -17,10 +19,19 @@ function ReviewForm({ suggestions, onDone }: { suggestions: ShoppingSuggestion[]
   })));
   const add = useMutation({
     mutationFn: shoppingApi.add,
-    onSuccess: async () => {
-      await client.invalidateQueries({ queryKey: ["shopping"] });
+    mutationKey: ["shopping", "add"],
+    onMutate: async (items) => {
+      const context = await snapshotQueryCaches(client, [["shopping"]]);
+      const optimisticItems = insertOptimisticShopping(client, items);
+      return { ...context, optimisticItems };
+    },
+    onSuccess: (items, _input, context) => {
+      replaceOptimisticShopping(client, context.optimisticItems, items);
       toast.success(getText("shopping.added"));
-      onDone();
+    },
+    onError: (_error, _items, context) => rollbackOptimisticMutation(context),
+    onSettled: async () => {
+      await settleDomainQueries(client, ["shopping", "add"], [["shopping"]]);
     },
   });
   const selected = suggestions.flatMap((item, index) => {
@@ -46,7 +57,7 @@ function ReviewForm({ suggestions, onDone }: { suggestions: ShoppingSuggestion[]
           </div>
         );
       })}
-      <Button type="button" className="h-11 w-full" disabled={!valid || add.isPending} onClick={() => add.mutate(selected)}>{t(add.isPending ? "shopping.adding" : "shopping.addSelected")}</Button>
+      <Button type="button" className="h-11 w-full" disabled={!valid || add.isPending} onClick={() => { add.mutate(selected); onDone(); }}>{t(add.isPending ? "shopping.adding" : "shopping.addSelected")}</Button>
       {add.isError && <p role="alert" className="text-destructive">{t("shopping.addError")}</p>}
     </div>
   );

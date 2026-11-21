@@ -14,4 +14,6 @@ export const common = {
   error: "Valami hiba történt. Próbáld újra.",
   notFound: "Ez az oldal nem található.",
   backToChat: "Vissza a beszélgetéshez",
+  syncing: "Szinkronizálás...",
+  optimisticRollback: "A módosítást nem sikerült menteni. Az előző állapot visszaállt.",
 } satisfies WidenStrings<typeof english>;
