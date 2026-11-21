@@ -1,4 +1,4 @@
-import { generateObject, type LanguageModel } from "ai";
+import { generateText, Output, type LanguageModel } from "ai";
 import { z } from "zod";
 import { getFastModel } from "../core/llm.client";
 
@@ -12,9 +12,9 @@ export async function isKitchenMessage(input: {
   abortSignal: AbortSignal;
   model?: LanguageModel;
 }): Promise<boolean> {
-  const response = await generateObject({
+  const response = await generateText({
     model: input.model ?? getFastModel(),
-    schema: restrictionSchema,
+    output: Output.object({ schema: restrictionSchema }),
     system: [
       "Decide whether the current user message belongs in a kitchen and food assistant.",
       "Allow cooking, recipes, food, nutrition, meal planning, grocery and kitchen inventory,",
@@ -32,5 +32,5 @@ export async function isKitchenMessage(input: {
     abortSignal: AbortSignal.any([input.abortSignal, AbortSignal.timeout(15_000)]),
     providerOptions: { google: { thinkingConfig: { thinkingLevel: "low" } } },
   });
-  return restrictionSchema.parse(response.object).allowed;
+  return restrictionSchema.parse(response.output).allowed;
 }

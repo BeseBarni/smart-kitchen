@@ -1,4 +1,4 @@
-import { generateObject, type LanguageModel } from "ai";
+import { generateText, Output, type LanguageModel } from "ai";
 import { z } from "zod";
 import { getFastModel } from "../core/llm.client";
 
@@ -12,9 +12,9 @@ export async function isSafeKitchenMessage(input: {
   abortSignal: AbortSignal;
   model?: LanguageModel;
 }): Promise<boolean> {
-  const response = await generateObject({
+  const response = await generateText({
     model: input.model ?? getFastModel(),
-    schema: safetySchema,
+    output: Output.object({ schema: safetySchema }),
     system: [
       "Classify the current message for a food and kitchen assistant.",
       "Reject requests seeking advice to carry out dangerous food handling or other hazardous practices.",
@@ -26,5 +26,5 @@ export async function isSafeKitchenMessage(input: {
     abortSignal: AbortSignal.any([input.abortSignal, AbortSignal.timeout(15_000)]),
     providerOptions: { google: { thinkingConfig: { thinkingLevel: "low" } } },
   });
-  return safetySchema.parse(response.object).safe;
+  return safetySchema.parse(response.output).safe;
 }

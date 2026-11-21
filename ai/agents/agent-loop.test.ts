@@ -167,7 +167,7 @@ test("finishes a workflow requiring more than five model steps", async () => {
   const model = new MockLanguageModelV4({
     doStream: async () => {
       calls += 1;
-      if (calls <= 6) return {
+      if (calls <= 12) return {
         stream: simulateReadableStream({
           chunks: [
             { type: "stream-start", warnings: [] },
@@ -214,5 +214,51 @@ test("finishes a workflow requiring more than five model steps", async () => {
     },
   });
   assert.equal(result.summary, "Done.");
-  assert.equal(calls, 7);
+  assert.equal(calls, 13);
+});
+
+test("reserves a tool-free final step to report unfinished work at the limit", async () => {
+  let calls = 0;
+  let executions = 0;
+  const usage = {
+    inputTokens: { total: 1, noCache: 1, cacheRead: undefined, cacheWrite: undefined },
+    outputTokens: { total: 1, text: 1, reasoning: undefined },
+  };
+  const model = new MockLanguageModelV4({
+    doStream: async () => {
+      calls += 1;
+      if (calls <= 20) return { stream: simulateReadableStream({ chunks: [
+        { type: "stream-start", warnings: [] },
+        { type: "tool-call", toolCallId: `call-${calls}`, toolName: "lookup", input: "{}" },
+        { type: "finish", finishReason: { unified: "tool-calls", raw: undefined }, usage },
+      ] }) };
+      return { stream: simulateReadableStream({ chunks: [
+        { type: "stream-start", warnings: [] },
+        { type: "text-start", id: "text-1" },
+        { type: "text-delta", id: "text-1", delta: "Some work remains unfinished." },
+        { type: "text-end", id: "text-1" },
+        { type: "finish", finishReason: { unified: "stop", raw: undefined }, usage },
+      ] }) };
+    },
+  });
+  const lookup = defineTool({
+    name: "lookup",
+    description: "Look up information.",
+    inputSchema: z.object({}).strict(),
+    annotations: {},
+    execute: async () => { executions += 1; return ok("Found."); },
+  });
+  const result = await runAgentLoop({
+    agent: "inventory_ops", system: "Test", request: { task: "Test" }, tools: [lookup], model,
+    context: {
+      userId: "user-1", conversationId: "conversation-1", locale: "en",
+      abortSignal: new AbortController().signal, emit: () => {},
+      recordLedger: async () => {}, ledgerItems: [], usage: { inputTokens: 0, outputTokens: 0 },
+    },
+  });
+  assert.equal(result.summary, "Some work remains unfinished.");
+  assert.equal(calls, 21);
+  assert.equal(executions, 20);
+  assert.equal(model.doStreamCalls[20]?.tools?.length ?? 0, 0);
+  assert.match(JSON.stringify(model.doStreamCalls[20]?.prompt), /explicitly identify any unfinished work/);
 });

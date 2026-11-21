@@ -1,7 +1,9 @@
 import { createGoogleGenerativeAI } from "@ai-sdk/google";
 import {
-  generateObject,
+  generateText,
   NoObjectGeneratedError,
+  NoOutputGeneratedError,
+  Output,
   streamText,
   type LanguageModel,
 } from "ai";
@@ -43,42 +45,43 @@ export async function generateStructuredMultimodal<TSchema extends z.ZodType>(
     prompt: string;
     system?: string;
     images: Array<{ mimeType: string; base64Data: string }>;
+    model?: LanguageModel;
   },
 ): Promise<Result<StructuredGeneration<z.output<TSchema>>, AppError>> {
-  const model = getModel(VISION_MODEL);
+  const model = input.model ?? getModel(VISION_MODEL);
   let correction: string | undefined;
   for (let attempt = 0; attempt < 2; attempt += 1) {
     try {
-      const response = await generateObject({
+      const response = await generateText({
         model,
-        schema: input.schema,
+        output: Output.object({ schema: input.schema }),
         system: input.system,
         messages: [{
           role: "user",
           content: [
             { type: "text", text: correction ? `${input.prompt}\n\nCorrect the prior output: ${correction}` : input.prompt },
             ...input.images.map((image) => ({
-              type: "image" as const,
+              type: "file" as const,
               mediaType: image.mimeType,
-              image: image.base64Data,
+              data: image.base64Data,
             })),
           ],
         }],
       });
       return ok({
-        output: input.schema.parse(response.object),
+        output: input.schema.parse(response.output),
         usage: {
           inputTokens: response.usage.inputTokens ?? 0,
           outputTokens: response.usage.outputTokens ?? 0,
         },
       });
     } catch (error) {
-      if (attempt === 0 && NoObjectGeneratedError.isInstance(error)) {
+      if (attempt === 0 && (NoObjectGeneratedError.isInstance(error) || NoOutputGeneratedError.isInstance(error))) {
         correction = error.message;
         continue;
       }
       return err({
-        code: NoObjectGeneratedError.isInstance(error) ? "VALIDATION_ERROR" : "INTERNAL_ERROR",
+        code: NoObjectGeneratedError.isInstance(error) || NoOutputGeneratedError.isInstance(error) ? "VALIDATION_ERROR" : "INTERNAL_ERROR",
         message: error instanceof Error ? error.message : "Vision extraction failed.",
       });
     }
@@ -108,26 +111,26 @@ export async function generateStructuredWithUsage<TSchema extends z.ZodType>(
   let correction: string | undefined;
   for (let attempt = 0; attempt < 2; attempt += 1) {
     try {
-      const response = await generateObject({
+      const response = await generateText({
         model,
-        schema: input.schema,
+        output: Output.object({ schema: input.schema }),
         system: input.system,
         prompt: correction ? `${input.prompt}\n\nCorrect the prior output: ${correction}` : input.prompt,
       });
       return ok({
-        output: input.schema.parse(response.object),
+        output: input.schema.parse(response.output),
         usage: {
           inputTokens: response.usage.inputTokens ?? 0,
           outputTokens: response.usage.outputTokens ?? 0,
         },
       });
     } catch (error) {
-      if (attempt === 0 && NoObjectGeneratedError.isInstance(error)) {
+      if (attempt === 0 && (NoObjectGeneratedError.isInstance(error) || NoOutputGeneratedError.isInstance(error))) {
         correction = error.message;
         continue;
       }
       return err({
-        code: NoObjectGeneratedError.isInstance(error) ? "VALIDATION_ERROR" : "INTERNAL_ERROR",
+        code: NoObjectGeneratedError.isInstance(error) || NoOutputGeneratedError.isInstance(error) ? "VALIDATION_ERROR" : "INTERNAL_ERROR",
         message: error instanceof Error ? error.message : "Structured generation failed.",
       });
     }

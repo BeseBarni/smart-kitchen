@@ -7,6 +7,8 @@ import type { ToolDefinition } from "../tools/definitions/tool.types";
 import type { AgentContext, SubAgentRequest, SubAgentResult } from "./agent.types";
 import { languageReminder } from "./language";
 
+const MAX_TOOL_STEPS = 20;
+
 export async function runAgentLoop(input: {
   agent: AgentName;
   system: string;
@@ -51,7 +53,15 @@ export async function runAgentLoop(input: {
       content: [input.request.task, input.request.contextHint].filter(Boolean).join("\n\n"),
     }],
     tools,
-    stopWhen: stepCountIs(10),
+    stopWhen: stepCountIs(MAX_TOOL_STEPS + 1),
+    prepareStep: ({ stepNumber, messages }) => stepNumber === MAX_TOOL_STEPS ? {
+      activeTools: [],
+      toolChoice: "none",
+      messages: [...messages, {
+        role: "user",
+        content: "The tool step limit has been reached. Summarize only what the tool results actually confirm, explicitly identify any unfinished work, and do not claim uncompleted actions succeeded.",
+      }],
+    } : undefined,
     abortSignal: input.context.abortSignal,
   });
 
