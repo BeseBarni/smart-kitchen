@@ -27,7 +27,7 @@ const promptText: Record<QuickPrompt["id"], TranslationKey> = {
 
 export function ChatView(): React.JSX.Element {
   const { t } = useText();
-  const { data: conversations = [], isPending: conversationsPending, error: conversationsError } = useConversations();
+  const { error: conversationsError } = useConversations();
   const activeConversationId = useChatUiStore((state) => state.activeConversationId);
   const setActiveConversationId = useChatUiStore((state) => state.setActiveConversationId);
   const draft = useChatUiStore((state) => state.draft);
@@ -35,7 +35,6 @@ export function ChatView(): React.JSX.Element {
   const attachments = useChatUiStore((state) => state.attachments);
   const setAttachments = useChatUiStore((state) => state.setAttachments);
   const rejectedTurns = useChatUiStore((state) => state.rejectedTurns);
-  const initializedSelection = useRef(false);
   const { data: history, isPending, isError, error: historyError, refetch } = useConversationHistory(activeConversationId);
   const { create } = useConversationMutations();
   const onConversationId = useCallback((id: string) => setActiveConversationId(id), [setActiveConversationId]);
@@ -50,12 +49,6 @@ export function ChatView(): React.JSX.Element {
   useEffect(() => {
     if (historyError) toast.error(getText("chat.historyError"), { id: "conversation-history-error" });
   }, [historyError]);
-
-  useEffect(() => {
-    if (initializedSelection.current || conversationsPending || pendingAutoPrompt) return;
-    initializedSelection.current = true;
-    if (!activeConversationId && conversations[0]) setActiveConversationId(conversations[0].id);
-  }, [activeConversationId, conversations, conversationsPending, pendingAutoPrompt, setActiveConversationId]);
 
   useEffect(() => {
     if (!pendingAutoPrompt || stream.isStreaming) return;
