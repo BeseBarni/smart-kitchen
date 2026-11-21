@@ -16,4 +16,5 @@ export const common = {
   backToChat: "Volver al chat",
   syncing: "Sincronizando...",
   optimisticRollback: "No se ha podido guardar el cambio. Se ha restaurado.",
+  unknown: "Desconocido",
 } satisfies WidenStrings<typeof english>;

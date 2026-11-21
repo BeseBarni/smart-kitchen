@@ -1,4 +1,4 @@
-import { getDatabase, inventoryItems, recipes } from "@app/db";
+import { getDatabase, inventoryItems, inventoryItemTags, recipeTags, recipes } from "@app/db";
 import { and, eq } from "drizzle-orm";
 import type { CookRecipeInput } from "./recipes.schema";
 
@@ -13,7 +13,7 @@ export async function cookRecipeRows(
       .where(and(eq(recipes.id, recipeId), eq(recipes.userId, userId))).for("update").limit(1);
     if (!recipe) return undefined;
     const preparedDate = preparedAt ? new Date(preparedAt) : new Date();
-    return tx.insert(inventoryItems).values(batches.map((batch) => ({
+    const rows = await tx.insert(inventoryItems).values(batches.map((batch) => ({
       userId, name: recipe.title, itemType: "meal_prep" as const, recipeId,
       storageLocation: batch.storageLocation, initialQuantity: String(batch.quantity),
       remainingQuantity: String(batch.quantity), unit: batch.unit ?? "portion",
@@ -22,6 +22,19 @@ export async function cookRecipeRows(
       proteinPerUnit: recipe.proteinPerServing, carbsPerUnit: recipe.carbsPerServing,
       fatPerUnit: recipe.fatPerServing, fiberPerUnit: recipe.fiberPerServing,
       costPerUnit: recipe.costPerServing, currency: recipe.currency,
+      shelfLifeDays: recipe.shelfLifeDays ?? {},
     }))).returning();
+    const copiedTags = await tx.select({ tagId: recipeTags.tagId })
+      .from(recipeTags)
+      .where(eq(recipeTags.recipeId, recipeId));
+    if (copiedTags.length > 0) {
+      await tx.insert(inventoryItemTags).values(
+        rows.flatMap((row) => copiedTags.slice(0, 3).map(({ tagId }) => ({
+          inventoryItemId: row.id,
+          tagId,
+        }))),
+      );
+    }
+    return rows;
   });
 }

@@ -15,6 +15,7 @@ import { InventoryItemSheet } from "./InventoryItemSheet";
 import { InventoryList } from "./InventoryList";
 import { InventoryTip } from "./InventoryTip";
 import { getText, useText } from "@/lib/i18n";
+import { ItemDetailModal } from "./detail/ItemDetailModal";
 
 function subscribeToDate(callback: () => void): () => void {
   const timer = window.setInterval(callback, 60_000);
@@ -97,10 +98,11 @@ export function InventoryView(): React.JSX.Element {
       <InventoryHeader total={counts.all} search={ui.search} searchOpen={ui.searchOpen} onSearch={ui.setSearch} onToggleSearch={() => { ui.setSearchOpen(!ui.searchOpen); if (ui.searchOpen) ui.setSearch(""); }} onAdd={ui.openAdd} />
       <InventoryFilters filter={ui.filter} counts={counts} onChange={ui.setFilter} />
       <FreshnessAlert items={expiring.data ?? []} />
-      <InventoryList items={items} asOf={asOf} disabled={busy} empty={summary.data.totalItems === 0} onEdit={ui.openEdit} onAdjust={(id, delta) => void changePortions(id, delta)} onConsume={(id) => void logEaten(id)} onDiscard={(id) => void discardItem(id)} />
+      <InventoryList items={items} asOf={asOf} disabled={busy} empty={summary.data.totalItems === 0} onEdit={ui.openEdit} onAdjust={(id, delta) => void changePortions(id, delta)} onConsume={(id) => void logEaten(id)} onDiscard={(id) => void discardItem(id)} onOpenDetail={ui.openItemDetail} />
       <InventoryTip />
       {ui.sheet === "add" && <InventoryItemSheet busy={busy} onClose={ui.closeSheet} onSave={save} />}
       {ui.sheet === "edit" && selected && <InventoryItemSheet key={selected.id} item={selected} busy={busy} onClose={ui.closeSheet} onSave={save} onDelete={deleteItem} />}
+      {ui.selectedItemId && <ItemDetailModal />}
     </div>
   );
 }

@@ -1,5 +1,6 @@
 import {
   index,
+  jsonb,
   numeric,
   pgTable,
   text,
@@ -43,6 +44,11 @@ export const inventoryItems = pgTable(
     fiberPerUnit: numeric("fiber_per_unit", { precision: 12, scale: 4 }),
     costPerUnit: numeric("cost_per_unit", { precision: 10, scale: 2 }),
     currency: text("currency").default("HUF").notNull(),
+    shelfLifeDays: jsonb("shelf_life_days").$type<{
+      fridge?: number | null;
+      freezer?: number | null;
+      pantry?: number | null;
+    }>().default({}).notNull(),
     createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
   },

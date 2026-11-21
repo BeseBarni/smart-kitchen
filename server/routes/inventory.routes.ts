@@ -9,6 +9,7 @@ import {
   inventoryService,
   listInventoryQuerySchema,
   updateInventoryItemSchema,
+  switchStorageLocationSchema,
 } from "@app/modules";
 import { Hono } from "hono";
 import { z } from "zod";
@@ -66,6 +67,21 @@ export const inventoryRoutes = new Hono<AuthEnvironment>()
       resultToResponse(
         context,
         await inventoryService.update(
+          context.get("userId"),
+          context.req.valid("param").id,
+          context.req.valid("json"),
+        ),
+      ),
+  )
+  .patch(
+    "/:id/storage",
+    requireAuth,
+    zValidator("param", inventoryParams),
+    zValidator("json", switchStorageLocationSchema),
+    async (context) =>
+      resultToResponse(
+        context,
+        await inventoryService.switchStorageLocation(
           context.get("userId"),
           context.req.valid("param").id,
           context.req.valid("json"),

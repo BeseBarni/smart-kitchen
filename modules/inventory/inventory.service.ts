@@ -14,6 +14,10 @@ import {
   insertInventoryBatch,
   listInventoryRows,
   updateInventoryItemRow,
+  findInventoryTags,
+  findLinkedRecipe,
+  replaceInventoryItemTags,
+  updateStorageLocationRow,
 } from "./inventory.repo";
 import { consumeInventoryRow } from "./inventory-consumption.repo";
 import type {
@@ -23,8 +27,11 @@ import type {
   InventoryItemDto,
   ListInventoryQuery,
   UpdateInventoryItemInput,
+  InventoryDetailDto,
+  SwitchStorageLocationInput,
 } from "./inventory.schema";
 import type { MealLogDto } from "../meal-logs/meal-logs.schema";
+import { resolveOrCreateTags, MAX_ATTRIBUTE_CHIPS } from "../tags/tags.service";
 
 type InventoryRow = NonNullable<Awaited<ReturnType<typeof findInventoryItem>>>;
 type ConsumedRows = Extract<
@@ -32,7 +39,10 @@ type ConsumedRows = Extract<
   { kind: "consumed" }
 >;
 
-export function toInventoryItemDto(row: InventoryRow): InventoryItemDto {
+export function toInventoryItemDto(
+  row: InventoryRow,
+  tags: InventoryItemDto["tags"] = [],
+): InventoryItemDto {
   return {
     ...row,
     initialQuantity: Number(row.initialQuantity),
@@ -47,6 +57,8 @@ export function toInventoryItemDto(row: InventoryRow): InventoryItemDto {
     expiresAt: row.expiresAt?.toISOString() ?? null,
     createdAt: row.createdAt.toISOString(),
     updatedAt: row.updatedAt.toISOString(),
+    shelfLifeDays: row.shelfLifeDays ?? {},
+    tags,
   };
 }
 
@@ -88,12 +100,57 @@ export async function list(
   userId: string,
   filters: ListInventoryQuery,
 ): Promise<Result<InventoryItemDto[], AppError>> {
-  return ok((await listInventoryRows(userId, filters)).map(toInventoryItemDto));
+  const rows = await listInventoryRows(userId, filters);
+  const tagRows = await findInventoryTags(rows.map((row) => row.id));
+  const byItem = new Map<string, InventoryItemDto["tags"]>();
+  for (const tag of tagRows) {
+    const current = byItem.get(tag.inventoryItemId) ?? [];
+    current.push({
+      id: tag.id,
+      slug: tag.slug,
+      label: tag.label,
+      i18nKey: tag.i18nKey,
+      category: tag.category,
+      colorToken: tag.colorToken,
+    });
+    byItem.set(tag.inventoryItemId, current.slice(0, MAX_ATTRIBUTE_CHIPS));
+  }
+  return ok(rows.map((row) => toInventoryItemDto(row, byItem.get(row.id) ?? [])));
 }
 
-export async function getById(userId: string, id: string): Promise<Result<InventoryItemDto, AppError>> {
+export async function getById(
+  userId: string,
+  id: string,
+): Promise<Result<InventoryDetailDto, AppError>> {
   const row = await findInventoryItem(userId, id);
-  return row ? ok(toInventoryItemDto(row)) : err(notFound());
+  if (!row) return err(notFound());
+  const [tagRows, recipe] = await Promise.all([
+    findInventoryTags([id]),
+    findLinkedRecipe(userId, row.recipeId),
+  ]);
+  const tags = tagRows.map((tag) => ({
+    id: tag.id,
+    slug: tag.slug,
+    label: tag.label,
+    i18nKey: tag.i18nKey,
+    category: tag.category,
+    colorToken: tag.colorToken,
+  })).slice(0, MAX_ATTRIBUTE_CHIPS);
+  const item = toInventoryItemDto(row, tags);
+  const msRemaining = row.expiresAt ? row.expiresAt.getTime() - Date.now() : null;
+  const daysRemaining = msRemaining === null
+    ? null
+    : msRemaining / (24 * 60 * 60 * 1000);
+  return ok({
+    ...item,
+    freshness: {
+      msRemaining,
+      daysRemaining,
+      isExpired: msRemaining !== null && msRemaining < 0,
+      shelfLifeDaysForCurrentLocation: row.shelfLifeDays?.[row.storageLocation] ?? null,
+    },
+    recipe,
+  });
 }
 
 export async function create(
@@ -105,7 +162,11 @@ export async function create(
   const user = await requireAuthUser(userId);
   if (!user.success) return user;
   const row = await insertInventoryItem(userId, input);
-  return row ? ok(toInventoryItemDto(row)) : err({ code: "INTERNAL_ERROR", message: "Item was not created." });
+  if (!row) return err({ code: "INTERNAL_ERROR", message: "Item was not created." });
+  const resolved = await resolveOrCreateTags(userId, input.tags ?? []);
+  if (!resolved.success) return err(resolved.error);
+  await replaceInventoryItemTags(row.id, resolved.data.map((tag) => tag.id));
+  return ok(toInventoryItemDto(row, resolved.data));
 }
 
 export async function createBatch(
@@ -119,7 +180,14 @@ export async function createBatch(
   if (!user.success) return user;
   try {
     const rows = await insertInventoryBatch(userId, input);
-    return ok({ items: rows.map(toInventoryItemDto) });
+    const items: InventoryItemDto[] = [];
+    for (const [index, row] of rows.entries()) {
+      const resolved = await resolveOrCreateTags(userId, input.items[index]?.tags ?? []);
+      if (!resolved.success) return err(resolved.error);
+      await replaceInventoryItemTags(row.id, resolved.data.map((tag) => tag.id));
+      items.push(toInventoryItemDto(row, resolved.data));
+    }
+    return ok({ items });
   } catch (error) {
     return err({
       code: "INTERNAL_ERROR",
@@ -136,7 +204,23 @@ export async function update(
   const validationError = await validateOwnership(userId, input);
   if (validationError) return err(validationError);
   const row = await updateInventoryItemRow(userId, id, input);
-  return row ? ok(toInventoryItemDto(row)) : err(notFound());
+  if (!row) return err(notFound());
+  if (input.tags !== undefined) {
+    const resolved = await resolveOrCreateTags(userId, input.tags);
+    if (!resolved.success) return err(resolved.error);
+    await replaceInventoryItemTags(row.id, resolved.data.map((tag) => tag.id));
+    return ok(toInventoryItemDto(row, resolved.data));
+  }
+  const tagRows = await findInventoryTags([id]);
+  const tags = tagRows.map((tag) => ({
+    id: tag.id,
+    slug: tag.slug,
+    label: tag.label,
+    i18nKey: tag.i18nKey,
+    category: tag.category,
+    colorToken: tag.colorToken,
+  })).slice(0, MAX_ATTRIBUTE_CHIPS);
+  return ok(toInventoryItemDto(row, tags));
 }
 
 export async function remove(userId: string, id: string): Promise<Result<{ deleted: true }, AppError>> {
@@ -152,7 +236,7 @@ export async function listExpiring(
   if (!Number.isFinite(withinHours) || withinHours <= 0) {
     return err({ code: "VALIDATION_ERROR", message: "Expiry window must be positive." });
   }
-  return ok((await findExpiringRows(userId, withinHours)).map(toInventoryItemDto));
+  return ok((await findExpiringRows(userId, withinHours)).map((row) => toInventoryItemDto(row)));
 }
 
 export async function getSummary(userId: string): Promise<Result<{
@@ -218,4 +302,32 @@ export async function consumePortion(
 export async function discardItem(userId: string, id: string): Promise<Result<InventoryItemDto, AppError>> {
   const row = await discardInventoryRow(userId, id);
   return row ? ok(toInventoryItemDto(row)) : err(notFound());
+}
+
+export async function switchStorageLocation(
+  userId: string,
+  id: string,
+  input: SwitchStorageLocationInput,
+): Promise<Result<InventoryDetailDto, AppError>> {
+  const existing = await findInventoryItem(userId, id);
+  if (!existing) return err(notFound());
+  const shelfLife = existing.shelfLifeDays?.[input.storageLocation];
+  let expiresAt = existing.expiresAt;
+  if (input.recalculateExpiry) {
+    const positive = typeof shelfLife === "number" && Number.isFinite(shelfLife) && shelfLife > 0;
+    if (positive) {
+      const days = existing.storageLocation === "freezer" && input.storageLocation === "fridge"
+        ? Math.min(shelfLife, 4)
+        : shelfLife;
+      expiresAt = new Date(Date.now() + days * 24 * 60 * 60 * 1000);
+    }
+  }
+  const row = await updateStorageLocationRow(
+    userId,
+    id,
+    input.storageLocation,
+    expiresAt,
+  );
+  if (!row) return err(notFound());
+  return getById(userId, id);
 }

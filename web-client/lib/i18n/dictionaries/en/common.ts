@@ -13,4 +13,5 @@ export const common = {
   backToChat: "Back to chat",
   syncing: "Syncing...",
   optimisticRollback: "The change could not be saved. It was restored.",
+  unknown: "Unknown",
 } as const;

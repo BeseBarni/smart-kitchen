@@ -24,6 +24,7 @@ function insertValues(input: CreateIngredientInput) {
     priceQuantity: numberToNumeric(input.priceQuantity ?? null),
     priceUnit: input.priceUnit,
     currency: input.currency,
+    shelfLifeDays: input.shelfLifeDays ?? {},
   };
 }
 
@@ -44,6 +45,7 @@ function updateValues(input: UpdateIngredientInput): Partial<typeof ingredients.
   if (input.priceQuantity !== undefined) values.priceQuantity = numberToNumeric(input.priceQuantity);
   if (input.priceUnit !== undefined) values.priceUnit = input.priceUnit;
   if (input.currency !== undefined) values.currency = input.currency;
+  if (input.shelfLifeDays !== undefined) values.shelfLifeDays = input.shelfLifeDays;
   return values;
 }
 

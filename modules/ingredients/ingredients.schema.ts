@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { rawTagSchema, shelfLifeDaysSchema, tagDtoSchema } from "../tags/tags.schema";
 
 export const baseUnitSchema = z.enum(["g", "ml", "pcs"]).describe("Supported base unit.");
 
@@ -21,6 +22,12 @@ export const ingredientSchema = z
     priceQuantity: z.number().positive().nullable().describe("Quantity covered by the price."),
     priceUnit: z.string().nullable().describe("Unit used for the price quantity."),
     currency: z.string().describe("ISO currency code used for the price."),
+    shelfLifeDays: shelfLifeDaysSchema
+      .optional()
+      .describe("Typical shelf life in days by storage method."),
+    tags: z.array(tagDtoSchema).max(3)
+      .optional()
+      .describe("Up to three persisted attribute chips."),
     createdAt: z.iso.datetime().describe("Creation time in ISO-8601 format."),
     updatedAt: z.iso.datetime().describe("Update time in ISO-8601 format."),
   })
@@ -28,6 +35,12 @@ export const ingredientSchema = z
 
 export const createIngredientSchema = ingredientSchema
   .omit({ id: true, userId: true, createdAt: true, updatedAt: true })
+  .extend({
+    shelfLifeDays: shelfLifeDaysSchema.optional()
+      .describe("Typical shelf life in days by storage method."),
+    tags: z.array(rawTagSchema).max(3).optional()
+      .describe("Up to three attribute tags to resolve."),
+  })
   .describe("Input for creating an ingredient.");
 
 export const updateIngredientSchema = createIngredientSchema

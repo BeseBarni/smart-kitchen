@@ -3,6 +3,7 @@ import { authUsers, userProfiles } from "./users";
 import { ingredients, recipeIngredients, recipes } from "./food";
 import { inventoryItems, mealLogs } from "./inventory";
 import { conversationItems, conversations } from "./conversations";
+import { ingredientTags, inventoryItemTags, recipeTags, tags } from "./tags";
 
 export const authUsersRelations = relations(authUsers, ({ many, one }) => ({
   profile: one(userProfiles),
@@ -21,6 +22,7 @@ export const ingredientsRelations = relations(ingredients, ({ many, one }) => ({
   user: one(authUsers, { fields: [ingredients.userId], references: [authUsers.id] }),
   recipeIngredients: many(recipeIngredients),
   inventoryItems: many(inventoryItems),
+  tags: many(ingredientTags),
 }));
 
 export const recipesRelations = relations(recipes, ({ many, one }) => ({
@@ -28,6 +30,7 @@ export const recipesRelations = relations(recipes, ({ many, one }) => ({
   ingredients: many(recipeIngredients),
   inventoryItems: many(inventoryItems),
   mealLogs: many(mealLogs),
+  tags: many(recipeTags),
 }));
 
 export const recipeIngredientsRelations = relations(recipeIngredients, ({ one }) => ({
@@ -46,6 +49,7 @@ export const inventoryItemsRelations = relations(inventoryItems, ({ many, one })
   recipe: one(recipes, { fields: [inventoryItems.recipeId], references: [recipes.id] }),
   ingredient: one(ingredients, { fields: [inventoryItems.ingredientId], references: [ingredients.id] }),
   mealLogs: many(mealLogs),
+  tags: many(inventoryItemTags),
 }));
 
 export const mealLogsRelations = relations(mealLogs, ({ one }) => ({
@@ -67,4 +71,29 @@ export const conversationItemsRelations = relations(conversationItems, ({ one })
     fields: [conversationItems.conversationId],
     references: [conversations.id],
   }),
+}));
+
+export const tagsRelations = relations(tags, ({ many, one }) => ({
+  user: one(authUsers, { fields: [tags.userId], references: [authUsers.id] }),
+  recipeTags: many(recipeTags),
+  ingredientTags: many(ingredientTags),
+  inventoryItemTags: many(inventoryItemTags),
+}));
+
+export const recipeTagsRelations = relations(recipeTags, ({ one }) => ({
+  recipe: one(recipes, { fields: [recipeTags.recipeId], references: [recipes.id] }),
+  tag: one(tags, { fields: [recipeTags.tagId], references: [tags.id] }),
+}));
+
+export const ingredientTagsRelations = relations(ingredientTags, ({ one }) => ({
+  ingredient: one(ingredients, { fields: [ingredientTags.ingredientId], references: [ingredients.id] }),
+  tag: one(tags, { fields: [ingredientTags.tagId], references: [tags.id] }),
+}));
+
+export const inventoryItemTagsRelations = relations(inventoryItemTags, ({ one }) => ({
+  inventoryItem: one(inventoryItems, {
+    fields: [inventoryItemTags.inventoryItemId],
+    references: [inventoryItems.id],
+  }),
+  tag: one(tags, { fields: [inventoryItemTags.tagId], references: [tags.id] }),
 }));

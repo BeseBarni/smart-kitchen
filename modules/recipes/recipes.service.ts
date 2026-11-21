@@ -26,6 +26,8 @@ import {
   type RecipeLineInput,
   type RecipeValues,
 } from "./recipes.mapper";
+import { resolveOrCreateTags } from "../tags/tags.service";
+import { replaceRecipeTags } from "../tags/tags.repo";
 
 async function loadLinked(userId: string, lines: RecipeLineInput[]) {
   const ids = [...new Set(lines.flatMap((line) => (line.ingredientId ? [line.ingredientId] : [])))];
@@ -68,6 +70,11 @@ export async function create(
   );
   const id = await insertRecipe(userId, input, computed);
   if (!id) return err({ code: "INTERNAL_ERROR", message: "Recipe was not created." });
+  if (input.tags) {
+    const resolved = await resolveOrCreateTags(userId, input.tags);
+    if (!resolved.success) return err(resolved.error);
+    await replaceRecipeTags(id, resolved.data.map((tag) => tag.id));
+  }
   return getById(userId, id);
 }
 
@@ -121,7 +128,13 @@ export async function update(
     ),
   };
   const updated = await updateRecipeRows(userId, id, input, computed);
-  return updated ? getById(userId, id) : err({ code: "ITEM_NOT_FOUND", message: "Recipe not found." });
+  if (!updated) return err({ code: "ITEM_NOT_FOUND", message: "Recipe not found." });
+  if (input.tags !== undefined) {
+    const resolved = await resolveOrCreateTags(userId, input.tags);
+    if (!resolved.success) return err(resolved.error);
+    await replaceRecipeTags(id, resolved.data.map((tag) => tag.id));
+  }
+  return getById(userId, id);
 }
 
 export async function remove(userId: string, id: string): Promise<Result<{ deleted: true }, AppError>> {

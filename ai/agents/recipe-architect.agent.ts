@@ -14,6 +14,7 @@ import { nutritionCostEstimatorSkill } from "../skills/nutrition-cost-estimator.
 import { runAgentLoop } from "./agent-loop";
 import type { AgentContext, LedgerItem, SubAgent } from "./agent.types";
 import type { SkillDefinition, SkillRun } from "../skills/skill.types";
+import { tagsListAvailableTool } from "../tools/definitions/tags.tools";
 
 function jsonValue(value: unknown) {
   const encoded = JSON.stringify(value);
@@ -42,6 +43,8 @@ export function mealPrepRecipeDirective(run: Pick<SkillRun<MealPrepInput, MealPr
       fiberPerServing: output.estimatedMacrosPerServing.fiberG,
       costPerServing: output.estimatedCostPerServing,
       currency: input.currency,
+      tags: output.tags,
+      shelfLifeDays: output.shelfLifeDays,
     },
     canSave: true,
     canCookAndStock: false,
@@ -109,6 +112,7 @@ export const recipeArchitectAgent: SubAgent = {
         inventoryExpiringTool,
         profileGetTool,
         presentRecipeDraftTool,
+        tagsListAvailableTool,
         skillTool(
           "meal_prep_architect_skill",
           "Generate a structured batch-cookable recipe from validated meal-prep context.",
@@ -155,6 +159,8 @@ export const recipeArchitectAgent: SubAgent = {
         "The meal_prep_architect_skill automatically presents its generated recipe as a card. Do not call ui_present_recipe_draft again for the same recipe unless it has changed.",
         "Use ui_present_recipe_draft for complete generated proposals not already presented by the meal prep skill, and stay within kitchen tasks.",
         "For a saved recipe requested in detail, use recipes_get_detail so the user can open its recipe card.",
+        "Before assigning chips, call tags_list_available and strongly prefer existing canonical or user slugs.",
+        "Maximum three attribute tags plus one item-type chip. Always provide realistic fridge/freezer/pantry shelfLifeDays with null where unsuitable.",
       ].join("\n"),
     }),
 }

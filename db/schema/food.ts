@@ -34,6 +34,11 @@ export const ingredients = pgTable(
     priceQuantity: numeric("price_quantity", { precision: 10, scale: 2 }),
     priceUnit: text("price_unit"),
     currency: text("currency").default("HUF").notNull(),
+    shelfLifeDays: jsonb("shelf_life_days").$type<{
+      fridge?: number | null;
+      freezer?: number | null;
+      pantry?: number | null;
+    }>().default({}).notNull(),
     createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
   },
@@ -63,6 +68,11 @@ export const recipes = pgTable(
     fiberPerServing: numeric("fiber_per_serving", { precision: 10, scale: 2 }),
     costPerServing: numeric("cost_per_serving", { precision: 10, scale: 2 }),
     currency: text("currency").default("HUF").notNull(),
+    shelfLifeDays: jsonb("shelf_life_days").$type<{
+      fridge?: number | null;
+      freezer?: number | null;
+      pantry?: number | null;
+    }>().default({}).notNull(),
     createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
   },

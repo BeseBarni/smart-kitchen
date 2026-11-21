@@ -26,6 +26,8 @@ export type RecipeCardPayload = {
   fiberPerServing?: number | null;
   costPerServing?: number | null;
   currency?: string;
+  tags?: Array<{ slug?: string; label: string; category?: "dietary" | "nutrition" | "prep" | "flavor" | "custom" }>;
+  shelfLifeDays?: { fridge?: number | null; freezer?: number | null; pantry?: number | null };
 };
 
 export type ExpiringItemSummary = {

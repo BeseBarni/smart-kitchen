@@ -6,6 +6,7 @@ import { extname } from "node:path";
 import { chatService, inventoryItemSchema, recipeSchema } from "@app/modules";
 import { runStreamingTurn } from "../runner";
 import type { AgentStreamEvent } from "../core/stream.types";
+import { tagsListAvailableTool } from "../tools/definitions/tags.tools";
 
 async function collectTurn(
   userId: string,
@@ -65,6 +66,8 @@ async function localImageAttachment(path: string): Promise<{
 }
 
 async function main(): Promise<void> {
+  assert.equal(tagsListAvailableTool.name, "tags_list_available");
+  assert.equal(tagsListAvailableTool.annotations.readOnlyHint, true);
   const userId = process.env.AI_SMOKE_TEST_USER_ID;
   if (!userId) throw new Error("AI_SMOKE_TEST_USER_ID must identify a seeded development user.");
   if (!process.env.GOOGLE_GENERATIVE_AI_API_KEY && !process.env.GEMINI_API_KEY) {
@@ -164,6 +167,8 @@ async function main(): Promise<void> {
   });
   const savedRecipe = savedRecipes.find((recipe) => recipe.title === recipeTitle);
   assert.ok(savedRecipe, "the requested recipe was not saved");
+  assert.ok(savedRecipe.tags === undefined || savedRecipe.tags.length <= 3, "saved recipe exceeds three attribute chips");
+  assert.ok(savedRecipe.shelfLifeDays !== undefined, "saved recipe did not include storage shelf life");
   const stockedItems = ledger.data.items.flatMap((item) => {
     if (item.toolName !== "recipes_cook_and_stock" || item.payload.kind !== "tool_result") return [];
     const parsed = inventoryItemSchema.array().safeParse(item.payload.result);
@@ -171,7 +176,11 @@ async function main(): Promise<void> {
   });
   assert.ok(
     stockedItems.some((item) =>
-      item.recipeId === savedRecipe.id && item.storageLocation === "pantry" && item.initialQuantity === 2
+      item.recipeId === savedRecipe.id &&
+      item.storageLocation === "pantry" &&
+      item.initialQuantity === 2 &&
+      (item.tags ?? []).length <= 3 &&
+      item.shelfLifeDays !== undefined
     ),
     "two portions of the requested recipe were not stocked in the pantry",
   );

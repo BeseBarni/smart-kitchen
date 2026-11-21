@@ -67,6 +67,8 @@ test("meal prep skill output becomes a complete recipe card", () => {
       storageGuidance: { fridgeDays: 3, freezerMonths: 2, reheatingTip: "Alaposan melegitsd at." },
       estimatedMacrosPerServing: { calories: 300, proteinG: 15, carbsG: 40, fatG: 5, fiberG: 8 },
       estimatedCostPerServing: 2,
+      tags: [{ slug: "budget-friendly", label: "Budget-friendly", category: "nutrition" }],
+      shelfLifeDays: { fridge: 3, freezer: 60, pantry: null },
     },
   });
   assert.equal(directive.component, "recipe_preview_card");

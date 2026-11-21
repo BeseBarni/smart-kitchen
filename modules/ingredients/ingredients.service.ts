@@ -16,6 +16,8 @@ import type {
   ListIngredientsQuery,
   UpdateIngredientInput,
 } from "./ingredients.schema";
+import { resolveOrCreateTags } from "../tags/tags.service";
+import { replaceIngredientTags } from "../tags/tags.repo";
 
 function toDto(row: Awaited<ReturnType<typeof findIngredient>> & object): IngredientDto {
   return {
@@ -30,6 +32,8 @@ function toDto(row: Awaited<ReturnType<typeof findIngredient>> & object): Ingred
     priceQuantity: numericToNumber(row.priceQuantity),
     createdAt: row.createdAt.toISOString(),
     updatedAt: row.updatedAt.toISOString(),
+    shelfLifeDays: row.shelfLifeDays ?? {},
+    tags: [],
   };
 }
 
@@ -56,7 +60,13 @@ export async function create(
   const user = await requireAuthUser(userId);
   if (!user.success) return user;
   const row = await insertIngredient(userId, input);
-  return row ? ok(toDto(row)) : err({ code: "INTERNAL_ERROR", message: "Ingredient was not created." });
+  if (!row) return err({ code: "INTERNAL_ERROR", message: "Ingredient was not created." });
+  if (input.tags) {
+    const resolved = await resolveOrCreateTags(userId, input.tags);
+    if (!resolved.success) return err(resolved.error);
+    await replaceIngredientTags(row.id, resolved.data.map((tag) => tag.id));
+  }
+  return ok(toDto(row));
 }
 
 export async function update(
@@ -65,7 +75,13 @@ export async function update(
   input: UpdateIngredientInput,
 ): Promise<Result<IngredientDto, AppError>> {
   const row = await updateIngredientRow(userId, id, input);
-  return row ? ok(toDto(row)) : err(notFound());
+  if (!row) return err(notFound());
+  if (input.tags !== undefined) {
+    const resolved = await resolveOrCreateTags(userId, input.tags);
+    if (!resolved.success) return err(resolved.error);
+    await replaceIngredientTags(row.id, resolved.data.map((tag) => tag.id));
+  }
+  return ok(toDto(row));
 }
 
 export async function remove(userId: string, id: string): Promise<Result<{ deleted: true }, AppError>> {

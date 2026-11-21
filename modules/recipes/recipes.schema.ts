@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { ingredientSchema } from "../ingredients/ingredients.schema";
+import { rawTagSchema, shelfLifeDaysSchema, tagDtoSchema } from "../tags/tags.schema";
 
 export const recipeIngredientSchema = z
   .object({
@@ -86,6 +87,12 @@ export const recipeSchema = z
       .nullable()
       .describe("Cost per serving."),
     currency: z.string().describe("ISO currency code used for recipe cost."),
+    shelfLifeDays: shelfLifeDaysSchema
+      .optional()
+      .describe("Typical shelf life in days by storage method."),
+    tags: z.array(tagDtoSchema).max(3)
+      .optional()
+      .describe("Up to three persisted attribute chips."),
     createdAt: z.iso.datetime().describe("Creation time in ISO-8601 format."),
     updatedAt: z.iso.datetime().describe("Update time in ISO-8601 format."),
   })
@@ -107,6 +114,10 @@ export const createRecipeSchema = recipeSchema
     fatPerServing: z.number().nonnegative().nullable().optional(),
     fiberPerServing: z.number().nonnegative().nullable().optional(),
     costPerServing: z.number().nonnegative().nullable().optional(),
+    shelfLifeDays: shelfLifeDaysSchema.optional()
+      .describe("Typical shelf life in days by storage method."),
+    tags: z.array(rawTagSchema).max(3).optional()
+      .describe("Up to three attribute tags to resolve."),
   })
   .describe("Input for creating a recipe.");
 

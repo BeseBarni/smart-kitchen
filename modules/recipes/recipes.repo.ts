@@ -30,6 +30,7 @@ function insertValues(input: CreateRecipeInput, computed: RecipeComputed) {
     fiberPerServing: numberToNumeric(computed.fiberPerServing),
     costPerServing: numberToNumeric(computed.costPerServing),
     currency: input.currency,
+    shelfLifeDays: input.shelfLifeDays ?? {},
   };
 }
 
@@ -48,6 +49,7 @@ function updateValues(
   if (input.isFreezerFriendly !== undefined) values.isFreezerFriendly = input.isFreezerFriendly;
   if (input.source !== undefined) values.source = input.source;
   if (input.currency !== undefined) values.currency = input.currency;
+  if (input.shelfLifeDays !== undefined) values.shelfLifeDays = input.shelfLifeDays;
   if (computed.caloriesPerServing !== undefined) values.caloriesPerServing = numberToNumeric(computed.caloriesPerServing);
   if (computed.proteinPerServing !== undefined) values.proteinPerServing = numberToNumeric(computed.proteinPerServing);
   if (computed.carbsPerServing !== undefined) values.carbsPerServing = numberToNumeric(computed.carbsPerServing);

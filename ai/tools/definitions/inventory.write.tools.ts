@@ -31,6 +31,16 @@ const addInput = z.object({
   fiberPerUnit: z.number().nonnegative().nullable().optional().describe("Fiber grams per unit."),
   costPerUnit: z.number().nonnegative().nullable().describe("Cost per unit or null."),
   currency: z.string().describe("Currency code for cost."),
+  tags: z.array(z.object({
+    slug: z.string().optional().describe("Existing normalized tag slug when known."),
+    label: z.string().min(1).describe("Tag label."),
+    category: z.enum(["dietary", "nutrition", "prep", "flavor", "custom"]).optional(),
+  }).strict()).max(3).optional().describe("Max three attribute chips; existing slugs are preferred."),
+  shelfLifeDays: z.object({
+    fridge: z.number().int().positive().nullable().optional(),
+    freezer: z.number().int().positive().nullable().optional(),
+    pantry: z.number().int().positive().nullable().optional(),
+  }).strict().optional().describe("Typical days by storage method; use null for unsuitable methods."),
 }).strict().refine(
   (value) => value.itemType !== "meal_prep" || value.fiberPerUnit != null,
   { message: "Fiber per unit is required for prepared meals." },

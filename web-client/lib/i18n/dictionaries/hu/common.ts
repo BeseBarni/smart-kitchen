@@ -16,4 +16,5 @@ export const common = {
   backToChat: "Vissza a beszélgetéshez",
   syncing: "Szinkronizálás...",
   optimisticRollback: "A módosítást nem sikerült menteni. Az előző állapot visszaállt.",
+  unknown: "Ismeretlen",
 } satisfies WidenStrings<typeof english>;

@@ -5,6 +5,16 @@ import type { SkillRun } from "./skill.types";
 import { estimatedMacrosPerUnitSchema, type ConversationStreamInput } from "@app/modules/schemas";
 
 const confidenceSchema = z.enum(["high", "medium", "low"]);
+const suggestedTagSchema = z.object({
+  slug: z.string().optional(),
+  label: z.string().min(1),
+  category: z.enum(["dietary", "nutrition", "prep", "flavor", "custom"]).optional(),
+}).strict();
+const shelfLifeSchema = z.object({
+  fridge: z.number().int().positive().nullable().optional(),
+  freezer: z.number().int().positive().nullable().optional(),
+  pantry: z.number().int().positive().nullable().optional(),
+}).strict();
 
 export const visionExtractorInputSchema = z
   .object({
@@ -38,6 +48,8 @@ export const visionExtractorOutputSchema = z.discriminatedUnion("kind", [
         .describe("Estimated nutrition for exactly one of the line item's quantity units, or null if not reasonably estimable."),
       isFoodItem: z.boolean(),
       confidence: confidenceSchema,
+      suggestedTags: z.array(suggestedTagSchema).max(3).optional(),
+      shelfLifeDays: shelfLifeSchema.optional(),
     }).strict()),
     ambiguities: z.array(z.string()),
   }).strict(),
@@ -57,6 +69,8 @@ export const visionExtractorOutputSchema = z.discriminatedUnion("kind", [
       fatG: z.number().nonnegative().nullable(),
     }).strict(),
     confidence: confidenceSchema,
+    suggestedTags: z.array(suggestedTagSchema).max(3).optional(),
+    shelfLifeDays: shelfLifeSchema.optional(),
   }).strict(),
   z.object({
     kind: z.literal("ingredients_or_fridge"),
@@ -67,6 +81,8 @@ export const visionExtractorOutputSchema = z.discriminatedUnion("kind", [
       unit: z.string(),
       freshnessHint: z.string().nullable(),
       confidence: confidenceSchema,
+      suggestedTags: z.array(suggestedTagSchema).max(3).optional(),
+      shelfLifeDays: shelfLifeSchema.optional(),
     }).strict()),
   }).strict(),
   z.object({

@@ -15,6 +15,9 @@ interface ChatUiState {
   setAttachments: (attachments: ChatAttachment[]) => void;
   clearAttachments: () => void;
   markReceiptImported: (key: string) => void;
+  pendingAutoPrompt: { id: string; text: string } | null;
+  queueNewChatPrompt: (text: string) => void;
+  consumePendingAutoPrompt: () => { id: string; text: string } | null;
 }
 
 export const useChatUiStore = create<ChatUiState>((set) => ({
@@ -35,4 +38,17 @@ export const useChatUiStore = create<ChatUiState>((set) => ({
   markReceiptImported: (key) => set((state) => ({
     importedReceiptKeys: { ...state.importedReceiptKeys, [key]: true },
   })),
+  pendingAutoPrompt: null,
+  queueNewChatPrompt: (text) => set({
+    activeConversationId: null,
+    pendingAutoPrompt: { id: crypto.randomUUID(), text },
+  }),
+  consumePendingAutoPrompt: () => {
+    let consumed: { id: string; text: string } | null = null;
+    set((state) => {
+      consumed = state.pendingAutoPrompt;
+      return { pendingAutoPrompt: null };
+    });
+    return consumed;
+  },
 }));

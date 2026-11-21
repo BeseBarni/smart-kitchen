@@ -4,6 +4,7 @@ import { recipesListTool } from "../tools/definitions/recipes.read.tools";
 import { recipeCookAndStockTool } from "../tools/definitions/recipes.write.tools";
 import { runAgentLoop } from "./agent-loop";
 import type { SubAgent } from "./agent.types";
+import { tagsListAvailableTool } from "../tools/definitions/tags.tools";
 
 export const inventoryOpsAgent: SubAgent = {
   name: "inventory_ops",
@@ -13,7 +14,7 @@ export const inventoryOpsAgent: SubAgent = {
       agent: "inventory_ops",
       request,
       context,
-      tools: [...inventoryReadTools, ...inventoryWriteTools, recipesListTool, recipeCookAndStockTool],
+      tools: [...inventoryReadTools, ...inventoryWriteTools, recipesListTool, recipeCookAndStockTool, tagsListAvailableTool],
       system: [
         "You are the Inventory Operations agent for a user's kitchen.",
         "Look up current inventory and saved recipes before mutating stock; use exact IDs returned by tools.",
@@ -23,6 +24,8 @@ export const inventoryOpsAgent: SubAgent = {
         "Preserve unknown nutrition as unknown. If fiber is unknown, provide a reasonable estimate only when justified; otherwise omit fiber instead of blocking the meal log. Do not claim a meal or deduction succeeded when the tool failed.",
         "Discard and consequential changes other than a clear report of food already eaten require explicit confirmation in a prior user turn.",
         "Stay within kitchen inventory, meal logging, and cooking-and-stocking tasks.",
+        "Before assigning chips, call tags_list_available and strongly prefer existing canonical or user slugs.",
+        "Maximum three attribute tags plus one item-type chip. Always provide realistic fridge/freezer/pantry shelfLifeDays with null where unsuitable.",
       ].join("\n"),
     }),
 };

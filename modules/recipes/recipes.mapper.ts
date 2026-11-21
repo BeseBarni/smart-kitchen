@@ -43,6 +43,8 @@ export function ingredientRowToDto(row: IngredientRow): IngredientDto {
     priceQuantity: numericToNumber(row.priceQuantity),
     createdAt: row.createdAt.toISOString(),
     updatedAt: row.updatedAt.toISOString(),
+    shelfLifeDays: row.shelfLifeDays ?? {},
+    tags: [],
   };
 }
 
@@ -58,6 +60,8 @@ export function recipeDto(recipe: RecipeDetail["recipe"], lines: RecipeDetail["l
     costPerServing: numericToNumber(recipe.costPerServing),
     createdAt: recipe.createdAt.toISOString(),
     updatedAt: recipe.updatedAt.toISOString(),
+    shelfLifeDays: recipe.shelfLifeDays ?? {},
+    tags: [],
     ingredients: lines.map(({ line, ingredient }) => ({
       ...line,
       quantity: Number(line.quantity),
@@ -78,6 +82,8 @@ export function recipeListDto(recipe: RecipeListRow): RecipeDto {
     costPerServing: numericToNumber(recipe.costPerServing),
     createdAt: recipe.createdAt.toISOString(),
     updatedAt: recipe.updatedAt.toISOString(),
+    shelfLifeDays: recipe.shelfLifeDays ?? {},
+    tags: [],
     ingredients: [],
   };
 }
@@ -161,5 +167,7 @@ export function cookedRowToDto(row: CookedRow): InventoryItemDto {
     expiresAt: row.expiresAt?.toISOString() ?? null,
     createdAt: row.createdAt.toISOString(),
     updatedAt: row.updatedAt.toISOString(),
+    shelfLifeDays: row.shelfLifeDays ?? {},
+    tags: [],
   };
 }

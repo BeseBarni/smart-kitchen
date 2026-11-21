@@ -1,5 +1,12 @@
-import { and, asc, desc, eq, ilike, lte, sql } from "drizzle-orm";
-import { getDatabase, inventoryItems } from "@app/db";
+import { and, asc, desc, eq, ilike, inArray, lte, sql } from "drizzle-orm";
+import {
+  getDatabase,
+  inventoryItems,
+  inventoryItemTags,
+  recipeIngredients,
+  recipes,
+  tags,
+} from "@app/db";
 import { numberToNumeric } from "../shared/numeric";
 import type {
   BatchCreateInventoryInput,
@@ -30,6 +37,7 @@ function insertValues(input: CreateInventoryItemInput) {
     fiberPerUnit: numberToNumeric(input.fiberPerUnit ?? null),
     costPerUnit: numberToNumeric(input.costPerUnit),
     currency: input.currency,
+    shelfLifeDays: input.shelfLifeDays ?? {},
   };
 }
 
@@ -54,6 +62,7 @@ function updateValues(input: UpdateInventoryItemInput): Partial<typeof inventory
   if (input.fiberPerUnit !== undefined) values.fiberPerUnit = numberToNumeric(input.fiberPerUnit);
   if (input.costPerUnit !== undefined) values.costPerUnit = numberToNumeric(input.costPerUnit);
   if (input.currency !== undefined) values.currency = input.currency;
+  if (input.shelfLifeDays !== undefined) values.shelfLifeDays = input.shelfLifeDays;
   return values;
 }
 
@@ -88,10 +97,90 @@ export async function findInventoryItem(userId: string, id: string) {
   return row;
 }
 
+export async function findInventoryTags(itemIds: string[]) {
+  if (itemIds.length === 0) return [];
+  return getDatabase()
+    .select({
+      inventoryItemId: inventoryItemTags.inventoryItemId,
+      id: tags.id,
+      slug: tags.slug,
+      label: tags.label,
+      i18nKey: tags.i18nKey,
+      category: tags.category,
+      colorToken: tags.colorToken,
+    })
+    .from(inventoryItemTags)
+    .innerJoin(tags, eq(inventoryItemTags.tagId, tags.id))
+    .where(inArray(inventoryItemTags.inventoryItemId, itemIds));
+}
+
+export async function findLinkedRecipe(userId: string, recipeId: string | null) {
+  if (!recipeId) return null;
+  const [recipe] = await getDatabase()
+    .select({
+      id: recipes.id,
+      title: recipes.title,
+      description: recipes.description,
+      prepTimeMin: recipes.prepTimeMin,
+      cookTimeMin: recipes.cookTimeMin,
+      servings: recipes.servings,
+    })
+    .from(recipes)
+    .where(and(eq(recipes.userId, userId), eq(recipes.id, recipeId)))
+    .limit(1);
+  if (!recipe) return null;
+  const lines = await getDatabase()
+    .select({
+      displayName: recipeIngredients.displayName,
+      quantity: recipeIngredients.quantity,
+      unit: recipeIngredients.unit,
+      notes: recipeIngredients.notes,
+      ingredientId: recipeIngredients.ingredientId,
+      sortOrder: recipeIngredients.sortOrder,
+    })
+    .from(recipeIngredients)
+    .where(eq(recipeIngredients.recipeId, recipeId))
+    .orderBy(asc(recipeIngredients.sortOrder), asc(recipeIngredients.id));
+  return {
+    ...recipe,
+    servings: Number(recipe.servings),
+    ingredients: lines.map((line) => ({
+      ...line,
+      quantity: Number(line.quantity),
+    })),
+  };
+}
+
 export async function insertInventoryItem(userId: string, input: CreateInventoryItemInput) {
   const [row] = await getDatabase()
     .insert(inventoryItems)
     .values({ userId, ...insertValues(input) })
+    .returning();
+  return row;
+}
+
+export async function replaceInventoryItemTags(itemId: string, tagIds: string[]) {
+  return getDatabase().transaction(async (tx) => {
+    await tx.delete(inventoryItemTags).where(eq(inventoryItemTags.inventoryItemId, itemId));
+    if (tagIds.length > 0) {
+      await tx.insert(inventoryItemTags).values(tagIds.slice(0, 3).map((tagId) => ({
+        inventoryItemId: itemId,
+        tagId,
+      })));
+    }
+  });
+}
+
+export async function updateStorageLocationRow(
+  userId: string,
+  id: string,
+  storageLocation: "fridge" | "freezer" | "pantry",
+  expiresAt: Date | null,
+) {
+  const [row] = await getDatabase()
+    .update(inventoryItems)
+    .set({ storageLocation, expiresAt, updatedAt: new Date() })
+    .where(and(eq(inventoryItems.userId, userId), eq(inventoryItems.id, id)))
     .returning();
   return row;
 }
@@ -118,6 +207,7 @@ export function batchInventoryValues(userId: string, item: BatchInventoryItemInp
     fiberPerUnit: numberToNumeric(item.estimatedMacrosPerUnit?.fiberG ?? null),
     costPerUnit: numberToNumeric(item.costPerUnit ?? null),
     currency: item.currency ?? "HUF",
+    shelfLifeDays: item.shelfLifeDays ?? {},
   };
 }
 

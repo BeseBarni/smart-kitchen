@@ -9,12 +9,15 @@ import type {
   ListInventoryQuery,
   MealLogDto,
   UpdateInventoryItemInput,
+  InventoryDetailDto,
+  SwitchStorageLocationInput,
 } from "@app/modules/schemas";
 import {
   batchCreateInventoryOutputSchema,
   inventoryItemSchema,
   inventorySummarySchema,
   mealLogSchema,
+  inventoryDetailSchema,
 } from "@app/modules/schemas";
 import { z } from "zod";
 import { apiClient, unwrapApiResponse } from "@/lib/api-client";
@@ -42,8 +45,8 @@ export const inventoryApi = {
     unwrapApiResponse(await apiClient.api.inventory.summary.$get(), inventorySummarySchema),
   expiring: async (withinHours = 48): Promise<InventoryItemDto[]> =>
     unwrapApiResponse(await apiClient.api.inventory.expiring.$get({ query: { withinHours: String(withinHours) } }), z.array(inventoryItemSchema)),
-  getById: async (id: string): Promise<InventoryItemDto> =>
-    unwrapApiResponse(await apiClient.api.inventory[":id"].$get({ param: { id } }), inventoryItemSchema),
+  getById: async (id: string): Promise<InventoryDetailDto> =>
+    unwrapApiResponse(await apiClient.api.inventory[":id"].$get({ param: { id } }), inventoryDetailSchema),
   create: async (input: CreateInventoryItemInput): Promise<InventoryItemDto> =>
     unwrapApiResponse(await apiClient.api.inventory.$post({ json: input }), inventoryItemSchema),
   batchCreate: async (input: BatchCreateInventoryInput): Promise<BatchCreateInventoryOutput> =>
@@ -64,4 +67,9 @@ export const inventoryApi = {
     })),
   discard: async (id: string): Promise<InventoryItemDto> =>
     unwrapApiResponse(await apiClient.api.inventory[":id"].discard.$post({ param: { id } }), inventoryItemSchema),
+  switchStorage: async (id: string, input: SwitchStorageLocationInput): Promise<InventoryDetailDto> =>
+    unwrapApiResponse(
+      await apiClient.api.inventory[":id"].storage.$patch({ param: { id }, json: input }),
+      inventoryDetailSchema,
+    ),
 };

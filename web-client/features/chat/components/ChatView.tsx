@@ -39,6 +39,9 @@ export function ChatView(): React.JSX.Element {
   const { create } = useConversationMutations();
   const onConversationId = useCallback((id: string) => setActiveConversationId(id), [setActiveConversationId]);
   const stream = useChatStream(activeConversationId, onConversationId);
+  const pendingAutoPrompt = useChatUiStore((state) => state.pendingAutoPrompt);
+  const consumePendingAutoPrompt = useChatUiStore((state) => state.consumePendingAutoPrompt);
+  const processedPromptIdRef = useRef<string | null>(null);
 
   useEffect(() => {
     if (conversationsError) toast.error(getText("chat.conversationsError"), { id: "conversations-error" });
@@ -48,10 +51,18 @@ export function ChatView(): React.JSX.Element {
   }, [historyError]);
 
   useEffect(() => {
-    if (initializedSelection.current || conversationsPending) return;
+    if (initializedSelection.current || conversationsPending || pendingAutoPrompt) return;
     initializedSelection.current = true;
     if (!activeConversationId && conversations[0]) setActiveConversationId(conversations[0].id);
-  }, [activeConversationId, conversations, conversationsPending, setActiveConversationId]);
+  }, [activeConversationId, conversations, conversationsPending, pendingAutoPrompt, setActiveConversationId]);
+
+  useEffect(() => {
+    if (!pendingAutoPrompt || stream.isStreaming) return;
+    if (processedPromptIdRef.current === pendingAutoPrompt.id) return;
+    processedPromptIdRef.current = pendingAutoPrompt.id;
+    const prompt = consumePendingAutoPrompt();
+    if (prompt) void stream.sendMessage(prompt.text);
+  }, [consumePendingAutoPrompt, pendingAutoPrompt, stream]);
 
   const turns = useMemo(() => {
     return mergeChatTurns(history?.turns ?? [], activeConversationId ? rejectedTurns[activeConversationId] ?? [] : [], stream.turn);

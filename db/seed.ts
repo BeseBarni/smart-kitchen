@@ -10,8 +10,12 @@ import {
   ingredients,
   inventoryItems,
   mealLogs,
+  ingredientTags,
+  inventoryItemTags,
+  recipeTags,
   recipeIngredients,
   recipes,
+  tags,
   userProfiles,
 } from "./schema";
 
@@ -82,6 +86,22 @@ async function seed(): Promise<void> {
             updatedAt: new Date(),
           },
         });
+
+      const canonicalTags = [
+        { slug: "high-protein", label: "High protein", i18nKey: "inventory.tagsHighProtein", category: "nutrition" as const, colorToken: "primary" },
+        { slug: "healthy", label: "Healthy", i18nKey: "inventory.tagsHealthy", category: "nutrition" as const, colorToken: "positive" },
+        { slug: "freezer-friendly", label: "Freezer-friendly", i18nKey: "inventory.tagsFreezerFriendly", category: "prep" as const, colorToken: "info" },
+        { slug: "spicy", label: "Spicy", i18nKey: "inventory.tagsSpicy", category: "flavor" as const, colorToken: "warning" },
+        { slug: "budget-friendly", label: "Budget-friendly", i18nKey: "inventory.tagsBudgetFriendly", category: "nutrition" as const, colorToken: "neutral" },
+        { slug: "low-carb", label: "Low carb", i18nKey: "inventory.tagsLowCarb", category: "nutrition" as const, colorToken: "primary" },
+        { slug: "vegetarian", label: "Vegetarian", i18nKey: "inventory.tagsVegetarian", category: "dietary" as const, colorToken: "positive" },
+        { slug: "quick", label: "Quick", i18nKey: "inventory.tagsQuick", category: "prep" as const, colorToken: "warning" },
+        { slug: "fresh-produce", label: "Fresh produce", i18nKey: "inventory.tagsFreshProduce", category: "prep" as const, colorToken: "positive" },
+        { slug: "comfort-food", label: "Comfort food", i18nKey: "inventory.tagsComfortFood", category: "flavor" as const, colorToken: "neutral" },
+      ];
+      for (const tag of canonicalTags) {
+        await tx.insert(tags).values({ ...tag, userId: null }).onConflictDoNothing();
+      }
 
       const ingredientsToSeed = [
         {
@@ -178,6 +198,17 @@ async function seed(): Promise<void> {
           .onConflictDoUpdate({ target: ingredients.id, set: ingredient });
       }
 
+      await tx.update(ingredients).set({ shelfLifeDays: { fridge: 4, freezer: 180, pantry: null } })
+        .where(eq(ingredients.id, ids.chicken));
+      await tx.update(ingredients).set({ shelfLifeDays: { fridge: 365, freezer: 365, pantry: 730 } })
+        .where(eq(ingredients.id, ids.rice));
+      await tx.update(ingredients).set({ shelfLifeDays: { fridge: 7, freezer: 90, pantry: null } })
+        .where(eq(ingredients.id, ids.tomatoes));
+      await tx.update(ingredients).set({ shelfLifeDays: { fridge: 4, freezer: 180, pantry: 365 } })
+        .where(eq(ingredients.id, ids.beans));
+      await tx.update(ingredients).set({ shelfLifeDays: { fridge: 7, freezer: 90, pantry: null } })
+        .where(eq(ingredients.id, ids.mozzarella));
+
       const recipesToSeed = [
         {
           id: ids.chiliRecipe,
@@ -229,6 +260,10 @@ async function seed(): Promise<void> {
           set: recipe,
         });
       }
+      await tx.update(recipes).set({ shelfLifeDays: { fridge: 4, freezer: 90, pantry: null } })
+        .where(eq(recipes.id, ids.chiliRecipe));
+      await tx.update(recipes).set({ shelfLifeDays: { fridge: 4, freezer: 90, pantry: null } })
+        .where(eq(recipes.id, ids.riceRecipe));
 
       const recipeIngredientsToSeed = [
         {
@@ -364,6 +399,36 @@ async function seed(): Promise<void> {
           .insert(inventoryItems)
           .values(item)
           .onConflictDoUpdate({ target: inventoryItems.id, set: item });
+      }
+      await tx.update(inventoryItems).set({ shelfLifeDays: { fridge: 4, freezer: 90, pantry: null } })
+        .where(eq(inventoryItems.id, ids.chiliBatch));
+      await tx.update(inventoryItems).set({ shelfLifeDays: { fridge: 4, freezer: 90, pantry: null } })
+        .where(eq(inventoryItems.id, ids.riceBatch));
+      await tx.update(inventoryItems).set({ shelfLifeDays: { fridge: 4, freezer: 180, pantry: null } })
+        .where(eq(inventoryItems.id, ids.chickenPack));
+      await tx.update(inventoryItems).set({ shelfLifeDays: { fridge: 7, freezer: 90, pantry: null } })
+        .where(eq(inventoryItems.id, ids.mozzarellaPack));
+
+      const [highProtein] = await tx.select().from(tags).where(eq(tags.slug, "high-protein")).limit(1);
+      const [freezerFriendly] = await tx.select().from(tags).where(eq(tags.slug, "freezer-friendly")).limit(1);
+      const [freshProduce] = await tx.select().from(tags).where(eq(tags.slug, "fresh-produce")).limit(1);
+      const [comfortFood] = await tx.select().from(tags).where(eq(tags.slug, "comfort-food")).limit(1);
+      if (highProtein) {
+        await tx.insert(recipeTags).values({ recipeId: ids.chiliRecipe, tagId: highProtein.id }).onConflictDoNothing();
+        await tx.insert(inventoryItemTags).values({ inventoryItemId: ids.chiliBatch, tagId: highProtein.id }).onConflictDoNothing();
+        await tx.insert(ingredientTags).values({ ingredientId: ids.chicken, tagId: highProtein.id }).onConflictDoNothing();
+      }
+      if (freezerFriendly) {
+        await tx.insert(recipeTags).values({ recipeId: ids.chiliRecipe, tagId: freezerFriendly.id }).onConflictDoNothing();
+        await tx.insert(recipeTags).values({ recipeId: ids.riceRecipe, tagId: freezerFriendly.id }).onConflictDoNothing();
+        await tx.insert(inventoryItemTags).values({ inventoryItemId: ids.chiliBatch, tagId: freezerFriendly.id }).onConflictDoNothing();
+      }
+      if (freshProduce) {
+        await tx.insert(ingredientTags).values({ ingredientId: ids.tomatoes, tagId: freshProduce.id }).onConflictDoNothing();
+        await tx.insert(inventoryItemTags).values({ inventoryItemId: ids.chickenPack, tagId: freshProduce.id }).onConflictDoNothing();
+      }
+      if (comfortFood) {
+        await tx.insert(recipeTags).values({ recipeId: ids.chiliRecipe, tagId: comfortFood.id }).onConflictDoNothing();
       }
 
       await tx

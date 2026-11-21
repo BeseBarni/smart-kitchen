@@ -27,3 +27,19 @@ test("keeps rejected turns per conversation and places them among saved turns", 
   ], rejected.one ?? []).map((item) => item.id), ["before", "rejected", "after"]);
   useChatUiStore.setState({ rejectedTurns: {} });
 });
+
+test("queues and consumes one unique auto-start prompt", () => {
+  useChatUiStore.setState({
+    activeConversationId: "old",
+    pendingAutoPrompt: null,
+  });
+  useChatUiStore.getState().queueNewChatPrompt("Tell me about chicken");
+  const queued = useChatUiStore.getState();
+  assert.equal(queued.activeConversationId, null);
+  assert.ok(queued.pendingAutoPrompt?.id);
+  assert.equal(queued.pendingAutoPrompt?.text, "Tell me about chicken");
+  const consumed = useChatUiStore.getState().consumePendingAutoPrompt();
+  assert.equal(consumed?.text, "Tell me about chicken");
+  assert.equal(useChatUiStore.getState().pendingAutoPrompt, null);
+  assert.equal(useChatUiStore.getState().consumePendingAutoPrompt(), null);
+});

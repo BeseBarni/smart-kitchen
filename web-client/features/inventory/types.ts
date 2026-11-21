@@ -5,6 +5,7 @@ import type {
   InventorySummaryDto,
   ListInventoryQuery,
   UpdateInventoryItemInput,
+  InventoryDetailDto,
 } from "@app/modules/schemas";
 
 export type InventoryItem = InventoryItemDto;
@@ -13,3 +14,4 @@ export type InventoryUpdate = UpdateInventoryItemInput;
 export type InventorySummary = InventorySummaryDto;
 export type InventoryListFilters = Partial<ListInventoryQuery>;
 export type Storage = InventoryItemDto["storageLocation"];
+export type InventoryDetail = InventoryDetailDto;

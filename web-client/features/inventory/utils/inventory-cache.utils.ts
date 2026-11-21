@@ -48,6 +48,8 @@ export function optimisticInventoryItem(input: InventoryInput): InventoryItemDto
     fiberPerUnit: input.fiberPerUnit ?? null,
     id: createOptimisticId(),
     userId: "",
+    shelfLifeDays: input.shelfLifeDays ?? {},
+    tags: [],
     createdAt: now,
     updatedAt: now,
   };
@@ -139,16 +141,21 @@ export function updateOptimisticInventory(
   input: InventoryUpdate,
 ): InventoryItemDto | undefined {
   let updated: InventoryItemDto | undefined;
-  patchInventoryList(client, (items) => items.flatMap((item) => {
-    if (item.id !== id) return [item];
-    updated = {
+  patchInventoryList(client, (items) => items.map((item) => {
+    if (item.id !== id) return item;
+    const next: InventoryItemDto = {
       ...item,
       ...input,
+      tags: [],
       ...(input.fiberPerUnit === undefined ? {} : { fiberPerUnit: input.fiberPerUnit }),
     };
-    return [updated];
+    updated = next;
+    return next;
   }));
-  if (updated) patchInventoryDetail(client, id, () => updated as InventoryItemDto);
+  if (updated) {
+    const nextUpdated = updated;
+    patchInventoryDetail(client, id, () => nextUpdated);
+  }
   for (const [key, items] of client.getQueriesData<InventoryItemDto[]>({ queryKey: inventoryKeys.lists() })) {
     if (!items) continue;
     const filters = (key[2] ?? {}) as InventoryListFilters;

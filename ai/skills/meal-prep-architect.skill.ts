@@ -25,6 +25,8 @@ const inputSchema = z.object({
   macroTargets: macros.partial().optional().describe("Optional per-serving nutrition targets."),
   currency: z.string().describe("Currency code for cost estimates."),
   freezerFriendlyRequired: z.boolean().optional().describe("Whether the recipe must freeze well."),
+  availableTagSlugs: z.array(z.string()).max(100).optional()
+    .describe("Existing canonical tag slugs that should be preferred."),
 }).strict();
 
 const outputSchema = z.object({
@@ -43,6 +45,16 @@ const outputSchema = z.object({
   }).strict().describe("Storage and reheating instructions."),
   estimatedMacrosPerServing: macros.describe("Estimated per-serving nutrition."),
   estimatedCostPerServing: z.number().nonnegative().describe("Estimated cost per serving."),
+  tags: z.array(z.object({
+    slug: z.string().optional(),
+    label: z.string().min(1),
+    category: z.enum(["dietary", "nutrition", "prep", "flavor", "custom"]).optional(),
+  }).strict()).max(3).describe("At most three attribute chips; prefer availableTagSlugs."),
+  shelfLifeDays: z.object({
+    fridge: z.number().int().positive().nullable().optional(),
+    freezer: z.number().int().positive().nullable().optional(),
+    pantry: z.number().int().positive().nullable().optional(),
+  }).strict().describe("Realistic storage shelf life; null for unsuitable methods."),
 }).strict();
 
 export const mealPrepArchitectSkill = defineSkill({

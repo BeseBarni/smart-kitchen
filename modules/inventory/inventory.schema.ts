@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { rawTagSchema, shelfLifeDaysSchema, tagDtoSchema } from "../tags/tags.schema";
 
 export const inventoryItemSchema = z
   .object({
@@ -23,6 +24,12 @@ export const inventoryItemSchema = z
     fiberPerUnit: z.number().nonnegative().nullable().describe("Fiber grams per inventory unit."),
     costPerUnit: z.number().nonnegative().nullable().describe("Cost per inventory unit."),
     currency: z.string().describe("ISO currency code used for cost."),
+    shelfLifeDays: shelfLifeDaysSchema
+      .optional()
+      .describe("Typical shelf life in days by storage method."),
+    tags: z.array(tagDtoSchema).max(3)
+      .optional()
+      .describe("Up to three persisted attribute chips."),
     createdAt: z.iso.datetime().describe("Creation time in ISO-8601 format."),
     updatedAt: z.iso.datetime().describe("Update time in ISO-8601 format."),
   })
@@ -30,7 +37,11 @@ export const inventoryItemSchema = z
 
 export const createInventoryItemSchema = inventoryItemSchema
   .omit({ id: true, userId: true, createdAt: true, updatedAt: true })
-  .extend({ fiberPerUnit: z.number().nonnegative().nullable().optional().describe("Fiber grams per unit, if known.") })
+  .extend({
+    fiberPerUnit: z.number().nonnegative().nullable().optional().describe("Fiber grams per unit, if known."),
+    shelfLifeDays: shelfLifeDaysSchema.optional().describe("Typical shelf life in days by storage method."),
+    tags: z.array(rawTagSchema).max(3).optional().describe("Up to three attribute tags to resolve."),
+  })
   .describe("Input for recording an inventory item.");
 
 export const updateInventoryItemSchema = createInventoryItemSchema
@@ -95,6 +106,10 @@ export const batchInventoryItemSchema = z
     currency: z.string().trim().min(1).max(8).optional().describe("Optional ISO-style currency code."),
     estimatedMacrosPerUnit: estimatedMacrosPerUnitSchema.nullable().optional()
       .describe("Estimated nutrition per recorded unit, if available."),
+    shelfLifeDays: shelfLifeDaysSchema.optional()
+      .describe("Typical shelf life in days by storage method."),
+    tags: z.array(rawTagSchema).max(3).optional()
+      .describe("Up to three attribute tags to resolve."),
   })
   .strict()
   .describe("One item in a receipt or photo inventory batch.");
@@ -125,6 +140,42 @@ export const consumeInventoryInputSchema = z
 
 export const inventoryItemIdSchema = z.string().uuid().describe("Inventory item identifier.");
 
+export const inventoryFreshnessSchema = z.object({
+  msRemaining: z.number().finite().nullable().describe("Milliseconds until expiry."),
+  daysRemaining: z.number().finite().nullable().describe("Days until expiry."),
+  isExpired: z.boolean().describe("Whether the item is already expired."),
+  shelfLifeDaysForCurrentLocation: z.number().int().positive().nullable()
+    .describe("Typical shelf life for the current storage method."),
+}).strict();
+
+export const linkedRecipeIngredientSchema = z.object({
+  displayName: z.string().min(1).describe("Ingredient name."),
+  quantity: z.number().positive().describe("Required quantity."),
+  unit: z.string().min(1).describe("Quantity unit."),
+  notes: z.string().nullable().describe("Preparation notes."),
+  ingredientId: z.string().uuid().nullable().describe("Linked ingredient identifier."),
+}).strict();
+
+export const linkedRecipeDetailSchema = z.object({
+  id: z.string().uuid().describe("Recipe identifier."),
+  title: z.string().min(1).describe("Recipe title."),
+  description: z.string().nullable().describe("Recipe description."),
+  prepTimeMin: z.number().int().nonnegative().nullable().describe("Preparation time."),
+  cookTimeMin: z.number().int().nonnegative().nullable().describe("Cooking time."),
+  servings: z.number().positive().describe("Recipe servings."),
+  ingredients: z.array(linkedRecipeIngredientSchema).describe("Ordered recipe ingredients."),
+}).strict();
+
+export const inventoryDetailSchema = inventoryItemSchema.extend({
+  freshness: inventoryFreshnessSchema,
+  recipe: linkedRecipeDetailSchema.nullable(),
+}).strict().describe("Complete inventory item detail modal DTO.");
+
+export const switchStorageLocationSchema = z.object({
+  storageLocation: z.enum(["fridge", "freezer", "pantry"]).describe("New storage method."),
+  recalculateExpiry: z.boolean().default(true).describe("Whether to recalculate expiry."),
+}).strict().describe("Optimistic storage switch request.");
+
 export type InventoryItemDto = z.infer<typeof inventoryItemSchema>;
 export type CreateInventoryItemInput = z.infer<typeof createInventoryItemSchema>;
 export type UpdateInventoryItemInput = z.infer<typeof updateInventoryItemSchema>;
@@ -134,3 +185,5 @@ export type ConsumeInventoryInput = z.infer<typeof consumeInventoryInputSchema>;
 export type BatchInventoryItemInput = z.infer<typeof batchInventoryItemSchema>;
 export type BatchCreateInventoryInput = z.infer<typeof batchCreateInventoryInputSchema>;
 export type BatchCreateInventoryOutput = z.infer<typeof batchCreateInventoryOutputSchema>;
+export type InventoryDetailDto = z.infer<typeof inventoryDetailSchema>;
+export type SwitchStorageLocationInput = z.infer<typeof switchStorageLocationSchema>;

@@ -41,6 +41,8 @@ export function optimisticRecipe(input: CreateRecipeInput): RecipeDto {
     fiberPerServing: input.fiberPerServing ?? null,
     costPerServing: input.costPerServing ?? null,
     userId: "",
+    shelfLifeDays: input.shelfLifeDays ?? {},
+    tags: [],
     createdAt: now,
     updatedAt: now,
   };
@@ -151,6 +153,8 @@ export function insertCookedBatches(
     fiberPerUnit: recipe.fiberPerServing,
     costPerUnit: recipe.costPerServing,
     currency: recipe.currency,
+    shelfLifeDays: recipe.shelfLifeDays ?? {},
+    tags: [],
     createdAt: now,
     updatedAt: now,
   }));
