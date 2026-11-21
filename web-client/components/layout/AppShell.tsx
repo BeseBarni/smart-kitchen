@@ -17,6 +17,7 @@ export function AppShell({ children }: { children: ReactNode }): React.JSX.Eleme
   }, []);
   const section = pathname.startsWith("/inventory") ? "Inventory" :
     pathname.startsWith("/recipes") ? "Recipes" :
+    pathname.startsWith("/tracker") ? "Calories" :
     pathname.startsWith("/account") ? "Account" : "Assistant Chat";
   return (
     <div className="mx-auto min-h-dvh w-full max-w-[430px] bg-background">

@@ -26,6 +26,7 @@ export function RecipeSuggestionCard(props: Props): React.JSX.Element {
         </span>
       </button>
       <ChatRecipeActions actions={actions} />
+      {props.status === "draft" && props.recipe.fiberPerServing == null && <p className="text-body-sm text-muted-foreground">Ask the assistant for a fiber estimate before saving this older draft.</p>}
       {open && <ChatRecipeSheet {...props} actions={actions} onClose={() => setOpen(false)} />}
     </article>
   );

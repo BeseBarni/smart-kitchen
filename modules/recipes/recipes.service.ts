@@ -2,13 +2,13 @@ import { err, ok, type AppError, type Result } from "@app/shared";
 import { findByIds } from "../ingredients/ingredients.service";
 import { requireAuthUser } from "../shared/user.service";
 import {
-  cookRecipeRows,
   deleteRecipeRow,
   findRecipe,
   insertRecipe,
   listRecipeRows,
   updateRecipeRows,
 } from "./recipes.repo";
+import { cookRecipeRows } from "./recipes-cook.repo";
 import type {
   CreateRecipeInput,
   ListRecipesQuery,
@@ -113,6 +113,7 @@ export async function update(
       shouldRecompute,
     ),
     fatPerServing: chooseComputedValue(input.fatPerServing, derived.fatPerServing, shouldRecompute),
+    fiberPerServing: chooseComputedValue(input.fiberPerServing, derived.fiberPerServing, shouldRecompute),
     costPerServing: chooseComputedValue(
       input.costPerServing,
       derived.costPerServing,

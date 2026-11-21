@@ -28,9 +28,13 @@ const addInput = z.object({
   proteinPerUnit: z.number().nonnegative().nullable().describe("Protein grams per unit or null."),
   carbsPerUnit: z.number().nonnegative().nullable().describe("Carbohydrate grams per unit or null."),
   fatPerUnit: z.number().nonnegative().nullable().describe("Fat grams per unit or null."),
+  fiberPerUnit: z.number().nonnegative().nullable().optional().describe("Fiber grams per unit."),
   costPerUnit: z.number().nonnegative().nullable().describe("Cost per unit or null."),
   currency: z.string().describe("Currency code for cost."),
-}).strict();
+}).strict().refine(
+  (value) => value.itemType !== "meal_prep" || value.fiberPerUnit != null,
+  { message: "Fiber per unit is required for prepared meals." },
+);
 
 export const inventoryAddTool = defineTool({
   name: "inventory_add_item",
@@ -74,12 +78,19 @@ export const inventoryConsumeTool = defineTool({
     quantity: z.number().positive().describe("Quantity consumed."),
     mealType: z.enum(["breakfast", "lunch", "dinner", "snack"]).optional().describe("Meal category."),
     eatenAt: z.iso.datetime().optional().describe("Consumption time."),
+    fiberG: z.number().nonnegative().optional().describe("Fiber grams for the consumed quantity if stock fiber is unknown."),
   }).strict(),
   outputSchema: z.object({ updatedItem: inventoryItemSchema, mealLog: mealLogSchema }).strict(),
   annotations: { destructiveHint: true, idempotentHint: false },
   invalidateDomains: ["inventory", "meal-logs"],
-  execute: ({ itemId, ...input }, context) =>
-    inventoryService.consumePortion(context.userId, itemId, input),
+  execute: async ({ itemId, ...input }, context) => {
+    const item = await inventoryService.getById(context.userId, itemId);
+    if (!item.success) return item;
+    if (item.data.fiberPerUnit === null && input.fiberG === undefined) {
+      return { success: false, error: { code: "VALIDATION_ERROR", message: "Fiber is unknown. Ask for the fiber amount or provide a clearly labeled estimate before logging." } };
+    }
+    return inventoryService.consumePortion(context.userId, itemId, { ...input, requireFiber: true });
+  },
   toUiDirective: ({ mealLog }) => ({
     component: "consumption_summary_card",
     loggedMeal: {
@@ -90,6 +101,7 @@ export const inventoryConsumeTool = defineTool({
       proteinG: mealLog.proteinG,
       carbsG: mealLog.carbsG,
       fatG: mealLog.fatG,
+      fiberG: mealLog.fiberG,
       costAmount: mealLog.costAmount,
       currency: mealLog.currency,
     },

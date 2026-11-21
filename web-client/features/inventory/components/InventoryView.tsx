@@ -61,6 +61,16 @@ export function InventoryView(): React.JSX.Element {
     }
   };
   const logEaten = async (id: string): Promise<void> => {
+    const item = items.find((entry) => entry.id === id);
+    if (!item) {
+      toast.error("This item is no longer available. Refresh inventory and try again.");
+      return;
+    }
+    if (item.fiberPerUnit === null) {
+      toast.error("Add fiber per unit before logging this item.");
+      ui.openEdit(id);
+      return;
+    }
     try {
       await consume.mutateAsync({ id, quantity: 1 });
       toast.success("Meal logged.");

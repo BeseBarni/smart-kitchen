@@ -16,6 +16,7 @@ const recipeDraft = z.object({
   proteinPerServing: z.number().nullable().optional().describe("Protein grams per serving."),
   carbsPerServing: z.number().nullable().optional().describe("Carbohydrate grams per serving."),
   fatPerServing: z.number().nullable().optional().describe("Fat grams per serving."),
+  fiberPerServing: z.number().nonnegative().describe("Estimated fiber grams per serving."),
   costPerServing: z.number().nullable().optional().describe("Cost per serving."),
   currency: z.string().optional().describe("Currency code."),
 }).strict();

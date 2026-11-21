@@ -5,6 +5,7 @@ import { RecipeSuggestionCard } from "./RecipeSuggestionCard";
 import type { UiDirective } from "../types";
 import { Button } from "@/components/ui/button";
 import { MarkdownContent } from "@/components/MarkdownContent";
+import { ProfileTargetsConfirmation } from "./ProfileTargetsConfirmation";
 
 export function UiDirectiveRenderer({
   directive,
@@ -17,6 +18,12 @@ export function UiDirectiveRenderer({
   disabled: boolean;
   recipeResponse: string;
 }): React.JSX.Element {
+  if (directive.component === "profile_targets_updated") {
+    return <p className="rounded-xl bg-secondary p-3 text-body-sm">Daily targets updated.</p>;
+  }
+  if (directive.component === "profile_targets_confirmation") {
+    return <ProfileTargetsConfirmation targets={directive.targets} disabled={disabled} />;
+  }
   if (directive.component === "recommendation_chips") {
     return (
       <div aria-label="Suggested replies" className="flex flex-wrap gap-2">
@@ -68,7 +75,7 @@ export function UiDirectiveRenderer({
         <h2 className="text-title-sm">Meal logged: {meal.name}</h2>
         <p className="text-body-sm">{meal.quantity} {meal.unit}</p>
         <p className="text-label-md text-muted-foreground">
-          {meal.calories ?? "—"} kcal · Protein {meal.proteinG ?? "—"} g · Carbs {meal.carbsG ?? "—"} g · Fat {meal.fatG ?? "—"} g
+          {meal.calories ?? "—"} kcal · Protein {meal.proteinG ?? "—"} g · Carbs {meal.carbsG ?? "—"} g · Fat {meal.fatG ?? "—"} g · Fiber {meal.fiberG ?? "—"} g (may include an estimate)
         </p>
         {directive.dailyTotals && <p className="text-label-md text-muted-foreground">Today: {directive.dailyTotals.calories} kcal</p>}
       </section>

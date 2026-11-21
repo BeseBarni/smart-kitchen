@@ -3,6 +3,7 @@ import { err } from "@app/shared";
 import { z } from "zod";
 import { presentRecommendationsTool, requestConfirmationTool } from "../tools/definitions/ui.tools";
 import { defineTool, toolOk } from "../tools/definitions/tool.types";
+import { profileUpdateTargetsTool } from "../tools/definitions/profile.write.tools";
 import { inventoryOpsAgent } from "./inventory-ops.agent";
 import { kitchenAdvisorAgent } from "./kitchen-advisor.agent";
 import { recipeArchitectAgent } from "./recipe-architect.agent";
@@ -77,5 +78,5 @@ export function orchestratorTools(context: AgentContext) {
       return toolOk({ summary: (await kitchenAdvisorAgent.execute({ task: question }, context)).summary });
     },
   });
-  return [inventory, recipe, advisor, requestConfirmationTool, presentRecommendationsTool] as const;
+  return [inventory, recipe, advisor, profileUpdateTargetsTool, requestConfirmationTool, presentRecommendationsTool] as const;
 }

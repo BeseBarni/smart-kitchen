@@ -24,6 +24,10 @@ export function InventoryItemSheet({ item, busy, onClose, onSave, onDelete }: Pr
     defaultValues: inventoryFormValues(item),
   });
   const submit = form.handleSubmit(async (input) => {
+    if (input.itemType === "meal_prep" && (input.fiberPerUnit === null || input.fiberPerUnit === undefined)) {
+      form.setError("fiberPerUnit", { message: "Enter fiber per portion." });
+      return;
+    }
     try {
       await onSave(input);
       onClose();

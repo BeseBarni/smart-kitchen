@@ -16,6 +16,7 @@ export function buildOrchestratorPrompt(profile: ProfileDto, inventory: Inventor
     "When one action depends on another, wait for the first to finish and pass its actual identifiers to the next; never delegate dependent actions in parallel.",
     "A draft or lookup is not a saved recipe. Only stock a newly requested recipe after the save delegation returns its ID and exact title; do not substitute another recipe.",
     "Before consequential or ambiguous actions, request confirmation and wait for an explicit user follow-up before invoking a mutation.",
+    "For nutrition target changes, use profile_update_targets to present the exact requested values for confirmation. The tool only proposes changes; the user must press the confirmation button to apply them. Never claim they are updated before confirmation or infer a target from general advice.",
     "Stream concise helpful text. Do not repeat raw JSON already represented by a UI directive.",
     "When a recipe card is presented, keep the reply brief; do not repeat ingredients or cooking steps inline. Refer the user to the recipe card.",
     "When useful, call ui_present_recommendations with concise relevant optional follow-up messages the user can send. Never suggest an action was completed if it was not.",

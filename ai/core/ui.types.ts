@@ -1,3 +1,5 @@
+import type { NutritionTargetChanges } from "@app/modules/schemas";
+
 export type InventoryActionSummary = {
   id: string;
   name: string;
@@ -21,6 +23,7 @@ export type RecipeCardPayload = {
   proteinPerServing?: number | null;
   carbsPerServing?: number | null;
   fatPerServing?: number | null;
+  fiberPerServing?: number | null;
   costPerServing?: number | null;
   currency?: string;
 };
@@ -47,6 +50,7 @@ export type MealLogSummary = {
   proteinG: number | null;
   carbsG: number | null;
   fatG: number | null;
+  fiberG?: number | null;
   costAmount: number | null;
   currency: string;
 };
@@ -59,6 +63,8 @@ export type DailyMacroSummary = {
 };
 
 export type UiDirective =
+  | { component: "profile_targets_updated" }
+  | { component: "profile_targets_confirmation"; targets: NutritionTargetChanges }
   | {
       component: "recommendation_chips";
       recommendations: string[];

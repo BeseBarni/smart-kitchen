@@ -24,6 +24,7 @@ export function inventoryFormValues(item?: InventoryItem): InventoryInput {
       proteinPerUnit: item.proteinPerUnit,
       carbsPerUnit: item.carbsPerUnit,
       fatPerUnit: item.fatPerUnit,
+      fiberPerUnit: item.fiberPerUnit,
       costPerUnit: item.costPerUnit,
       currency: item.currency,
     };
@@ -46,6 +47,7 @@ export function inventoryFormValues(item?: InventoryItem): InventoryInput {
     proteinPerUnit: null,
     carbsPerUnit: null,
     fatPerUnit: null,
+    fiberPerUnit: null,
     costPerUnit: null,
     currency: "HUF",
   };

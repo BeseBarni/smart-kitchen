@@ -5,7 +5,8 @@ import type {
   CreateRecipeInput,
   RecipeDto,
 } from "./recipes.schema";
-import { cookRecipeRows, findRecipe, listRecipeRows } from "./recipes.repo";
+import { findRecipe, listRecipeRows } from "./recipes.repo";
+import { cookRecipeRows } from "./recipes-cook.repo";
 
 type RecipeDetail = NonNullable<Awaited<ReturnType<typeof findRecipe>>>;
 type IngredientRow = Exclude<RecipeDetail["lines"][number]["ingredient"], null>;
@@ -17,6 +18,7 @@ export type RecipeValues = {
   proteinPerServing: number | null;
   carbsPerServing: number | null;
   fatPerServing: number | null;
+  fiberPerServing: number | null;
   costPerServing: number | null;
 };
 
@@ -25,6 +27,7 @@ const macroFields = [
   ["proteinPerServing", "proteinG"],
   ["carbsPerServing", "carbsG"],
   ["fatPerServing", "fatG"],
+  ["fiberPerServing", "fiberG"],
 ] as const;
 
 export function ingredientRowToDto(row: IngredientRow): IngredientDto {
@@ -51,6 +54,7 @@ export function recipeDto(recipe: RecipeDetail["recipe"], lines: RecipeDetail["l
     proteinPerServing: numericToNumber(recipe.proteinPerServing),
     carbsPerServing: numericToNumber(recipe.carbsPerServing),
     fatPerServing: numericToNumber(recipe.fatPerServing),
+    fiberPerServing: numericToNumber(recipe.fiberPerServing),
     costPerServing: numericToNumber(recipe.costPerServing),
     createdAt: recipe.createdAt.toISOString(),
     updatedAt: recipe.updatedAt.toISOString(),
@@ -70,6 +74,7 @@ export function recipeListDto(recipe: RecipeListRow): RecipeDto {
     proteinPerServing: numericToNumber(recipe.proteinPerServing),
     carbsPerServing: numericToNumber(recipe.carbsPerServing),
     fatPerServing: numericToNumber(recipe.fatPerServing),
+    fiberPerServing: numericToNumber(recipe.fiberPerServing),
     costPerServing: numericToNumber(recipe.costPerServing),
     createdAt: recipe.createdAt.toISOString(),
     updatedAt: recipe.updatedAt.toISOString(),
@@ -87,6 +92,7 @@ export function calculateRecipeValues(
     proteinPerServing: null,
     carbsPerServing: null,
     fatPerServing: null,
+    fiberPerServing: null,
     costPerServing: null,
   };
   if (lines.length === 0 || servings <= 0) return result;
@@ -126,6 +132,7 @@ export function withRecipeOverrides(input: CreateRecipeInput, computed: RecipeVa
     proteinPerServing: input.proteinPerServing ?? computed.proteinPerServing,
     carbsPerServing: input.carbsPerServing ?? computed.carbsPerServing,
     fatPerServing: input.fatPerServing ?? computed.fatPerServing,
+    fiberPerServing: input.fiberPerServing ?? computed.fiberPerServing,
     costPerServing: input.costPerServing ?? computed.costPerServing,
   };
 }
@@ -148,6 +155,7 @@ export function cookedRowToDto(row: CookedRow): InventoryItemDto {
     proteinPerUnit: numericToNumber(row.proteinPerUnit),
     carbsPerUnit: numericToNumber(row.carbsPerUnit),
     fatPerUnit: numericToNumber(row.fatPerUnit),
+    fiberPerUnit: numericToNumber(row.fiberPerUnit),
     costPerUnit: numericToNumber(row.costPerUnit),
     preparedAt: row.preparedAt?.toISOString() ?? null,
     expiresAt: row.expiresAt?.toISOString() ?? null,

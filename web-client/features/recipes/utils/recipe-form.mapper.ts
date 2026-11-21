@@ -17,6 +17,7 @@ export function recipeFormValues(recipe?: RecipeDto): CreateRecipeInput {
       proteinPerServing: null,
       carbsPerServing: null,
       fatPerServing: null,
+      fiberPerServing: null,
       costPerServing: null,
       currency: "HUF",
     };
@@ -43,6 +44,7 @@ export function recipeFormValues(recipe?: RecipeDto): CreateRecipeInput {
     proteinPerServing: recipe.proteinPerServing,
     carbsPerServing: recipe.carbsPerServing,
     fatPerServing: recipe.fatPerServing,
+    fiberPerServing: recipe.fiberPerServing,
     costPerServing: recipe.costPerServing,
     currency: recipe.currency,
   };

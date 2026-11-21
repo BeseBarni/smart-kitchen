@@ -47,6 +47,7 @@ export const mealLogRoutes = new Hono<AuthEnvironment>()
           context.get("userId"),
           context.req.valid("param").id,
           context.req.valid("query").restoreInventory,
+          context.req.valid("query").requireInventory,
         ),
       ),
   );

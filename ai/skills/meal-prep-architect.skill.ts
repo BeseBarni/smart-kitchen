@@ -14,6 +14,7 @@ const macros = z.object({
   proteinG: z.number().nonnegative().describe("Protein grams per serving."),
   carbsG: z.number().nonnegative().describe("Carbohydrate grams per serving."),
   fatG: z.number().nonnegative().describe("Fat grams per serving."),
+  fiberG: z.number().nonnegative().describe("Estimated fiber grams per serving."),
 }).strict();
 
 const inputSchema = z.object({
@@ -49,7 +50,7 @@ export const mealPrepArchitectSkill = defineSkill({
   inputSchema,
   outputSchema,
   modelTier: "reasoning",
-  system: "<role>Design practical batch-cookable recipes.</role><rules>Respect allergies and dislikes. Do not invent precise nutrition or prices when context is insufficient; label estimates conservatively. Scale ingredient quantities to servings.</rules><context>Use only the supplied structured context.</context><output_format>Return only the schema-conforming recipe.</output_format>",
+  system: "<role>Design practical batch-cookable recipes.</role><rules>Respect allergies and dislikes. Nutrition including fiber is an estimate, never a measured value. Do not invent precise nutrition or prices when context is insufficient; label estimates conservatively. Scale ingredient quantities to servings.</rules><context>Use only the supplied structured context.</context><output_format>Return only the schema-conforming recipe.</output_format>",
   prompt: (input) => `<context>${JSON.stringify(input)}</context>`,
 });
 

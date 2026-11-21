@@ -1,5 +1,5 @@
 import { and, asc, desc, eq, ilike, lte, sql } from "drizzle-orm";
-import { getDatabase, inventoryItems, mealLogs } from "@app/db";
+import { getDatabase, inventoryItems } from "@app/db";
 import { numberToNumeric } from "../shared/numeric";
 import type {
   CreateInventoryItemInput,
@@ -25,6 +25,7 @@ function insertValues(input: CreateInventoryItemInput) {
     proteinPerUnit: numberToNumeric(input.proteinPerUnit),
     carbsPerUnit: numberToNumeric(input.carbsPerUnit),
     fatPerUnit: numberToNumeric(input.fatPerUnit),
+    fiberPerUnit: numberToNumeric(input.fiberPerUnit ?? null),
     costPerUnit: numberToNumeric(input.costPerUnit),
     currency: input.currency,
   };
@@ -48,6 +49,7 @@ function updateValues(input: UpdateInventoryItemInput): Partial<typeof inventory
   if (input.proteinPerUnit !== undefined) values.proteinPerUnit = numberToNumeric(input.proteinPerUnit);
   if (input.carbsPerUnit !== undefined) values.carbsPerUnit = numberToNumeric(input.carbsPerUnit);
   if (input.fatPerUnit !== undefined) values.fatPerUnit = numberToNumeric(input.fatPerUnit);
+  if (input.fiberPerUnit !== undefined) values.fiberPerUnit = numberToNumeric(input.fiberPerUnit);
   if (input.costPerUnit !== undefined) values.costPerUnit = numberToNumeric(input.costPerUnit);
   if (input.currency !== undefined) values.currency = input.currency;
   return values;
@@ -70,7 +72,7 @@ export async function listInventoryRows(userId: string, filters: ListInventoryQu
     .select()
     .from(inventoryItems)
     .where(and(...conditions))
-    .orderBy(order)
+    .orderBy(order, desc(inventoryItems.id))
     .limit(filters.limit)
     .offset(filters.offset);
 }
@@ -158,61 +160,6 @@ export async function adjustInventoryRow(userId: string, id: string, delta: numb
       .returning();
     return updated ? { kind: "updated" as const, item: updated } : { kind: "not_found" as const };
   });
-}
-
-export async function consumeInventoryRow(
-  userId: string,
-  id: string,
-  input: { quantity: number; mealType?: "breakfast" | "lunch" | "dinner" | "snack"; eatenAt?: string },
-) {
-  return getDatabase().transaction(async (tx) => {
-    const [item] = await tx
-      .select()
-      .from(inventoryItems)
-      .where(and(eq(inventoryItems.userId, userId), eq(inventoryItems.id, id)))
-      .for("update")
-      .limit(1);
-    if (!item) return { kind: "not_found" as const };
-    const remaining = Number(item.remainingQuantity);
-    if (item.status !== "in_stock" || remaining < input.quantity) {
-      return { kind: "insufficient" as const };
-    }
-    const [updatedItem] = await tx
-      .update(inventoryItems)
-      .set({
-        remainingQuantity: String(remaining - input.quantity),
-        status: remaining - input.quantity === 0 ? "consumed" : "in_stock",
-        updatedAt: new Date(),
-      })
-      .where(and(eq(inventoryItems.userId, userId), eq(inventoryItems.id, id)))
-      .returning();
-    if (!updatedItem) return { kind: "not_found" as const };
-    const [mealLog] = await tx
-      .insert(mealLogs)
-      .values({
-        userId,
-        inventoryItemId: id,
-        recipeId: item.recipeId,
-        name: item.name,
-        mealType: input.mealType,
-        quantity: String(input.quantity),
-        unit: item.unit,
-        calories: multiply(item.caloriesPerUnit, input.quantity),
-        proteinG: multiply(item.proteinPerUnit, input.quantity),
-        carbsG: multiply(item.carbsPerUnit, input.quantity),
-        fatG: multiply(item.fatPerUnit, input.quantity),
-        costAmount: multiply(item.costPerUnit, input.quantity),
-        currency: item.currency,
-        eatenAt: input.eatenAt ? new Date(input.eatenAt) : new Date(),
-      })
-      .returning();
-    if (!mealLog) throw new Error("Meal log insert returned no row.");
-    return { kind: "consumed" as const, item: updatedItem, mealLog };
-  });
-}
-
-function multiply(value: string | null, quantity: number): string | null {
-  return value === null ? null : String(Number(value) * quantity);
 }
 
 export async function discardInventoryRow(userId: string, id: string) {

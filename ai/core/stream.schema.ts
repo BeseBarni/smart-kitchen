@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { nutritionTargetChangesSchema } from "@app/modules/schemas";
 import type { AgentStreamEvent } from "./stream.types";
 
 const agentNameSchema = z.enum(["orchestrator", "inventory_ops", "recipe_architect", "kitchen_advisor"]);
@@ -25,10 +26,13 @@ const recipePayloadSchema = z.object({
   proteinPerServing: z.number().nullable().optional(),
   carbsPerServing: z.number().nullable().optional(),
   fatPerServing: z.number().nullable().optional(),
+  fiberPerServing: z.number().nullable().optional(),
   costPerServing: z.number().nullable().optional(),
   currency: z.string().optional(),
 });
 export const uiDirectiveSchema = z.discriminatedUnion("component", [
+  z.object({ component: z.literal("profile_targets_updated") }),
+  z.object({ component: z.literal("profile_targets_confirmation"), targets: nutritionTargetChangesSchema }),
   z.object({
     component: z.literal("recommendation_chips"),
     recommendations: z.array(z.string().trim().min(1).max(120)).min(1).max(4),
@@ -70,6 +74,7 @@ export const uiDirectiveSchema = z.discriminatedUnion("component", [
       proteinG: z.number().nullable(),
       carbsG: z.number().nullable(),
       fatG: z.number().nullable(),
+      fiberG: z.number().nullable().optional(),
       costAmount: z.number().nullable(),
       currency: z.string(),
     }),

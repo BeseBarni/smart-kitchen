@@ -18,6 +18,7 @@ type DetailRecipe = {
   proteinPerServing?: number | null;
   carbsPerServing?: number | null;
   fatPerServing?: number | null;
+  fiberPerServing?: number | null;
   ingredients: Array<{ name: string; quantity: number; unit: string; notes?: string | null }>;
   instructions: string[];
 };
@@ -33,6 +34,7 @@ export function RecipeDetailModal({ open, onClose, recipe, markdown = false, chi
     { name: "Protein", value: recipe?.proteinPerServing },
     { name: "Carbs", value: recipe?.carbsPerServing },
     { name: "Fat", value: recipe?.fatPerServing },
+    { name: markdown ? "Fiber (estimated)" : "Fiber", value: recipe?.fiberPerServing },
   ];
   return (
     <Sheet open={open} onOpenChange={(next) => { if (!next) onClose(); }}>
@@ -53,8 +55,8 @@ export function RecipeDetailModal({ open, onClose, recipe, markdown = false, chi
               <p className="mt-1 text-label-md text-muted-foreground">{recipe.servings} servings{recipe.caloriesPerServing != null ? ` · ${recipe.caloriesPerServing} kcal per serving` : ""}</p>
               {(recipe.prepTimeMin != null || recipe.cookTimeMin != null) && <p className="text-label-md text-muted-foreground">{recipe.prepTimeMin != null ? `${recipe.prepTimeMin} min prep` : ""}{recipe.prepTimeMin != null && recipe.cookTimeMin != null ? " · " : ""}{recipe.cookTimeMin != null ? `${recipe.cookTimeMin} min cook` : ""}</p>}
             </div>
-            <div className="grid grid-cols-3 gap-2">
-              {macros.map((macro) => <div key={macro.name} className="rounded-xl border border-primary/20 bg-secondary p-2 text-center"><span className="block text-label-sm text-primary">{macro.name}</span><strong>{macro.value == null ? "—" : `${macro.value} g`}</strong></div>)}
+            <div className="grid grid-cols-2 gap-2">
+              {macros.map((macro) => <div key={macro.name} className="rounded-xl border border-primary/20 bg-secondary p-2 text-center"><span className="block text-label-sm text-primary">{macro.name}</span><strong className="tabular-nums">{macro.value == null ? "—" : `${macro.value} g`}</strong></div>)}
             </div>
             <section className="space-y-2">
               <h3 className="text-title-sm">Ingredients checklist</h3>

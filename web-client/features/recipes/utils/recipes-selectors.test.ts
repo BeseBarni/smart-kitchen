@@ -30,6 +30,7 @@ function recipe(id: string, title: string, source: "manual" | "ai_skill", prepTi
     proteinPerServing: null,
     carbsPerServing: null,
     fatPerServing: null,
+    fiberPerServing: null,
     costPerServing: null,
     currency: "HUF",
     createdAt: "2026-03-01T00:00:00.000Z",

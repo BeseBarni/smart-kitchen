@@ -22,6 +22,7 @@ export const userProfiles = pgTable("user_profiles", {
   dailyProteinG: integer("daily_protein_g"),
   dailyCarbsG: integer("daily_carbs_g"),
   dailyFatG: integer("daily_fat_g"),
+  dailyFiberG: integer("daily_fiber_g"),
   dietaryPreferences: jsonb("dietary_preferences").$type<DietaryPreferences>(),
   currency: text("currency").default("HUF").notNull(),
   unitSystem: unitSystemEnum("unit_system").default("metric").notNull(),

@@ -44,6 +44,7 @@ test("derives per-serving values for matching units", () => {
     proteinPerServing: 5,
     carbsPerServing: 7.5,
     fatPerServing: 1,
+    fiberPerServing: 2,
     costPerServing: 50,
   });
 });
@@ -89,6 +90,7 @@ test("keeps explicit non-null recipe values and derives unset values", () => {
     proteinPerServing: 5,
     carbsPerServing: 7,
     fatPerServing: 1,
+    fiberPerServing: 2,
     costPerServing: 50,
   });
   assert.equal(values.caloriesPerServing, 123);

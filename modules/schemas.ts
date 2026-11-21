@@ -5,6 +5,7 @@ export * from "./inventory/inventory.schema";
 export * from "./meal-logs/meal-logs.schema";
 export * from "./chat/chat.schema";
 export * from "./shopping/shopping.schema";
+export * from "./meal-suggestions/meal-suggestions.schema";
 
 import {
   profileSchema,

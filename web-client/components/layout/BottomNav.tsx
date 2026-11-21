@@ -1,6 +1,6 @@
 "use client";
 
-import { BookOpen, MessageCircle, Refrigerator } from "lucide-react";
+import { BookOpen, Flame, MessageCircle, Refrigerator } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
@@ -18,6 +18,9 @@ export function BottomNav(): React.JSX.Element {
         </Link>
         <Link href="/recipes" aria-current={pathname === "/recipes" || pathname.startsWith("/recipes/") ? "page" : undefined} className={`${itemClass} ${pathname === "/recipes" || pathname.startsWith("/recipes/") ? "text-primary-pressed" : "text-muted-foreground"} focus-visible:outline-2 focus-visible:outline-ring`}>
           <BookOpen size={22} aria-hidden="true" />Recipes
+        </Link>
+        <Link href="/tracker" aria-current={pathname === "/tracker" ? "page" : undefined} className={`${itemClass} ${pathname === "/tracker" ? "text-primary-pressed" : "text-muted-foreground"} focus-visible:outline-2 focus-visible:outline-ring`}>
+          <Flame size={22} aria-hidden="true" />Calories
         </Link>
       </div>
     </nav>

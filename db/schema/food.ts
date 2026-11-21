@@ -60,6 +60,7 @@ export const recipes = pgTable(
     proteinPerServing: numeric("protein_per_serving", { precision: 10, scale: 2 }),
     carbsPerServing: numeric("carbs_per_serving", { precision: 10, scale: 2 }),
     fatPerServing: numeric("fat_per_serving", { precision: 10, scale: 2 }),
+    fiberPerServing: numeric("fiber_per_serving", { precision: 10, scale: 2 }),
     costPerServing: numeric("cost_per_serving", { precision: 10, scale: 2 }),
     currency: text("currency").default("HUF").notNull(),
     createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),

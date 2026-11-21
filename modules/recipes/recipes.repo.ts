@@ -1,5 +1,5 @@
 import { and, asc, desc, eq, ilike, lte } from "drizzle-orm";
-import { getDatabase, ingredients, inventoryItems, recipeIngredients, recipes } from "@app/db";
+import { getDatabase, ingredients, recipeIngredients, recipes } from "@app/db";
 import { numberToNumeric } from "../shared/numeric";
 import type { CreateRecipeInput, ListRecipesQuery, UpdateRecipeInput } from "./recipes.schema";
 
@@ -8,6 +8,7 @@ type RecipeComputed = {
   proteinPerServing: number | null;
   carbsPerServing: number | null;
   fatPerServing: number | null;
+  fiberPerServing: number | null;
   costPerServing: number | null;
 };
 
@@ -26,6 +27,7 @@ function insertValues(input: CreateRecipeInput, computed: RecipeComputed) {
     proteinPerServing: numberToNumeric(computed.proteinPerServing),
     carbsPerServing: numberToNumeric(computed.carbsPerServing),
     fatPerServing: numberToNumeric(computed.fatPerServing),
+    fiberPerServing: numberToNumeric(computed.fiberPerServing),
     costPerServing: numberToNumeric(computed.costPerServing),
     currency: input.currency,
   };
@@ -50,6 +52,7 @@ function updateValues(
   if (computed.proteinPerServing !== undefined) values.proteinPerServing = numberToNumeric(computed.proteinPerServing);
   if (computed.carbsPerServing !== undefined) values.carbsPerServing = numberToNumeric(computed.carbsPerServing);
   if (computed.fatPerServing !== undefined) values.fatPerServing = numberToNumeric(computed.fatPerServing);
+  if (computed.fiberPerServing !== undefined) values.fiberPerServing = numberToNumeric(computed.fiberPerServing);
   if (computed.costPerServing !== undefined) values.costPerServing = numberToNumeric(computed.costPerServing);
   return values;
 }
@@ -156,52 +159,4 @@ export async function deleteRecipeRow(userId: string, id: string): Promise<boole
     .where(and(eq(recipes.userId, userId), eq(recipes.id, id)))
     .returning({ id: recipes.id });
   return rows.length > 0;
-}
-
-export async function cookRecipeRows(
-  userId: string,
-  recipeId: string,
-  batches: Array<{
-    storageLocation: "fridge" | "freezer" | "pantry";
-    quantity: number;
-    unit?: string;
-    expiresAt?: string;
-  }>,
-  preparedAt?: string,
-) {
-  return getDatabase().transaction(async (tx) => {
-    const [recipe] = await tx
-      .select()
-      .from(recipes)
-      .where(and(eq(recipes.id, recipeId), eq(recipes.userId, userId)))
-      .for("update")
-      .limit(1);
-    if (!recipe) return undefined;
-    const preparedDate = preparedAt ? new Date(preparedAt) : new Date();
-    const rows = await tx
-      .insert(inventoryItems)
-      .values(
-        batches.map((batch) => ({
-          userId,
-          name: recipe.title,
-          itemType: "meal_prep" as const,
-          recipeId,
-          storageLocation: batch.storageLocation,
-          initialQuantity: String(batch.quantity),
-          remainingQuantity: String(batch.quantity),
-          unit: batch.unit ?? "portion",
-          preparedAt: preparedDate,
-          expiresAt: batch.expiresAt ? new Date(batch.expiresAt) : null,
-          imageUrl: recipe.imageUrl,
-          caloriesPerUnit: recipe.caloriesPerServing,
-          proteinPerUnit: recipe.proteinPerServing,
-          carbsPerUnit: recipe.carbsPerServing,
-          fatPerUnit: recipe.fatPerServing,
-          costPerUnit: recipe.costPerServing,
-          currency: recipe.currency,
-        })),
-      )
-      .returning();
-    return rows;
-  });
 }

@@ -20,6 +20,7 @@ export const inventoryItemSchema = z
     proteinPerUnit: z.number().nonnegative().nullable().describe("Protein grams per inventory unit."),
     carbsPerUnit: z.number().nonnegative().nullable().describe("Carbohydrate grams per inventory unit."),
     fatPerUnit: z.number().nonnegative().nullable().describe("Fat grams per inventory unit."),
+    fiberPerUnit: z.number().nonnegative().nullable().describe("Fiber grams per inventory unit."),
     costPerUnit: z.number().nonnegative().nullable().describe("Cost per inventory unit."),
     currency: z.string().describe("ISO currency code used for cost."),
     createdAt: z.iso.datetime().describe("Creation time in ISO-8601 format."),
@@ -29,6 +30,7 @@ export const inventoryItemSchema = z
 
 export const createInventoryItemSchema = inventoryItemSchema
   .omit({ id: true, userId: true, createdAt: true, updatedAt: true })
+  .extend({ fiberPerUnit: z.number().nonnegative().nullable().optional().describe("Fiber grams per unit, if known.") })
   .describe("Input for recording an inventory item.");
 
 export const updateInventoryItemSchema = createInventoryItemSchema
@@ -79,6 +81,8 @@ export const consumeInventoryInputSchema = z
     quantity: z.number().positive().describe("Amount to consume."),
     mealType: z.enum(["breakfast", "lunch", "dinner", "snack"]).optional().describe("Meal category."),
     eatenAt: z.iso.datetime().optional().describe("Consumption timestamp."),
+    fiberG: z.number().nonnegative().optional().describe("Fiber grams for the consumed quantity, when known."),
+    requireFiber: z.boolean().optional().describe("Reject consumption if fiber is unknown."),
   })
   .describe("Input for consuming inventory and recording a meal.");
 

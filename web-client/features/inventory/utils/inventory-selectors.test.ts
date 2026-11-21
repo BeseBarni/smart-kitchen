@@ -24,6 +24,7 @@ function item(id: string, name: string, storageLocation: Storage, remainingQuant
     proteinPerUnit: null,
     carbsPerUnit: null,
     fatPerUnit: null,
+    fiberPerUnit: null,
     costPerUnit: null,
     currency: "HUF",
     createdAt: "2026-03-01T00:00:00.000Z",

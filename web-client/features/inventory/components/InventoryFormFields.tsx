@@ -38,6 +38,10 @@ export function InventoryFormFields({ form, disabled }: { form: UseFormReturn<In
         }} />
       </div>
       {errors.remainingQuantity && <p role="alert" className="text-body-sm text-destructive">{errors.remainingQuantity.message}</p>}
+      <label className="block space-y-1.5 text-label-md">Fiber per unit (g) {watch("itemType") === "meal_prep" ? "*" : ""}
+        <Input type="number" min="0" step="0.01" className="h-12 bg-card" disabled={disabled} {...register("fiberPerUnit", { setValueAs: (value: string) => value === "" ? null : Number(value) })} />
+      </label>
+      {errors.fiberPerUnit && <p role="alert" className="text-body-sm text-destructive">{errors.fiberPerUnit.message}</p>}
       <div className="space-y-1.5">
         <label htmlFor="best-before" className="text-label-md">Freshness &amp; best before</label>
         <Input id="best-before" type="date" value={expiryDateValue(expiresAt)} onChange={(event) => {

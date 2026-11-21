@@ -31,12 +31,14 @@ export function recipeCard(recipe: RecipeDto) {
     proteinPerServing: recipe.proteinPerServing,
     carbsPerServing: recipe.carbsPerServing,
     fatPerServing: recipe.fatPerServing,
+    fiberPerServing: recipe.fiberPerServing,
     costPerServing: recipe.costPerServing,
     currency: recipe.currency,
   };
 }
 
 const strictCreateRecipeSchema = createRecipeSchema.extend({
+  fiberPerServing: z.number().nonnegative().describe("Fiber grams per serving, estimated when necessary."),
   ingredients: z.array(
     recipeIngredientSchema
       .omit({ id: true, recipeId: true, linkedIngredient: true })

@@ -64,7 +64,7 @@ test("meal prep skill output becomes a complete recipe card", () => {
       ingredients: [{ name: "Lentils", quantity: 200, unit: "g", notes: "rinsed" }],
       instructions: ["Simmer."],
       storageGuidance: { fridgeDays: 3, freezerMonths: 2, reheatingTip: "Heat thoroughly." },
-      estimatedMacrosPerServing: { calories: 300, proteinG: 15, carbsG: 40, fatG: 5 },
+      estimatedMacrosPerServing: { calories: 300, proteinG: 15, carbsG: 40, fatG: 5, fiberG: 8 },
       estimatedCostPerServing: 2,
     },
   });

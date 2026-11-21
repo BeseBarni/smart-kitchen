@@ -5,7 +5,6 @@ import { getById as getIngredientById } from "../ingredients/ingredients.service
 import { getById as getRecipeById } from "../recipes/recipes.service";
 import {
   adjustInventoryRow,
-  consumeInventoryRow,
   deleteInventoryItemRow,
   discardInventoryRow,
   findExpiringRows,
@@ -15,6 +14,7 @@ import {
   listInventoryRows,
   updateInventoryItemRow,
 } from "./inventory.repo";
+import { consumeInventoryRow } from "./inventory-consumption.repo";
 import type {
   ConsumeInventoryInput,
   CreateInventoryItemInput,
@@ -39,6 +39,7 @@ export function toInventoryItemDto(row: InventoryRow): InventoryItemDto {
     proteinPerUnit: numericToNumber(row.proteinPerUnit),
     carbsPerUnit: numericToNumber(row.carbsPerUnit),
     fatPerUnit: numericToNumber(row.fatPerUnit),
+    fiberPerUnit: numericToNumber(row.fiberPerUnit),
     costPerUnit: numericToNumber(row.costPerUnit),
     preparedAt: row.preparedAt?.toISOString() ?? null,
     expiresAt: row.expiresAt?.toISOString() ?? null,
@@ -55,6 +56,7 @@ function toMealLogDto(row: ConsumedRows["mealLog"]): MealLogDto {
     proteinG: numericToNumber(row.proteinG),
     carbsG: numericToNumber(row.carbsG),
     fatG: numericToNumber(row.fatG),
+    fiberG: numericToNumber(row.fiberG),
     costAmount: numericToNumber(row.costAmount),
     eatenAt: row.eatenAt.toISOString(),
     createdAt: row.createdAt.toISOString(),
@@ -182,6 +184,9 @@ export async function consumePortion(
   }
   const result = await consumeInventoryRow(userId, id, input);
   if (result.kind === "not_found") return err(notFound());
+  if (result.kind === "missing_fiber") {
+    return err({ code: "VALIDATION_ERROR", message: "Fiber is required for this meal." });
+  }
   if (result.kind === "insufficient") {
     return err({ code: "INSUFFICIENT_QUANTITY", message: "Item is not in stock or does not have enough quantity." });
   }

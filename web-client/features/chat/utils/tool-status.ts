@@ -3,6 +3,7 @@ const labels: Record<string, string> = {
   delegate_to_inventory_ops: "Checking your inventory...",
   delegate_to_kitchen_advisor: "Checking your kitchen information...",
   profile_get: "Checking your preferences...",
+  profile_update_targets: "Preparing target changes...",
   inventory_list: "Checking your inventory...",
   inventory_get_summary: "Checking your inventory...",
   inventory_list_expiring: "Checking what needs using soon...",

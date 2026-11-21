@@ -63,7 +63,7 @@ export function useInventoryMutations(): InventoryMutations {
   });
   const consume = useMutation({
     mutationFn: ({ id, quantity }: { id: string; quantity: number }) =>
-      inventoryApi.consume(id, { quantity }),
+      inventoryApi.consume(id, { quantity, requireFiber: true }),
     onSuccess: refreshConsumption,
   });
   const discard = useMutation({ mutationFn: inventoryApi.discard, onSuccess: refreshInventory });

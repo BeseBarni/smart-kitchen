@@ -40,6 +40,7 @@ export function mealPrepRecipeDirective(run: Pick<SkillRun<MealPrepInput, MealPr
       proteinPerServing: output.estimatedMacrosPerServing.proteinG,
       carbsPerServing: output.estimatedMacrosPerServing.carbsG,
       fatPerServing: output.estimatedMacrosPerServing.fatG,
+      fiberPerServing: output.estimatedMacrosPerServing.fiberG,
       costPerServing: output.estimatedCostPerServing,
       currency: input.currency,
     },

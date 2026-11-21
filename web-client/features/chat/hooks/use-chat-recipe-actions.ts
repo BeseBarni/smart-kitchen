@@ -45,6 +45,7 @@ export function useChatRecipeActions({ recipe, status, canSave }: RecipeDirectiv
     proteinPerServing: recipe.proteinPerServing ?? null,
     carbsPerServing: recipe.carbsPerServing ?? null,
     fatPerServing: recipe.fatPerServing ?? null,
+    fiberPerServing: recipe.fiberPerServing ?? null,
     costPerServing: recipe.currency ? recipe.costPerServing ?? null : null,
     currency: recipe.currency ?? "USD",
   };
@@ -52,7 +53,7 @@ export function useChatRecipeActions({ recipe, status, canSave }: RecipeDirectiv
   return {
     showSave: canSave && status === "draft" && !existingId,
     savePending: create.isPending,
-    saveDisabled: create.isPending || savedRecipes.isPending || savedRecipes.isError,
+    saveDisabled: create.isPending || savedRecipes.isPending || savedRecipes.isError || recipe.fiberPerServing == null,
     save: () => create.mutate(createInput, {
       onSuccess: (saved) => { setSavedId(saved.id); toast.success("Recipe saved."); },
       onError: () => toast.error("Could not save this recipe. Please try again."),

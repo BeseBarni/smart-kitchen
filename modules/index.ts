@@ -8,3 +8,4 @@ export * as mealLogService from "./meal-logs/meal-logs.service";
 export * as chatService from "./chat/chat.service";
 export * as chatMapper from "./chat/chat.mapper";
 export * as shoppingService from "./shopping/shopping.service";
+export * as mealSuggestionsService from "./meal-suggestions/meal-suggestions.service";

@@ -44,6 +44,26 @@ not cached or available offline.
 
 Run `pnpm typecheck` and `pnpm --filter @app/web-client build` from the root.
 
+## Calories and meal tracker
+
+The Calories tab reads live meal logs, inventory and profile targets through the
+authenticated API. Daily totals use the device's local calendar day, including
+daylight-saving transitions. Manual meals and meal-prep entries require fiber;
+older records may have unknown fiber and are marked incomplete. Recipe fiber is
+carried into cooked stock and meal logs. Before using these features, review and
+apply `0003_tracker_fiber.sql` to the target database using the standard
+migration workflow; test it on an isolated development branch first.
+
+Today's advisory suggestions are generated from available stock and dietary
+preferences, including allergy information and dietary notes, using the
+configured AI provider. This information is sent to that provider
+automatically when today's tracker is opened. Suggestions do not reserve, consume or
+log food. Fiber in suggestions is an estimate, and suggestions are not a
+substitute for checking food safety and allergens. AI failures are displayed
+with a retry control. The feature requires the same AI configuration as chat.
+AI-proposed target changes are applied only after confirming the displayed
+values in the chat.
+
 ## Authentication setup
 
 1. Use a disposable Neon development branch with Managed Better Auth enabled.

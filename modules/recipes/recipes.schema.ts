@@ -79,6 +79,7 @@ export const recipeSchema = z
       .nonnegative()
       .nullable()
       .describe("Fat grams per serving."),
+    fiberPerServing: z.number().nonnegative().nullable().describe("Fiber grams per serving."),
     costPerServing: z
       .number()
       .nonnegative()
@@ -104,6 +105,7 @@ export const createRecipeSchema = recipeSchema
     proteinPerServing: z.number().nonnegative().nullable().optional(),
     carbsPerServing: z.number().nonnegative().nullable().optional(),
     fatPerServing: z.number().nonnegative().nullable().optional(),
+    fiberPerServing: z.number().nonnegative().nullable().optional(),
     costPerServing: z.number().nonnegative().nullable().optional(),
   })
   .describe("Input for creating a recipe.");
