@@ -44,6 +44,18 @@ not cached or available offline.
 
 Run `pnpm typecheck` and `pnpm --filter @app/web-client build` from the root.
 
+## Language
+
+Choose English, Magyar, or Español in Account. The preference is stored in this
+browser, survives sign-out, and is restored after hydration; the initial server
+render may briefly appear in English. If storage is unavailable, the selected
+language works for the current session and a warning explains that it may not
+be saved. User-written and AI-generated content remains in its original
+language. The offline page and install metadata use the selected language;
+the browser or operating system may require a PWA update or reinstall before
+an existing installed app's name changes. Offline and localized manifest assets
+are generated from the dictionaries by the `predev` and `prebuild` scripts.
+
 ## Calories and meal tracker
 
 The Calories tab reads live meal logs, inventory and profile targets through the

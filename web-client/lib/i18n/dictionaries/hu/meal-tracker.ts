@@ -1,0 +1,30 @@
+import type { WidenStrings } from "../../types";
+import type { mealTracker as english } from "../en/meal-tracker";
+
+export const mealTracker = {
+  today: "Ma", yesterday: "Tegnap", selectDay: "Nap kiválasztása", previousDay: "Előző nap", nextDay: "Következő nap",
+  dailyBalance: "Napi egyenleg", target: "Cél: {{value}}", notSet: "Nincs megadva", editTargets: "Célok szerkesztése",
+  eatenNoTarget: "{{count}} kalória elfogyasztva, nincs megadott cél", eatenTarget: "{{count}} kalória elfogyasztva, a cél {{target}} kalória",
+  kcalEaten: "kcal elfogyasztva", incompleteCalories: "Egyes étkezések kalóriaadatai hiányosak.",
+  setTargets: "Állítsd be a napi céljaidat a haladásod megtekintéséhez.", overTarget: "Cél felett", remaining: "Hátralévő",
+  nutritionProgress: "Tápanyagok alakulása", incomplete: "(hiányos)", estimates: "Becsült értékeket is tartalmazhat",
+  breakfast: "Reggeli", lunch: "Ebéd", dinner: "Vacsora", snack: "Kisétkezés", other: "Egyéb",
+  addMealType: "{{type}} hozzáadása", noMeals: "Még nincs naplózott étkezés.", deleteNamed: "{{name}} törlése",
+  macroSummary: "Fehérje: {{protein}} · Szénhidrát: {{carbs}} · Zsír: {{fat}} · Rost: {{fiber}} g (becsült értéket is tartalmazhat)",
+  deleteQuestion: "Törlöd ezt: {{name}}?", deleteDescription: "Ez eltávolítja az étkezést a napi összesítésből.",
+  restore: "Adag visszahelyezése a készletbe", dailyTargets: "Napi célok",
+  targetDescription: "Hagyd üresen azt a célt, amelyet nem szeretnél beállítani.", caloriesLabel: "Kalória (kcal)",
+  proteinLabel: "Fehérje (g)", carbsLabel: "Szénhidrát (g)", fatLabel: "Zsír (g)", fiberLabel: "Rost (g)",
+  invalidTargets: "A céloknak pozitív egész számoknak kell lenniük.", saveTargets: "Célok mentése",
+  logMeal: "Étkezés naplózása", logDescription: "Válassz a készletből, vagy add meg az étkezést kézzel.", fromStock: "Készletből", manualEntry: "Kézi bevitel",
+  mealName: "Étkezés neve", mealType: "Étkezés típusa", quantity: "Mennyiség", unit: "Mértékegység", eatenAt: "Étkezés ideje",
+  checkFields: "Ellenőrizd a kötelező mezőket és a megadott értékeket.", log: "Étkezés naplózása",
+  loadingStock: "Készlet betöltése...", loadStockError: "Nem sikerült betölteni a készletet.", stockItem: "Készletelem", selectItem: "Válassz elemet",
+  loadMore: "További készletelemek", noStock: "Nincs elérhető készletelem.", unknown: "Ismeretlen", cost: "Költség ({{currency}})",
+  fiberForMeal: "Az étkezés rosttartalma (g) *", checkStock: "Ellenőrizd az elemet, a mennyiséget, az időt és a rostértéket.", logStock: "Naplózás a készletből",
+  suggestions: "Mai ajánlatok", refreshSuggestions: "Ajánlatok frissítése", advisory: "Az ajánlatok tájékoztató jellegűek; semmit nem foglalunk le vagy naplózunk.",
+  preparing: "Ajánlatok készítése...", suggestionsError: "Nem sikerült ajánlatokat készíteni.", estimatedFiber: "Becsült rost: {{count}} g",
+  logStockFor: "{{type}} naplózása a készletből", mealLogged: "Az étkezést naplóztuk.", mealDeleted: "Az étkezést töröltük.", targetsUpdated: "A célokat frissítettük.",
+  operationError: "A művelet sikertelen volt.", loading: "Napló betöltése", loadError: "Nem sikerült betölteni a naplót.",
+  timeline: "Étkezések", logged: "{{count}} naplózva", eatStock: "Étkezés a készletből", customLog: "Egyedi étkezés naplózása",
+} satisfies WidenStrings<typeof english>;

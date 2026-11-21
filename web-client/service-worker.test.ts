@@ -21,7 +21,7 @@ function setupWorker(network: () => Promise<Response>) {
   };
   const caches = {
     open: async () => cache,
-    keys: async () => ["preppilot-offline-v1", "preppilot-offline-old", "other-app"],
+    keys: async () => ["preppilot-offline-v2", "preppilot-offline-v1", "preppilot-offline-old", "other-app"],
     delete: async (name: string) => { deleted.push(name); },
   };
   const self = {
@@ -44,7 +44,7 @@ test("pre-caches only the offline page and removes only old app caches", async (
   assert.deepEqual(worker.added, ["/offline.html"]);
   worker.handlers.get("activate")?.(event);
   await pending;
-  assert.deepEqual(worker.deleted, ["preppilot-offline-old"]);
+  assert.deepEqual(worker.deleted, ["preppilot-offline-v1", "preppilot-offline-old"]);
 });
 
 test("uses the offline fallback only for failed same-origin page navigation", async () => {

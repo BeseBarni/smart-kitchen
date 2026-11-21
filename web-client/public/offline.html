@@ -13,9 +13,27 @@
   </head>
   <body>
     <main>
-      <h1>You're offline</h1>
-      <p>Reconnect to access your conversations, recipes, and inventory.</p>
-      <a href="/chat">Try again</a>
+      <h1 id="heading">You're offline</h1>
+      <p id="description">Reconnect to access your conversations, recipes, and inventory.</p>
+      <a id="retry" href="/chat">Try again</a>
+      <p id="storage-error" role="status" hidden></p>
     </main>
+    <script>
+      const translations = {"en":{"title":"Offline - PrepPilot","heading":"You're offline","description":"Reconnect to access your conversations, recipes, and inventory.","retry":"Try again","storageError":"Your saved language could not be loaded."},"hu":{"title":"Nincs kapcsolat - PrepPilot","heading":"Nincs internetkapcsolat","description":"Csatlakozz újra a beszélgetések, receptek és a készlet eléréséhez.","retry":"Próbáld újra","storageError":"Nem sikerült betölteni a mentett nyelvet."},"es":{"title":"Sin conexión - PrepPilot","heading":"No tienes conexión","description":"Vuelve a conectarte para acceder a tus conversaciones, recetas e inventario.","retry":"Intentar de nuevo","storageError":"No se ha podido cargar el idioma guardado."}};
+      try {
+        const saved = localStorage.getItem("app-language-preference");
+        const locale = saved ? JSON.parse(saved)?.state?.locale : "en";
+        if (!Object.hasOwn(translations, locale)) throw new Error("Invalid saved language");
+        document.documentElement.lang = locale;
+        const text = translations[locale];
+        document.title = text.title;
+        for (const id of ["heading", "description", "retry"]) document.getElementById(id).textContent = text[id];
+      } catch (error) {
+        console.error("Language preference could not be restored:", error);
+        const warning = document.getElementById("storage-error");
+        warning.textContent = translations.en.storageError;
+        warning.hidden = false;
+      }
+    </script>
   </body>
 </html>

@@ -1,5 +1,6 @@
 import { Check, CircleAlert, LoaderCircle } from "lucide-react";
 import type { ChatToolStep } from "../types";
+import { useText } from "@/lib/i18n";
 
 const icons = {
   running: LoaderCircle,
@@ -8,9 +9,10 @@ const icons = {
 };
 
 export function ChatToolSteps({ steps }: { steps: readonly ChatToolStep[] }): React.JSX.Element {
+  const { t } = useText();
   if (!steps.length) return <></>;
   return (
-    <ol aria-label="Assistant tool activity" className="space-y-1">
+    <ol aria-label={t("chat.toolActivity")} className="space-y-1">
       {steps.map((step) => {
         const Icon = icons[step.status];
         return (

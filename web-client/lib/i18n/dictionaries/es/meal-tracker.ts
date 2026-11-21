@@ -1,0 +1,30 @@
+import type { WidenStrings } from "../../types";
+import type { mealTracker as english } from "../en/meal-tracker";
+
+export const mealTracker = {
+  today: "Hoy", yesterday: "Ayer", selectDay: "Elegir día", previousDay: "Día anterior", nextDay: "Día siguiente",
+  dailyBalance: "Balance diario", target: "Objetivo: {{value}}", notSet: "Sin establecer", editTargets: "Editar objetivos",
+  eatenNoTarget: "{{count}} calorías consumidas, sin objetivo", eatenTarget: "{{count}} calorías consumidas de un objetivo de {{target}}",
+  kcalEaten: "kcal consumidas", incompleteCalories: "Faltan datos de calorías en algunas comidas.",
+  setTargets: "Establece tus objetivos diarios para ver tu progreso.", overTarget: "Por encima del objetivo", remaining: "Restantes",
+  nutritionProgress: "Progreso nutricional", incomplete: "(incompleto)", estimates: "Puede incluir estimaciones",
+  breakfast: "Desayuno", lunch: "Comida", dinner: "Cena", snack: "Tentempié", other: "Otros",
+  addMealType: "Añadir {{type}}", noMeals: "No hay comidas registradas.", deleteNamed: "Eliminar {{name}}",
+  macroSummary: "Proteínas: {{protein}} · Carbohidratos: {{carbs}} · Grasas: {{fat}} · Fibra: {{fiber}} g (puede incluir una estimación)",
+  deleteQuestion: "¿Eliminar {{name}}?", deleteDescription: "Esta comida se eliminará de los totales diarios.",
+  restore: "Devolver la ración al inventario", dailyTargets: "Objetivos diarios",
+  targetDescription: "Deja vacío cualquier objetivo que no quieras establecer.", caloriesLabel: "Calorías (kcal)",
+  proteinLabel: "Proteínas (g)", carbsLabel: "Carbohidratos (g)", fatLabel: "Grasas (g)", fiberLabel: "Fibra (g)",
+  invalidTargets: "Los objetivos deben ser números enteros positivos.", saveTargets: "Guardar objetivos",
+  logMeal: "Registrar comida", logDescription: "Elige del inventario o introduce una comida manualmente.", fromStock: "Del inventario", manualEntry: "Entrada manual",
+  mealName: "Nombre de la comida", mealType: "Tipo de comida", quantity: "Cantidad", unit: "Unidad", eatenAt: "Hora de consumo",
+  checkFields: "Comprueba los campos obligatorios y los valores introducidos.", log: "Registrar comida",
+  loadingStock: "Cargando inventario...", loadStockError: "No se ha podido cargar el inventario.", stockItem: "Elemento del inventario", selectItem: "Selecciona un elemento",
+  loadMore: "Cargar más elementos", noStock: "No hay elementos en el inventario.", unknown: "Desconocido", cost: "Coste ({{currency}})",
+  fiberForMeal: "Fibra de esta comida (g) *", checkStock: "Comprueba el elemento, la cantidad, la hora y la fibra.", logStock: "Registrar del inventario",
+  suggestions: "Sugerencias de hoy", refreshSuggestions: "Actualizar sugerencias", advisory: "Las sugerencias son orientativas; no se reserva ni registra ningún alimento.",
+  preparing: "Preparando sugerencias...", suggestionsError: "No se han podido generar sugerencias.", estimatedFiber: "Fibra estimada: {{count}} g",
+  logStockFor: "Registrar del inventario para {{type}}", mealLogged: "Comida registrada.", mealDeleted: "Comida eliminada.", targetsUpdated: "Objetivos actualizados.",
+  operationError: "La operación ha fallado.", loading: "Cargando registro", loadError: "No se ha podido cargar el registro.",
+  timeline: "Registro de comidas", logged: "{{count}} registradas", eatStock: "Comer del inventario", customLog: "Registrar comida personalizada",
+} satisfies WidenStrings<typeof english>;

@@ -14,6 +14,8 @@ import { InventoryHeader } from "./InventoryHeader";
 import { InventoryItemSheet } from "./InventoryItemSheet";
 import { InventoryList } from "./InventoryList";
 import { InventoryTip } from "./InventoryTip";
+import { getText, useText } from "@/lib/i18n";
+import { getErrorText } from "@/lib/i18n/error-text";
 
 function subscribeToDate(callback: () => void): () => void {
   const timer = window.setInterval(callback, 60_000);
@@ -26,6 +28,7 @@ function serverDate(): null {
 }
 
 export function InventoryView(): React.JSX.Element {
+  const { t } = useText();
   const ui = useInventoryUiStore();
   const filters = {
     ...(ui.filter !== "all" ? { storageLocation: ui.filter } : {}),
@@ -47,9 +50,9 @@ export function InventoryView(): React.JSX.Element {
       } else {
         await create.mutateAsync(input);
       }
-      toast.success("Inventory updated.");
+      toast.success(getText("inventory.updated"));
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Could not save this item.");
+      toast.error(getErrorText(error, "inventory.saveError"));
       throw error;
     }
   };
@@ -57,42 +60,42 @@ export function InventoryView(): React.JSX.Element {
     try {
       await adjust.mutateAsync({ id, delta });
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Could not update portions.");
+      toast.error(getErrorText(error, "inventory.updateError"));
     }
   };
   const logEaten = async (id: string): Promise<void> => {
     const item = items.find((entry) => entry.id === id);
     if (!item) {
-      toast.error("This item is no longer available. Refresh inventory and try again.");
+      toast.error(t("inventory.unavailable"));
       return;
     }
     if (item.fiberPerUnit === null) {
-      toast.error("Add fiber per unit before logging this item.");
+      toast.error(t("inventory.missingFiber"));
       ui.openEdit(id);
       return;
     }
     try {
       await consume.mutateAsync({ id, quantity: 1 });
-      toast.success("Meal logged.");
+      toast.success(getText("inventory.mealLogged"));
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Could not log this meal.");
+      toast.error(getErrorText(error, "inventory.logError"));
     }
   };
   const discardItem = async (id: string): Promise<void> => {
     try {
       await discard.mutateAsync(id);
-      toast.success("Item discarded.");
+      toast.success(getText("inventory.discarded"));
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Could not discard this item.");
+      toast.error(getErrorText(error, "inventory.discardError"));
     }
   };
   const deleteItem = async (id: string): Promise<void> => {
     try {
       await remove.mutateAsync(id);
-      toast.success("Item deleted.");
+      toast.success(getText("inventory.deleted"));
       ui.closeSheet();
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Could not delete this item.");
+      toast.error(getErrorText(error, "inventory.deleteError"));
       throw error;
     }
   };
@@ -102,8 +105,8 @@ export function InventoryView(): React.JSX.Element {
     void expiring.refetch();
   };
 
-  if (query.isPending || summary.isPending || expiring.isPending || !asOf) return <div role="status" aria-label="Loading inventory" className="space-y-3 pt-4"><Skeleton className="h-16 w-full" /><Skeleton className="h-28 w-full" /><Skeleton className="h-28 w-full" /></div>;
-  if (query.isError || summary.isError || expiring.isError) return <div role="alert" className="space-y-3 py-8"><p>Could not load your inventory.</p><Button type="button" className="h-11" onClick={retry}>Try again</Button></div>;
+  if (query.isPending || summary.isPending || expiring.isPending || !asOf) return <div role="status" aria-label={t("inventory.load")} className="space-y-3 pt-4"><Skeleton className="h-16 w-full" /><Skeleton className="h-28 w-full" /><Skeleton className="h-28 w-full" /></div>;
+  if (query.isError || summary.isError || expiring.isError) return <div role="alert" className="space-y-3 py-8"><p>{t("inventory.loadError")}</p><Button type="button" className="h-11" onClick={retry}>{t("common.retry")}</Button></div>;
 
   const counts = {
     all: summary.data.totalQuantity,

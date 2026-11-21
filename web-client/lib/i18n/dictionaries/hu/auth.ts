@@ -1,0 +1,31 @@
+import type { WidenStrings } from "../../types";
+import type { auth as english } from "../en/auth";
+
+export const auth = {
+  welcome: "Üdv a konyhádban",
+  loadingSession: "Munkamenet betöltése...",
+  loadingAccount: "Fiók betöltése...",
+  sessionError: "Nem sikerült betölteni a munkamenetet.",
+  sessionEnded: "A munkameneted lejárt.",
+  signIn: "Bejelentkezés",
+  signOut: "Kijelentkezés",
+  signingOut: "Kijelentkezés...",
+  signOutError: "Nem sikerült kijelentkezni.",
+  accountError: "Nem sikerült betölteni a fiókodat.",
+  googleError: "A Google-bejelentkezés sikertelen. Próbáld újra.",
+  namePasswordError: "Add meg a nevedet és egy legalább 8 karakteres jelszót.",
+  emailError: "Adj meg egy érvényes e-mail-címet.",
+  passwordError: "Add meg a jelszavadat.",
+  authError: "A hitelesítés sikertelen. Próbáld újra.",
+  accountCreated: "A fiók elkészült. Ha megerősítés szükséges, nézd meg az e-mailjeidet, majd jelentkezz be.",
+  verifyError: "Nem sikerült ellenőrizni a munkamenetet. Próbálj újra bejelentkezni.",
+  createAccount: "Fiók létrehozása",
+  name: "Név",
+  email: "E-mail",
+  password: "Jelszó",
+  waiting: "Kis türelmet...",
+  connectingGoogle: "Kapcsolódás a Google-höz...",
+  continueGoogle: "Folytatás Google-lel",
+  existingAccount: "Már van fiókod? Jelentkezz be",
+  newAccount: "Új vagy itt? Hozz létre fiókot",
+} satisfies WidenStrings<typeof english>;

@@ -4,6 +4,7 @@ import type { Recipe } from "../types";
 import { RecipeIngredients } from "./RecipeIngredients";
 import { RecipeMetrics } from "./RecipeMetrics";
 import { RecipeCardImage } from "./RecipeCardImage";
+import { useText } from "@/lib/i18n";
 
 interface RecipeCardProps {
   recipe: Recipe;
@@ -13,6 +14,7 @@ interface RecipeCardProps {
 }
 
 export function RecipeCard({ recipe, pending, onView, onCook }: RecipeCardProps): React.JSX.Element {
+  const { t } = useText();
   return (
     <article className="overflow-hidden rounded-stitch-xl border border-border bg-card shadow-[0_1px_3px_rgba(17,24,39,0.04)]">
       <RecipeCardImage recipe={recipe} />
@@ -23,8 +25,8 @@ export function RecipeCard({ recipe, pending, onView, onCook }: RecipeCardProps)
         <RecipeMetrics recipe={recipe} />
         <RecipeIngredients ingredients={recipe.ingredients.map((ingredient) => ingredient.displayName)} />
         <div className="flex gap-2 pt-1">
-          <Button type="button" variant="outline" onClick={() => onView(recipe.id)} className="min-h-11 min-w-0 flex-1"><Eye aria-hidden="true" />Details</Button>
-          <Button type="button" disabled={pending} onClick={() => onCook(recipe.id)} className="min-h-11 min-w-0 flex-1"><Zap aria-hidden="true" />Cook &amp; Stock</Button>
+          <Button type="button" variant="outline" onClick={() => onView(recipe.id)} className="min-h-11 min-w-0 flex-1"><Eye aria-hidden="true" />{t("recipes.details")}</Button>
+          <Button type="button" disabled={pending} onClick={() => onCook(recipe.id)} className="min-h-11 min-w-0 flex-1"><Zap aria-hidden="true" />{t("recipes.cookStock")}</Button>
         </div>
       </div>
     </article>

@@ -3,6 +3,7 @@
 import type { ConversationDto } from "@app/modules/schemas";
 import { useMutation, useQuery, useQueryClient, type UseMutationResult, type UseQueryResult } from "@tanstack/react-query";
 import { toast } from "sonner";
+import { getText } from "@/lib/i18n";
 import type { CreateConversationInput } from "../api/chat.api";
 import { chatApi } from "../api/chat.api";
 import { chatKeys } from "../api/chat.keys";
@@ -38,15 +39,15 @@ export function useConversationMutations(): ConversationMutations {
   const refreshList = async (): Promise<void> => {
     await client.invalidateQueries({ queryKey: chatKeys.conversations() });
   };
-  const create = useMutation({ mutationFn: chatApi.createConversation, onSuccess: refreshList, onError: () => toast.error("Could not create a conversation. Please try again.") });
+  const create = useMutation({ mutationFn: chatApi.createConversation, onSuccess: refreshList, onError: () => toast.error(getText("chat.createError")) });
   const updateTitle = useMutation({
     mutationFn: ({ id, title }: { id: string; title: string }) => chatApi.updateTitle(id, title),
     onSuccess: refreshList,
-    onError: () => toast.error("Could not rename this conversation. Please try again."),
+    onError: () => toast.error(getText("chat.renameError")),
   });
   const remove = useMutation({
     mutationFn: chatApi.removeConversation,
-    onError: () => toast.error("Could not delete this conversation. Please try again."),
+    onError: () => toast.error(getText("chat.deleteError")),
     onSuccess: async (_result, id) => {
       await Promise.all([
         client.invalidateQueries({ queryKey: chatKeys.conversations() }),

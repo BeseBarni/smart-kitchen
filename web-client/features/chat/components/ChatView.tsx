@@ -13,15 +13,17 @@ import { useConversationHistory, useConversationMutations, useConversations } fr
 import { useChatUiStore } from "../stores/chat-ui.store";
 import type { QuickPrompt } from "../types";
 import { mergeChatTurns } from "../utils/merge-chat-turns";
+import { getText, useText, type TranslationKey } from "@/lib/i18n";
 
-const promptText: Record<QuickPrompt["id"], string> = {
-  plan: "Help me plan meal prep using my saved recipes and ingredients.",
-  rescue: "Check my inventory for expiring foods and suggest a fridge rescue meal.",
-  meal: "I want to log a meal I ate.",
-  quick: "Help me quickly log an inventory change.",
+const promptText: Record<QuickPrompt["id"], TranslationKey> = {
+  plan: "chat.promptPlanText",
+  rescue: "chat.promptRescueText",
+  meal: "chat.promptMealText",
+  quick: "chat.promptQuickText",
 };
 
 export function ChatView(): React.JSX.Element {
+  const { t } = useText();
   const { data: conversations = [], isPending: conversationsPending, error: conversationsError } = useConversations();
   const activeConversationId = useChatUiStore((state) => state.activeConversationId);
   const setActiveConversationId = useChatUiStore((state) => state.setActiveConversationId);
@@ -35,10 +37,10 @@ export function ChatView(): React.JSX.Element {
   const stream = useChatStream(activeConversationId, onConversationId);
 
   useEffect(() => {
-    if (conversationsError) toast.error("Could not load conversations. Please try again.", { id: "conversations-error" });
+    if (conversationsError) toast.error(getText("chat.conversationsError"), { id: "conversations-error" });
   }, [conversationsError]);
   useEffect(() => {
-    if (historyError) toast.error("Could not load this conversation. Please try again.", { id: "conversation-history-error" });
+    if (historyError) toast.error(getText("chat.historyError"), { id: "conversation-history-error" });
   }, [historyError]);
 
   useEffect(() => {
@@ -63,7 +65,7 @@ export function ChatView(): React.JSX.Element {
     create.mutate({}, { onSuccess: (conversation) => setActiveConversationId(conversation.id) });
   };
 
-  const selectPrompt = (prompt: QuickPrompt): void => setDraft(promptText[prompt.id]);
+  const selectPrompt = (prompt: QuickPrompt): void => setDraft(t(promptText[prompt.id]));
   const replyToDirective = (message: string): void => {
     if (stream.isStreaming) return;
     setDraft("");
@@ -72,7 +74,7 @@ export function ChatView(): React.JSX.Element {
 
   return (
     <>
-      <h1 className="sr-only">AI Kitchen Assistant Chat</h1>
+      <h1 className="sr-only">{t("chat.title")}</h1>
       <ConversationSwitcher
         activeId={activeConversationId}
         onSelect={setActiveConversationId}
@@ -80,12 +82,12 @@ export function ChatView(): React.JSX.Element {
         disabled={stream.isStreaming || create.isPending}
       />
       {isPending && activeConversationId ? (
-        <div role="status" aria-label="Loading conversation" className="space-y-3 pt-4">
+        <div role="status" aria-label={t("chat.loading")} className="space-y-3 pt-4">
           <Skeleton className="ml-auto h-20 w-3/4" /><Skeleton className="h-36 w-5/6" /><Skeleton className="h-32 w-5/6" />
         </div>
       ) : isError ? (
         <div className="space-y-3 py-8 text-body-md">
-          <Button type="button" className="h-11" onClick={() => void refetch()}>Try again</Button>
+          <Button type="button" className="h-11" onClick={() => void refetch()}>{t("common.retry")}</Button>
         </div>
       ) : (
         <>
@@ -93,7 +95,7 @@ export function ChatView(): React.JSX.Element {
             <ChatMessageList turns={turns} activeStatus={stream.activeStatus} onReply={replyToDirective} streaming={stream.isStreaming} />
           ) : (
             <div className="py-10 text-center text-body-md text-muted-foreground">
-              <p>{activeConversationId ? "No messages in this conversation yet." : "Start a conversation with your kitchen assistant."}</p>
+              <p>{t(activeConversationId ? "chat.emptyHistory" : "chat.emptyChat")}</p>
             </div>
           )}
         </>
@@ -105,10 +107,10 @@ export function ChatView(): React.JSX.Element {
         onSubmit={submitMessage}
         onStop={stream.stopStreaming}
         quickPrompts={<QuickPrompts prompts={[
-          { id: "plan", label: "Plan Meal Prep" },
-          { id: "rescue", label: "Fridge Rescue" },
-          { id: "meal", label: "Log Eaten Meal" },
-          { id: "quick", label: "Quick Log" },
+          { id: "plan", label: t("chat.promptPlan") },
+          { id: "rescue", label: t("chat.promptRescue") },
+          { id: "meal", label: t("chat.promptMeal") },
+          { id: "quick", label: t("chat.promptQuick") },
         ]} onSelect={selectPrompt} />}
       />
     </>

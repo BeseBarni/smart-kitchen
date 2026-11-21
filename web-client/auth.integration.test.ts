@@ -93,7 +93,7 @@ test("page guards and session proxy support login and logout", async () => {
   const login = await fetch(`${origin}/auth/sign-in`);
   assert.match(await login.text(), /Continue with Google/);
 
-  for (const path of ["/manifest.webmanifest", "/icons/icon-192.png", "/icons/icon-512.png", "/sw.js", "/offline.html", "/recipes/gyros.jpg"]) {
+  for (const path of ["/manifest.webmanifest", "/manifest.en.webmanifest", "/manifest.hu.webmanifest", "/manifest.es.webmanifest", "/icons/icon-192.png", "/icons/icon-512.png", "/sw.js", "/offline.html", "/recipes/gyros.jpg"]) {
     const asset = await fetch(`${origin}${path}`, { redirect: "manual" });
     assert.equal(asset.status, 200, path);
   }

@@ -16,6 +16,10 @@ applyTo: "web-client/**"
 
 ## 2. Feature-Based Frontend Structure (`web-client/`)
 
+### Mandatory localization
+
+All application-authored user-facing text, including accessibility labels, validation and error messages, toasts, offline content, metadata, and plural forms, must be defined in English, Hungarian, and Spanish under `web-client/lib/i18n/dictionaries/`. Use `useText()` in React, `getText()` in client callbacks, or the pure Text Orchestrator for server and static contexts. Do not hardcode UI copy. Keep locale dictionaries in compile-time key parity and retain matching interpolation parameters. User-provided and AI-generated content, protocol identifiers, and native language labels are not translated UI copy.
+
 Organize `web-client/` strictly by **feature** rather than dumping all files into flat global folders. Keep global folders minimal and reserved ONLY for truly cross-cutting primitives.
 
 ```text

@@ -1,3 +1,6 @@
+import { formatLocaleDate, resolveText } from "../../../lib/i18n/orchestrator";
+import type { SupportedLocale } from "../../../lib/i18n/types";
+
 export function localDate(date = new Date()): string {
   const y = date.getFullYear();
   const m = String(date.getMonth() + 1).padStart(2, "0");
@@ -28,9 +31,9 @@ export function toLocalDayRange(value: string): { from: string; to: string } {
   return { from: start.toISOString(), to: end.toISOString() };
 }
 
-export function dateLabel(value: string, now = new Date()): string {
+export function dateLabel(value: string, now = new Date(), locale: SupportedLocale = "en"): string {
   const today = localDate(now);
-  if (value === today) return "Today";
-  if (value === addLocalDays(today, -1)) return "Yesterday";
-  return new Intl.DateTimeFormat(undefined, { weekday: "long", month: "short", day: "numeric" }).format(parseLocalDay(value));
+  if (value === today) return resolveText(locale, "mealTracker.today");
+  if (value === addLocalDays(today, -1)) return resolveText(locale, "mealTracker.yesterday");
+  return formatLocaleDate(locale, parseLocalDay(value), { weekday: "long", month: "short", day: "numeric" });
 }

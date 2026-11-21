@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { localDate } from "../utils/date.utils";
 import { useMealLogMutations } from "../hooks/use-meal-log-mutations";
+import { useText, type TranslationKey } from "@/lib/i18n";
 
 const formSchema = createMealLogSchema.pick({
   name: true, mealType: true, quantity: true, unit: true, calories: true,
@@ -21,6 +22,7 @@ type Values = z.infer<typeof formSchema>;
 export function ManualLogForm({ date, profile, mealType, onClose }: {
   date: string; profile: ProfileDto; mealType: Values["mealType"]; onClose: () => void;
 }): React.JSX.Element {
+  const { t } = useText();
   const { create } = useMealLogMutations();
   const now = new Date();
   const time = date === localDate(now) ? `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}` : "12:00";
@@ -31,7 +33,7 @@ export function ManualLogForm({ date, profile, mealType, onClose }: {
   const submit = form.handleSubmit(async ({ time: selectedTime, ...values }) => {
     const eaten = new Date(`${date}T${selectedTime}:00`);
     if (Number.isNaN(eaten.getTime()) || localDate(eaten) !== date || `${String(eaten.getHours()).padStart(2, "0")}:${String(eaten.getMinutes()).padStart(2, "0")}` !== selectedTime) {
-      form.setError("time", { message: "Choose a valid local time." }); return;
+      form.setError("time", { type: "validate" }); return;
     }
     try {
       await create.mutateAsync({ ...values, inventoryItemId: null, recipeId: null, currency: profile.currency, eatenAt: eaten.toISOString() });
@@ -40,16 +42,16 @@ export function ManualLogForm({ date, profile, mealType, onClose }: {
   });
   const optionalNumber = (value: string): number | null => value === "" ? null : Number(value);
   return <form onSubmit={(event) => void submit(event)} className="space-y-3">
-    <label className="block text-label-md">Meal name<Input className="h-11" {...form.register("name")} /></label>
-    <label className="block text-label-md">Meal type<select className="h-11 w-full rounded-md border bg-background px-2" {...form.register("mealType")}>{["breakfast", "lunch", "dinner", "snack"].map((type) => <option key={type} value={type}>{type}</option>)}</select></label>
+    <label className="block text-label-md">{t("mealTracker.mealName")}<Input className="h-11" {...form.register("name")} /></label>
+    <label className="block text-label-md">{t("mealTracker.mealType")}<select className="h-11 w-full rounded-md border bg-background px-2" {...form.register("mealType")}>{(["breakfast", "lunch", "dinner", "snack"] as const).map((type) => <option key={type} value={type}>{t(`mealTracker.${type}`)}</option>)}</select></label>
     <div className="grid grid-cols-2 gap-2">
-      <label className="text-label-md">Quantity<Input type="number" step="0.01" className="h-11" {...form.register("quantity", { valueAsNumber: true })} /></label>
-      <label className="text-label-md">Unit<Input className="h-11" {...form.register("unit")} /></label>
-      {(["calories", "proteinG", "carbsG", "fatG", "costAmount"] as const).map((field) => <label key={field} className="text-label-md">{field}<Input type="number" min="0" step="0.01" className="h-11" {...form.register(field, { setValueAs: optionalNumber })} /></label>)}
-      <label className="text-label-md">Fiber (g) *<Input type="number" min="0" step="0.01" className="h-11" {...form.register("fiberG", { valueAsNumber: true })} /></label>
-      <label className="text-label-md">Eaten at<Input type="time" className="h-11" {...form.register("time")} /></label>
+      <label className="text-label-md">{t("mealTracker.quantity")}<Input type="number" step="0.01" className="h-11" {...form.register("quantity", { valueAsNumber: true })} /></label>
+      <label className="text-label-md">{t("mealTracker.unit")}<Input className="h-11" {...form.register("unit")} /></label>
+      {([["calories", "mealTracker.caloriesLabel"], ["proteinG", "mealTracker.proteinLabel"], ["carbsG", "mealTracker.carbsLabel"], ["fatG", "mealTracker.fatLabel"], ["costAmount", "mealTracker.cost"]] as const satisfies readonly (readonly [keyof Values, TranslationKey])[]).map(([field, label]) => <label key={field} className="text-label-md">{t(label, { currency: profile.currency })}<Input type="number" min="0" step="0.01" className="h-11" {...form.register(field, { setValueAs: optionalNumber })} /></label>)}
+      <label className="text-label-md">{t("mealTracker.fiberLabel")} *<Input type="number" min="0" step="0.01" className="h-11" {...form.register("fiberG", { valueAsNumber: true })} /></label>
+      <label className="text-label-md">{t("mealTracker.eatenAt")}<Input type="time" className="h-11" {...form.register("time")} /></label>
     </div>
-    {Object.keys(form.formState.errors).length > 0 && <p role="alert" className="text-destructive text-body-sm">Check the required fields and enter valid values.</p>}
-    <Button className="h-12 w-full" disabled={create.isPending}>Log meal</Button>
+    {Object.keys(form.formState.errors).length > 0 && <p role="alert" className="text-destructive text-body-sm">{t("mealTracker.checkFields")}</p>}
+    <Button className="h-12 w-full" disabled={create.isPending}>{t("mealTracker.log")}</Button>
   </form>;
 }

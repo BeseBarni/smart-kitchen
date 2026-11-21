@@ -5,9 +5,11 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, type ReactNode } from "react";
 import { BottomNav } from "./BottomNav";
+import { useText } from "@/lib/i18n";
 
 export function AppShell({ children }: { children: ReactNode }): React.JSX.Element {
   const pathname = usePathname();
+  const { t } = useText();
   useEffect(() => {
     const revalidateRestoredPage = (event: PageTransitionEvent): void => {
       if (event.persisted) window.location.reload();
@@ -15,23 +17,23 @@ export function AppShell({ children }: { children: ReactNode }): React.JSX.Eleme
     window.addEventListener("pageshow", revalidateRestoredPage);
     return () => window.removeEventListener("pageshow", revalidateRestoredPage);
   }, []);
-  const section = pathname.startsWith("/inventory") ? "Inventory" :
-    pathname.startsWith("/recipes") ? "Recipes" :
-    pathname.startsWith("/tracker") ? "Calories" :
-    pathname.startsWith("/account") ? "Account" : "Assistant Chat";
+  const section = pathname.startsWith("/inventory") ? t("nav.inventory") :
+    pathname.startsWith("/recipes") ? t("nav.recipes") :
+    pathname.startsWith("/tracker") ? t("nav.tracker") :
+    pathname.startsWith("/account") ? t("nav.account") : t("nav.assistant");
   return (
     <div className="mx-auto min-h-dvh w-full max-w-[430px] bg-background">
       {pathname !== "/chat" && <header className="fixed inset-x-0 top-0 z-50 mx-auto max-w-[430px] bg-background/95 pt-[env(safe-area-inset-top,0px)] shadow-[0_1px_8px_rgba(0,0,0,0.03)] backdrop-blur-xl">
         <div className="flex h-16 items-center justify-between px-margin">
           <div className="min-w-0">
             <div className="flex items-center gap-1.5">
-              <span className="text-title-sm">PrepPilot</span>
+              <span className="text-title-sm">{t("common.appName")}</span>
               <span aria-hidden="true" className="text-muted-foreground">·</span>
               <span className="truncate text-body-sm text-muted-foreground">{section}</span>
             </div>
           </div>
           <div className="flex shrink-0 items-center">
-            <Link href="/account" className="flex size-11 items-center justify-center" aria-label="Account">
+            <Link href="/account" className="flex size-11 items-center justify-center" aria-label={t("nav.account")}>
               <span className="flex size-8 items-center justify-center rounded-full bg-primary text-primary-foreground"><UserRound size={18} /></span>
             </Link>
           </div>

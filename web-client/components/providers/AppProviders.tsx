@@ -3,6 +3,7 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useEffect, useState, type ReactNode } from "react";
 import { Toaster } from "sonner";
+import { LanguageSync } from "./LanguageSync";
 
 export function AppProviders({ children }: { children: ReactNode }): React.JSX.Element {
   const [queryClient] = useState(() => new QueryClient({
@@ -19,6 +20,7 @@ export function AppProviders({ children }: { children: ReactNode }): React.JSX.E
   }, []);
   return (
     <QueryClientProvider client={queryClient}>
+      <LanguageSync />
       {children}
       <Toaster position="top-right" mobileOffset={{ top: "max(1rem, env(safe-area-inset-top))", right: "1rem", left: "1rem" }} />
     </QueryClientProvider>

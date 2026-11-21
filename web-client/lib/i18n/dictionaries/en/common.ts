@@ -1,0 +1,14 @@
+export const common = {
+  appName: "PrepPilot",
+  installName: "PrepPilot Meal Assistant",
+  appDescription: "Your meal prep and kitchen inventory assistant.",
+  close: "Close",
+  retry: "Try again",
+  loading: "Loading...",
+  cancel: "Cancel",
+  save: "Save",
+  delete: "Delete",
+  error: "Something went wrong. Please try again.",
+  notFound: "This page could not be found.",
+  backToChat: "Back to chat",
+} as const;

@@ -11,6 +11,8 @@ import { streamChatTurn } from "../api/chat-stream.client";
 import { toolStatusLabel } from "../utils/tool-status";
 import type { ChatToolStep, ChatTurn } from "../types";
 import { useChatUiStore } from "../stores/chat-ui.store";
+import { getText } from "@/lib/i18n";
+import { getErrorText } from "@/lib/i18n/error-text";
 
 export function useChatStream(
   conversationId: string | null,
@@ -34,7 +36,7 @@ export function useChatStream(
     const message = value.trim();
     if (!message) return;
     if (controller.current) {
-      toast.error("A response is already streaming.");
+      toast.error(getText("chat.alreadyStreaming"));
       return;
     }
     const abortController = new AbortController();
@@ -80,10 +82,10 @@ export function useChatStream(
             setTurn((current) => current ? {
               ...current,
               activeStatus: { ...event, label: event.status === "running_skill"
-                ? current.activeStatus?.label ?? "Preparing your suggestion..."
+                ? current.activeStatus?.label ?? getText("chat.preparingSuggestion")
                 : event.status === "delegating"
-                  ? "Getting the right help..."
-                  : "Thinking..." },
+                  ? getText("chat.delegating")
+                  : getText("chat.thinking") },
             } : current);
           } else if (event.type === "text_delta") {
             setTurn((current) => current ? {
@@ -140,13 +142,14 @@ export function useChatStream(
             } : current);
             await invalidateAppDomains(queryClient, event.invalidateDomains);
             if (event.directive.component === "inventory_action_card") {
-              toast.message("Inventory updated from chat.");
+              toast.message(getText("chat.inventoryUpdated"));
             } else if (event.directive.component === "consumption_summary_card") {
-              toast.message("Meal log updated from chat.");
+              toast.message(getText("chat.mealUpdated"));
             }
           } else if (event.type === "error") {
             setTurn((current) => current ? { ...current, activeStatus: null } : current);
-            toast.error(event.message);
+            console.error("Chat stream error:", event);
+            toast.error(getText("chat.responseError"));
           } else if (event.type === "turn_completed") {
             activeConversationId = event.conversationId;
             onConversationId(event.conversationId);
@@ -163,9 +166,7 @@ export function useChatStream(
             userMessage: { ...newTurn.userMessage, rejected: true },
           });
         }
-        toast.error(cause instanceof ApiClientError && cause.code !== "INTERNAL_ERROR"
-          ? cause.message
-          : "The response could not be completed. Please try again.");
+        toast.error(getErrorText(cause, "chat.responseError"));
         abortController.abort();
       }
     } finally {

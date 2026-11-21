@@ -1,0 +1,31 @@
+import type { WidenStrings } from "../../types";
+import type { auth as english } from "../en/auth";
+
+export const auth = {
+  welcome: "Te damos la bienvenida a tu cocina",
+  loadingSession: "Cargando sesión...",
+  loadingAccount: "Cargando cuenta...",
+  sessionError: "No se ha podido cargar tu sesión.",
+  sessionEnded: "Tu sesión ha terminado.",
+  signIn: "Iniciar sesión",
+  signOut: "Cerrar sesión",
+  signingOut: "Cerrando sesión...",
+  signOutError: "No se ha podido cerrar la sesión.",
+  accountError: "No se ha podido cargar tu cuenta.",
+  googleError: "Ha fallado el inicio de sesión con Google. Inténtalo de nuevo.",
+  namePasswordError: "Introduce tu nombre y una contraseña de al menos 8 caracteres.",
+  emailError: "Introduce una dirección de correo válida.",
+  passwordError: "Introduce tu contraseña.",
+  authError: "La autenticación ha fallado. Inténtalo de nuevo.",
+  accountCreated: "Cuenta creada. Si debes verificarla, revisa tu correo y después inicia sesión.",
+  verifyError: "No se ha podido verificar tu sesión. Vuelve a iniciar sesión.",
+  createAccount: "Crear cuenta",
+  name: "Nombre",
+  email: "Correo electrónico",
+  password: "Contraseña",
+  waiting: "Espera un momento...",
+  connectingGoogle: "Conectando con Google...",
+  continueGoogle: "Continuar con Google",
+  existingAccount: "¿Ya tienes cuenta? Inicia sesión",
+  newAccount: "¿Eres nuevo? Crea una cuenta",
+} satisfies WidenStrings<typeof english>;

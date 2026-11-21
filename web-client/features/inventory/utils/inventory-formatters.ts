@@ -1,3 +1,6 @@
+import { formatLocaleNumber, resolveText } from "../../../lib/i18n/orchestrator";
+import { LOCALE_META, type SupportedLocale } from "../../../lib/i18n/types";
+
 const DAY = 86_400_000;
 
 export function todayLocal(now: Date = new Date()): string {
@@ -42,9 +45,13 @@ export function addMonths(value: string, months: number): string {
   return date.toISOString().slice(0, 10);
 }
 
-export function freshnessLabel(days: number): string {
-  if (days < 0) return `Expired ${Math.abs(days)} ${days === -1 ? "day" : "days"} ago`;
-  if (days === 0) return "Expires today";
-  if (days === 1) return "Expires tomorrow";
-  return `${days} days left`;
+export function freshnessLabel(days: number, locale: SupportedLocale = "en"): string {
+  if (days < 0) {
+    const count = Math.abs(days);
+    const key = new Intl.PluralRules(LOCALE_META[locale].tag).select(count) === "one" ? "inventory.expiredOne" : "inventory.expiredOther";
+    return resolveText(locale, key, { count: formatLocaleNumber(locale, count) });
+  }
+  if (days === 0) return resolveText(locale, "inventory.expiresToday");
+  if (days === 1) return resolveText(locale, "inventory.expiresTomorrow");
+  return resolveText(locale, "inventory.daysLeft", { count: formatLocaleNumber(locale, days) });
 }

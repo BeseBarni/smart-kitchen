@@ -1,10 +1,11 @@
 import type { MetadataRoute } from "next";
+import { resolveText } from "@/lib/i18n/orchestrator";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "PrepPilot Meal Assistant",
-    short_name: "PrepPilot",
-    description: "A meal prep and kitchen inventory assistant.",
+    name: resolveText("en", "common.installName"),
+    short_name: resolveText("en", "common.appName"),
+    description: resolveText("en", "common.appDescription"),
     start_url: "/chat",
     scope: "/",
     display: "standalone",

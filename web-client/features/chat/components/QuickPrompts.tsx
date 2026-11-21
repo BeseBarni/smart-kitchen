@@ -1,13 +1,15 @@
 import { Snowflake, Sparkles, Utensils, Zap, type LucideIcon } from "lucide-react";
 import type { QuickPrompt } from "../types";
+import { useText } from "@/lib/i18n";
 
 const icons: Record<QuickPrompt["id"], LucideIcon> = {
   plan: Sparkles, rescue: Snowflake, meal: Utensils, quick: Zap,
 };
 
 export function QuickPrompts({ prompts, onSelect }: { prompts: readonly QuickPrompt[]; onSelect: (prompt: QuickPrompt) => void }): React.JSX.Element {
+  const { t } = useText();
   return (
-    <div aria-label="Quick prompts" className="hide-scrollbar pointer-events-auto overflow-x-auto pb-2">
+    <div aria-label={t("chat.quickPrompts")} className="hide-scrollbar pointer-events-auto overflow-x-auto pb-2">
       <div className="flex w-max gap-1">
         {prompts.map((prompt) => {
           const Icon = icons[prompt.id];

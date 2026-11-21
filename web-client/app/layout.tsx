@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { AppProviders } from "@/components/providers/AppProviders";
+import { resolveText } from "@/lib/i18n/orchestrator";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -14,8 +15,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "PrepPilot",
-  description: "Your meal prep and kitchen inventory assistant.",
+  title: resolveText("en", "common.appName"),
+  description: resolveText("en", "common.appDescription"),
 };
 
 export const viewport: Viewport = {

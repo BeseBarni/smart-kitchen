@@ -5,6 +5,7 @@ import type { CreateRecipeInput } from "@app/modules/schemas";
 import { toast } from "sonner";
 import { useRecipeMutations, useRecipes } from "@/features/recipes";
 import type { UiDirective } from "../types";
+import { getText } from "@/lib/i18n";
 
 type RecipeDirective = Extract<UiDirective, { component: "recipe_preview_card" }>;
 type StorageLocation = "fridge" | "freezer" | "pantry";
@@ -27,7 +28,7 @@ export function useChatRecipeActions({ recipe, status, canSave }: RecipeDirectiv
   const { create, cookAndStock } = useRecipeMutations();
   const savedRecipes = useRecipes({ search: recipe.title, limit: 100 });
   useEffect(() => {
-    if (savedRecipes.error) toast.error("Could not check saved recipes. Please try again.", { id: "chat-recipe-lookup-error" });
+    if (savedRecipes.error) toast.error(getText("chat.savedRecipeLookupError"), { id: "chat-recipe-lookup-error" });
   }, [savedRecipes.error]);
   const [savedId, setSavedId] = useState<string | null>(recipe.id ?? null);
   const [location, setLocation] = useState<StorageLocation>("fridge");
@@ -55,8 +56,8 @@ export function useChatRecipeActions({ recipe, status, canSave }: RecipeDirectiv
     savePending: create.isPending,
     saveDisabled: create.isPending || savedRecipes.isPending || savedRecipes.isError || recipe.fiberPerServing == null,
     save: () => create.mutate(createInput, {
-      onSuccess: (saved) => { setSavedId(saved.id); toast.success("Recipe saved."); },
-      onError: () => toast.error("Could not save this recipe. Please try again."),
+      onSuccess: (saved) => { setSavedId(saved.id); toast.success(getText("recipes.saved")); },
+      onError: () => toast.error(getText("chat.saveRecipeError")),
     }),
     existingId,
     quantity,
@@ -66,8 +67,8 @@ export function useChatRecipeActions({ recipe, status, canSave }: RecipeDirectiv
     cookPending: cookAndStock.isPending,
     cookDisabled: cookAndStock.isPending || !Number.isFinite(parsedQuantity) || parsedQuantity <= 0,
     cook: (id: string) => cookAndStock.mutate({ id, input: { batches: [{ storageLocation: location, quantity: parsedQuantity, unit: "portions" }] } }, {
-      onSuccess: () => toast.success("Recipe cooked and added to inventory."),
-      onError: () => toast.error("Could not stock this recipe. Please try again."),
+      onSuccess: () => toast.success(getText("chat.stockedRecipe")),
+      onError: () => toast.error(getText("chat.stockRecipeError")),
     }),
   };
 }

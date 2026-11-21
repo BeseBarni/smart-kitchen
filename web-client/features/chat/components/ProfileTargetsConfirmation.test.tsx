@@ -10,7 +10,7 @@ test("target proposals show exact changes and require an explicit confirmation",
       <ProfileTargetsConfirmation targets={{ dailyCalorieTarget: 2000, dailyFiberG: null }} disabled={false} />
     </QueryClientProvider>,
   );
-  assert.match(markup, /Calories:.*2000 kcal/);
+  assert.match(markup, /Calories:.*2,000 kcal/);
   assert.match(markup, /Fiber:.*Unset/);
   assert.match(markup, /Confirm and update targets/);
   assert.doesNotMatch(markup, /Protein:/);

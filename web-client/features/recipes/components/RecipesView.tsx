@@ -15,8 +15,12 @@ import { RecipeFormSheet } from "./RecipeFormSheet";
 import { RecipesFilters } from "./RecipesFilters";
 import { RecipesHeader } from "./RecipesHeader";
 import { RecipesList } from "./RecipesList";
+import { getText, LOCALE_META, useText } from "@/lib/i18n";
+import { languageStore } from "@/lib/i18n/language.store";
+import { getErrorText } from "@/lib/i18n/error-text";
 
 export function RecipesView(): React.JSX.Element {
+  const { t } = useText();
   const { search, filter, setSearch, setFilter } = useRecipesUiStore();
   const query = useRecipes({
     ...(filter === "ai-generated" ? { source: "ai_skill" } : {}),
@@ -38,7 +42,7 @@ export function RecipesView(): React.JSX.Element {
   const saveRecipe = async (input: CreateRecipeInput): Promise<void> => {
     if (formRecipe) await mutations.update.mutateAsync({ id: formRecipe.id, input });
     else await mutations.create.mutateAsync(input);
-    toast.success("Recipe saved.");
+    toast.success(getText("recipes.saved"));
     setFormOpen(false);
     setFormRecipe(undefined);
   };
@@ -46,16 +50,18 @@ export function RecipesView(): React.JSX.Element {
     if (!selectedId) return;
     try {
       await mutations.remove.mutateAsync(selectedId);
-      toast.success("Recipe deleted.");
+      toast.success(getText("recipes.deleted"));
       setSelectedId(null);
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Could not delete this recipe.");
+      toast.error(getErrorText(error, "recipes.deleteError"));
     }
   };
   const cookRecipe = async (input: CookRecipeInput): Promise<void> => {
     if (!cookId) throw new Error("No recipe selected.");
     const stocked = await mutations.cookAndStock.mutateAsync({ id: cookId, input });
-    toast.success(`${stocked.length} ${stocked.length === 1 ? "batch" : "batches"} stocked.`);
+    const locale = languageStore.getState().locale;
+    const key = new Intl.PluralRules(LOCALE_META[locale].tag).select(stocked.length) === "one" ? "recipes.batchesOne" : "recipes.batchesOther";
+    toast.success(getText(key, { count: new Intl.NumberFormat(LOCALE_META[locale].tag).format(stocked.length) }));
     setCookId(null);
   };
   const editSelectedRecipe = (): void => {
@@ -65,14 +71,14 @@ export function RecipesView(): React.JSX.Element {
     setFormOpen(true);
   };
 
-  if (query.isPending) return <div role="status" aria-label="Loading recipes" className="space-y-3 pt-4"><Skeleton className="h-16 w-full" /><Skeleton className="h-11 w-full" /><Skeleton className="h-80 w-full" /></div>;
-  if (query.isError && !query.data) return <div role="alert" className="space-y-3 py-8"><p>Could not load recipes.</p><Button type="button" className="h-11" onClick={() => void query.refetch()}>Try again</Button></div>;
+  if (query.isPending) return <div role="status" aria-label={t("recipes.loading")} className="space-y-3 pt-4"><Skeleton className="h-16 w-full" /><Skeleton className="h-11 w-full" /><Skeleton className="h-80 w-full" /></div>;
+  if (query.isError && !query.data) return <div role="alert" className="space-y-3 py-8"><p>{t("recipes.loadAllError")}</p><Button type="button" className="h-11" onClick={() => void query.refetch()}>{t("common.retry")}</Button></div>;
 
   return (
     <div className="space-y-3 pb-8">
       <RecipesHeader total={counts.total} search={search} onSearch={setSearch} onNew={() => { setFormRecipe(undefined); setFormOpen(true); }} />
       <RecipesFilters filter={filter} total={counts.total} onChange={setFilter} />
-      {query.isError && <div role="alert" className="space-y-2 text-body-sm"><p>Could not refresh recipes. Showing the last loaded results.</p><Button type="button" variant="outline" className="h-11" onClick={() => void query.refetch()}>Try again</Button></div>}
+      {query.isError && <div role="alert" className="space-y-2 text-body-sm"><p>{t("recipes.refreshError")}</p><Button type="button" variant="outline" className="h-11" onClick={() => void query.refetch()}>{t("common.retry")}</Button></div>}
       <RecipesList recipes={filtered} total={counts.total} pending={busy} onView={setSelectedId} onCook={setCookId} />
       <RecipeDetailsSheet
         key={selectedId ?? "none"}
@@ -88,7 +94,7 @@ export function RecipesView(): React.JSX.Element {
       />
       {formOpen && <RecipeFormSheet key={formRecipe?.id ?? "new"} recipe={formRecipe} busy={busy} onClose={() => { setFormOpen(false); setFormRecipe(undefined); }} onSave={saveRecipe} />}
       {cookId && cooking.data && <CookRecipeSheet key={cookId} recipe={cooking.data} busy={busy} onClose={() => setCookId(null)} onSave={cookRecipe} />}
-      {cookId && cooking.isError && <div role="alert" className="py-2"><p>Could not load this recipe for cooking.</p><Button type="button" className="h-11" onClick={() => void cooking.refetch()}>Try again</Button></div>}
+      {cookId && cooking.isError && <div role="alert" className="py-2"><p>{t("recipes.loadCookError")}</p><Button type="button" className="h-11" onClick={() => void cooking.refetch()}>{t("common.retry")}</Button></div>}
     </div>
   );
 }

@@ -1,5 +1,6 @@
 import type { InventoryItem } from "../types";
 import { InventoryItemCard } from "./InventoryItemCard";
+import { useText } from "@/lib/i18n";
 
 interface Props {
   items: readonly InventoryItem[];
@@ -13,8 +14,9 @@ interface Props {
 }
 
 export function InventoryList({ items, asOf, disabled, empty, onEdit, onAdjust, onConsume, onDiscard }: Props): React.JSX.Element {
+  const { t } = useText();
   if (!items.length) {
-    return <p className="rounded-xl border border-border bg-card p-5 text-body-md text-muted-foreground">{empty ? "Your inventory is empty. Add an item to get started." : "No items match these filters."}</p>;
+    return <p className="rounded-xl border border-border bg-card p-5 text-body-md text-muted-foreground">{t(empty ? "inventory.empty" : "inventory.noMatches")}</p>;
   }
   return <div className="flex flex-col gap-2.5">{items.map((item) => <InventoryItemCard key={item.id} item={item} asOf={asOf} disabled={disabled} onEdit={onEdit} onAdjust={onAdjust} onConsume={onConsume} onDiscard={onDiscard} />)}</div>;
 }

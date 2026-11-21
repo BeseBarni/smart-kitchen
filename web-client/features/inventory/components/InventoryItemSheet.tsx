@@ -9,6 +9,7 @@ import { Sheet, SheetClose, SheetContent, SheetDescription, SheetTitle } from "@
 import type { InventoryInput, InventoryItem } from "../types";
 import { inventoryFormValues } from "../utils/inventory-form.mapper";
 import { InventoryFormFields } from "./InventoryFormFields";
+import { useText } from "@/lib/i18n";
 
 interface Props {
   item?: InventoryItem;
@@ -19,20 +20,21 @@ interface Props {
 }
 
 export function InventoryItemSheet({ item, busy, onClose, onSave, onDelete }: Props): React.JSX.Element {
+  const { t } = useText();
   const form = useForm<InventoryInput>({
     resolver: zodResolver(createInventoryItemSchema),
     defaultValues: inventoryFormValues(item),
   });
   const submit = form.handleSubmit(async (input) => {
     if (input.itemType === "meal_prep" && (input.fiberPerUnit === null || input.fiberPerUnit === undefined)) {
-      form.setError("fiberPerUnit", { message: "Enter fiber per portion." });
+      form.setError("fiberPerUnit", { type: "required" });
       return;
     }
     try {
       await onSave(input);
       onClose();
-    } catch (error) {
-      form.setError("root", { message: error instanceof Error ? error.message : "Could not save this item." });
+    } catch {
+      form.setError("root", { type: "save" });
     }
   });
   const deleteItem = async (): Promise<void> => {
@@ -40,23 +42,23 @@ export function InventoryItemSheet({ item, busy, onClose, onSave, onDelete }: Pr
     try {
       await onDelete(item.id);
       onClose();
-    } catch (error) {
-      form.setError("root", { message: error instanceof Error ? error.message : "Could not delete this item." });
+    } catch {
+      form.setError("root", { type: "delete" });
     }
   };
   return (
     <Sheet open onOpenChange={(open) => { if (!open && !busy) onClose(); }}>
       <SheetContent side="bottom" showCloseButton={false} className="mx-auto max-h-[90dvh] w-full max-w-[430px] gap-0 overflow-y-auto rounded-t-2xl pb-[env(safe-area-inset-bottom,0px)]">
         <div className="flex items-start justify-between px-4 pt-5">
-          <div><SheetTitle className="text-headline-md">{item ? "Edit Meal Prep Item" : "Add Meal Prep Item"}</SheetTitle>
-            <SheetDescription className="mt-1 text-body-sm">Record a batch in your inventory.</SheetDescription></div>
-          <SheetClose render={<Button type="button" variant="ghost" className="size-11 shrink-0" disabled={busy} />}><X size={18} /><span className="sr-only">Close</span></SheetClose>
+          <div><SheetTitle className="text-headline-md">{t(item ? "inventory.editTitle" : "inventory.addTitle")}</SheetTitle>
+            <SheetDescription className="mt-1 text-body-sm">{t("inventory.sheetDescription")}</SheetDescription></div>
+          <SheetClose render={<Button type="button" variant="ghost" className="size-11 shrink-0" disabled={busy} />}><X size={18} /><span className="sr-only">{t("common.close")}</span></SheetClose>
         </div>
         <form onSubmit={(event) => void submit(event)} className="space-y-4 px-4 pb-5 pt-4">
           <InventoryFormFields form={form} disabled={busy} />
-          {form.formState.errors.root && <p role="alert" className="text-body-sm text-destructive">{form.formState.errors.root.message}</p>}
-          <Button type="submit" disabled={busy} className="h-12 w-full rounded-xl text-title-sm">{busy ? "Saving..." : item ? "Save changes" : "Save to Inventory"}</Button>
-          {item && onDelete && <Button type="button" disabled={busy} variant="outline" onClick={() => void deleteItem()} className="h-11 w-full text-destructive">Delete item</Button>}
+          {form.formState.errors.root && <p role="alert" className="text-body-sm text-destructive">{t(form.formState.errors.root.type === "delete" ? "inventory.deleteError" : "inventory.saveError")}</p>}
+          <Button type="submit" disabled={busy} className="h-12 w-full rounded-xl text-title-sm">{t(busy ? "inventory.saving" : item ? "inventory.saveChanges" : "inventory.saveInventory")}</Button>
+          {item && onDelete && <Button type="button" disabled={busy} variant="outline" onClick={() => void deleteItem()} className="h-11 w-full text-destructive">{t("inventory.deleteItem")}</Button>}
         </form>
       </SheetContent>
     </Sheet>

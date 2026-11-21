@@ -1,4 +1,6 @@
 import type { MealLogDto } from "@app/modules/schemas";
+import { formatLocaleNumber } from "../../../lib/i18n/orchestrator";
+import type { SupportedLocale } from "../../../lib/i18n/types";
 
 export type MealGroup = "breakfast" | "lunch" | "dinner" | "snack" | "other";
 
@@ -13,6 +15,6 @@ export function groupMeals(logs: MealLogDto[]): Record<MealGroup, MealLogDto[]> 
   return groups;
 }
 
-export function formatAmount(value: number): string {
-  return new Intl.NumberFormat(undefined, { maximumFractionDigits: 1 }).format(value);
+export function formatAmount(value: number, locale: SupportedLocale = "en"): string {
+  return formatLocaleNumber(locale, value, { maximumFractionDigits: 1 });
 }

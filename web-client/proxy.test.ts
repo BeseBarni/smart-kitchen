@@ -42,6 +42,8 @@ test("login guard reports session verification failures", async () => {
     headers: { cookie: "__Secure-neon-auth.session_token=test-session" },
   }));
   assert.equal(response.status, 503);
+  assert.match(response.headers.get("content-type") ?? "", /^text\/html/);
+  assert.equal(response.headers.get("cache-control"), "no-store");
 });
 
 test("Google OAuth verifier is exchanged on the chat callback", async () => {

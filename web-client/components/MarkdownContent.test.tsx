@@ -4,9 +4,11 @@ import { Children, isValidElement, type ReactNode } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { MessageBubble } from "../features/chat/components/MessageBubble";
 import { RecipeDetailsSheet } from "../features/recipes/components/RecipeDetailsSheet";
+import { RecipeDetailModal } from "../features/recipes/components/RecipeDetailModal";
 import type { Recipe } from "../features/recipes/types";
 import { MarkdownContent } from "./MarkdownContent";
 import { SheetDescription } from "./ui/sheet";
+import { resolveText } from "../lib/i18n/orchestrator";
 
 test("renders GitHub-flavored Markdown as semantic, read-only content", () => {
   const html = renderToStaticMarkup(<MarkdownContent text={[
@@ -78,13 +80,22 @@ test("recipe details render Markdown only for AI-generated recipes", () => {
       return [{ type: child.type, ...child.props }, ...collect(child.props.children)];
     });
   };
-  const elements = (source: Recipe["source"]) => collect(RecipeDetailsSheet({
-    recipe: { ...recipe, source }, open: true, loading: false,
-    onClose: noop, onRetry: noop, onEdit: noop, onDelete: noop, onCook: noop,
-  }));
+  const elements = (source: Recipe["source"]) => {
+    let result: ReturnType<typeof collect> = [];
+    function Capture(): null {
+      const sheet = RecipeDetailsSheet({
+        recipe: { ...recipe, source }, open: true, loading: false,
+        onClose: noop, onRetry: noop, onEdit: noop, onDelete: noop, onCook: noop,
+      });
+      result = collect(RecipeDetailModal(sheet.props));
+      return null;
+    }
+    renderToStaticMarkup(<Capture />);
+    return result;
+  };
   const ai = elements("ai_skill");
   assert.deepEqual(ai.filter((item) => item.type === MarkdownContent).map((item) => item.text),
     ["**Warm** soup", "**Mix** ingredients"]);
-  assert.equal(ai.find((item) => item.type === SheetDescription)?.children, "Recipe details");
+  assert.equal(ai.find((item) => item.type === SheetDescription)?.children, resolveText("en", "recipes.detailsDescription"));
   assert.equal(elements("manual").filter((item) => item.type === MarkdownContent).length, 0);
 });
