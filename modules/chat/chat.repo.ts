@@ -3,9 +3,12 @@ import {
   conversationItems,
   conversations,
   getDatabase,
+  inventoryItems,
   type ConversationItemPayload,
   type ConversationItemMetadata,
 } from "@app/db";
+import { batchInventoryValues } from "../inventory/inventory.repo";
+import type { ReceiptImportInput } from "./chat.schema";
 
 export type AppendConversationItem = {
   type: "message" | "tool_call" | "tool_result" | "skill_execution";
@@ -140,5 +143,35 @@ export async function appendConversationRows(
       .set({ updatedAt: new Date() })
       .where(and(eq(conversations.userId, userId), eq(conversations.id, conversationId)));
     return rows;
+  });
+}
+
+export async function importReceiptRows(
+  userId: string,
+  conversationId: string,
+  itemId: string,
+  directiveIndex: number,
+  input: ReceiptImportInput,
+): Promise<boolean> {
+  return getDatabase().transaction(async (tx) => {
+    const [conversation] = await tx.select({ id: conversations.id }).from(conversations)
+      .where(and(eq(conversations.userId, userId), eq(conversations.id, conversationId)))
+      .for("update").limit(1);
+    if (!conversation) return false;
+    const [item] = await tx.select().from(conversationItems)
+      .where(and(eq(conversationItems.conversationId, conversationId), eq(conversationItems.id, itemId),
+        eq(conversationItems.type, "message"), eq(conversationItems.role, "assistant")))
+      .limit(1);
+    if (!item || item.payload.kind !== "message") return false;
+    const directive = item.payload.uiDirectives?.[directiveIndex];
+    if (!directive || typeof directive !== "object" || Array.isArray(directive) ||
+        !("component" in directive) || directive.component !== "receipt_import_card") return false;
+    const imported = item.payload.importedReceiptIndexes ?? [];
+    if (imported.includes(directiveIndex)) return true;
+    await tx.insert(inventoryItems).values(input.items.map((entry) => batchInventoryValues(userId, entry)));
+    await tx.update(conversationItems)
+      .set({ payload: { ...item.payload, importedReceiptIndexes: [...imported, directiveIndex] } })
+      .where(eq(conversationItems.id, itemId));
+    return true;
   });
 }

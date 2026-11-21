@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { batchInventoryItemSchema } from "../inventory/inventory.schema";
 
 export type ChatJsonValue =
   | string
@@ -61,6 +62,8 @@ export const conversationItemPayloadSchema = z
           .array(chatJsonValueSchema)
           .optional()
           .describe("Optional UI directives emitted during the turn."),
+        importedReceiptIndexes: z.array(z.number().int().nonnegative()).optional()
+          .describe("Indexes of receipt directives already imported into inventory."),
       })
       .describe("A text message with optional attachments."),
     z
@@ -167,6 +170,13 @@ export const conversationItemsQuerySchema = z
   .describe("Conversation history pagination.");
 
 export const conversationIdSchema = z.string().uuid().describe("Conversation identifier.");
+
+export const receiptImportInputSchema = z.object({
+  items: z.array(batchInventoryItemSchema.omit({ tags: true })).min(1).max(100)
+    .describe("Selected receipt items to add to inventory."),
+}).strict();
+
+export type ReceiptImportInput = z.infer<typeof receiptImportInputSchema>;
 
 export const conversationStreamInputSchema = z
   .object({

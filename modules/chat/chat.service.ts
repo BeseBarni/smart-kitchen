@@ -1,4 +1,4 @@
-import { err, ok, type AppError, type Result } from "@app/shared";
+import { err, estimatedExpiry, ok, type AppError, type Result } from "@app/shared";
 import { requireAuthUser } from "../shared/user.service";
 import {
   appendConversationRows,
@@ -10,6 +10,7 @@ import {
   recentConversationItems,
   updateConversationTitleRow,
   updateUntitledConversationRow,
+  importReceiptRows,
   type AppendConversationItem,
 } from "./chat.repo";
 import type {
@@ -17,6 +18,7 @@ import type {
   ConversationItemDto,
   ConversationItemMetadataDto,
   ConversationItemPayloadDto,
+  ReceiptImportInput,
 } from "./chat.schema";
 
 export type AppendItemInput = {
@@ -126,6 +128,26 @@ export async function appendItems(
     metadata: row.metadata,
     createdAt: row.createdAt.toISOString(),
   }))) : err(toError());
+}
+
+export async function importReceipt(
+  userId: string,
+  conversationId: string,
+  itemId: string,
+  directiveIndex: number,
+  input: ReceiptImportInput,
+): Promise<Result<{ imported: true }, AppError>> {
+  if (input.items.length === 0) {
+    return err({ code: "VALIDATION_ERROR", message: "At least one inventory item is required." });
+  }
+  const now = new Date();
+  const result = await importReceiptRows(userId, conversationId, itemId, directiveIndex, {
+    items: input.items.map((item) => ({
+      ...item,
+      expiresAt: item.expiresAt ?? estimatedExpiry(item.shelfLifeDays, item.storageLocation, now)?.toISOString() ?? null,
+    })),
+  });
+  return result ? ok({ imported: true }) : err({ code: "ITEM_NOT_FOUND", message: "Receipt not found." });
 }
 
 export async function getRecentContextItems(

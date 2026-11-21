@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { conversationItemSchema, conversationStreamInputSchema } from "./chat.schema";
+import { conversationItemSchema, conversationStreamInputSchema, receiptImportInputSchema } from "./chat.schema";
 
 const item = {
   id: "00000000-0000-4000-8000-000000000001",
@@ -33,6 +33,21 @@ test("assistant messages accept JSON-safe UI directives for replay", () => {
       }],
     },
   }).success, true);
+});
+
+test("receipt confirmation survives conversation validation and import requires selected items", () => {
+  const parsed = conversationItemSchema.parse({
+    ...item, role: "assistant", payload: {
+      kind: "message", text: "Review", uiDirectives: [{ component: "receipt_import_card" }],
+      importedReceiptIndexes: [0],
+    },
+  });
+  assert.equal(parsed.payload.kind, "message");
+  if (parsed.payload.kind === "message") assert.deepEqual(parsed.payload.importedReceiptIndexes, [0]);
+  assert.equal(receiptImportInputSchema.safeParse({ items: [] }).success, false);
+  assert.equal(receiptImportInputSchema.safeParse({ items: [{
+    name: "Apple", quantity: 1, unit: "piece", storageLocation: "fridge", tags: [],
+  }] }).success, false);
 });
 
 test("conversation item rejects mismatched type and payload discriminators", () => {

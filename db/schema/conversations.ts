@@ -25,6 +25,7 @@ export type ConversationItemPayload =
         sizeBytes?: number;
       }[];
       uiDirectives?: ConversationJsonValue[];
+      importedReceiptIndexes?: number[];
     }
   | { kind: "tool_call"; arguments: ConversationJsonObject }
   | {

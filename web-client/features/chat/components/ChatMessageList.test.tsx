@@ -86,6 +86,28 @@ test("renders one inventory import action for a previously duplicated receipt", 
   assert.equal((markup.match(/Add Selected to Inventory/g) ?? []).length, 1);
 });
 
+test("renders a persisted receipt confirmation after reloading history", () => {
+  const receipt = {
+    component: "receipt_import_card", merchant: "Shop", purchasedAt: null, currency: "USD",
+    totalAmount: 2, items: [{
+      tempId: "receipt-0", name: "Tomatoes", quantity: 1, unit: "piece", priceAmount: 2,
+      storageLocation: "fridge", estimatedShelfLifeDays: 3, isFoodItem: true, confidence: "high",
+    }],
+  };
+  const base = { conversationId: "conversation", callId: null, metadata: null, createdAt: "2026-01-01T10:00:00Z" };
+  const history: ConversationItemDto[] = [
+    { ...base, id: "user", sequence: 1, type: "message", role: "user", toolName: null,
+      payload: { kind: "message", text: "Scan" } },
+    { ...base, id: "assistant", sequence: 2, type: "message", role: "assistant", toolName: null,
+      payload: { kind: "message", text: "Review", uiDirectives: [receipt], importedReceiptIndexes: [0] } },
+  ];
+  const markup = renderToStaticMarkup(<QueryClientProvider client={new QueryClient()}><ChatMessageList
+    turns={mapConversationHistory(history)} activeStatus={null} onReply={() => {}} streaming={false}
+  /></QueryClientProvider>);
+  assert.match(markup, /Added to inventory/i);
+  assert.doesNotMatch(markup, /Add Selected to Inventory/);
+});
+
 test("shows AI-generated progress instead of generic tool status", () => {
   const activeStatus = {
     type: "agent_status" as const, agent: "orchestrator" as const,

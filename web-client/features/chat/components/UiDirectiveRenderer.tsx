@@ -2,7 +2,7 @@
 
 import { InventoryActionCard } from "./InventoryActionCard";
 import { RecipeSuggestionCard } from "./RecipeSuggestionCard";
-import type { UiDirective } from "../types";
+import type { ChatTurn, UiDirective } from "../types";
 import { Button } from "@/components/ui/button";
 import { MarkdownContent } from "@/components/MarkdownContent";
 import { ProfileTargetsConfirmation } from "./ProfileTargetsConfirmation";
@@ -14,11 +14,13 @@ export function UiDirectiveRenderer({
   onReply,
   disabled,
   recipeResponse,
+  receiptSource,
 }: {
   directive: UiDirective;
   onReply: (message: string) => void;
   disabled: boolean;
   recipeResponse: string;
+  receiptSource?: NonNullable<ChatTurn["receiptSources"]>[number];
 }): React.JSX.Element {
   const { t, formatDate, formatNumber } = useText();
   if (directive.component === "profile_targets_updated") {
@@ -72,7 +74,7 @@ export function UiDirectiveRenderer({
     );
   }
   if (directive.component === "receipt_import_card") {
-    return <ReceiptImportCard directive={directive} />;
+    return <ReceiptImportCard directive={directive} source={receiptSource} disabled={disabled} />;
   }
   if (directive.component === "consumption_summary_card") {
     const meal = directive.loggedMeal;

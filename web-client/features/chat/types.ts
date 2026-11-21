@@ -41,6 +41,7 @@ export interface ChatTurn {
   assistantMessage: ChatMessage;
   toolSteps: ChatToolStep[];
   uiDirectives: UiDirective[];
+  receiptSources?: Record<number, { conversationId: string; itemId: string; directiveIndex: number; imported: boolean }>;
   activeStatus: AgentStatus | null;
 }
 

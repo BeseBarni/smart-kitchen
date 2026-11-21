@@ -69,10 +69,19 @@ export function mapConversationHistory(items: readonly ConversationItemDto[]): C
           text: turn.assistantMessage.text + item.payload.text,
           createdAt: item.createdAt,
         };
-        for (const directive of item.payload.uiDirectives ?? []) {
+        for (const [directiveIndex, directive] of (item.payload.uiDirectives ?? []).entries()) {
           const parsed = uiDirectiveSchema.parse(directive);
           if (receiptExtractionTurns.has(turn) && parsed.component === "receipt_import_card" &&
               turn.uiDirectives.some((existing) => existing.component === "receipt_import_card")) continue;
+          if (parsed.component === "receipt_import_card") {
+            turn.receiptSources ??= {};
+            turn.receiptSources[turn.uiDirectives.length] = {
+              conversationId: item.conversationId,
+              itemId: item.id,
+              directiveIndex,
+              imported: item.payload.importedReceiptIndexes?.includes(directiveIndex) ?? false,
+            };
+          }
           turn.uiDirectives.push(parsed);
         }
       }

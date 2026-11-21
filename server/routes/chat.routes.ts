@@ -9,6 +9,7 @@ import {
   createConversationInputSchema,
   listConversationsQuerySchema,
   updateConversationTitleSchema,
+  receiptImportInputSchema,
   type ConversationStreamInput,
 } from "@app/modules";
 import { runStreamingTurn } from "@app/ai";
@@ -19,6 +20,11 @@ import { requireAuth } from "../middleware/auth.middleware";
 import { resultToResponse } from "../middleware/error-handler";
 
 const conversationParams = z.object({ id: conversationIdSchema });
+const receiptParams = z.object({
+  id: conversationIdSchema,
+  itemId: z.string().uuid(),
+  directiveIndex: z.coerce.number().int().nonnegative(),
+});
 
 async function streamResponse(
   context: Context<AuthEnvironment>,
@@ -96,6 +102,18 @@ export const chatRoutes = new Hono<AuthEnvironment>()
       context,
       await chatService.deleteConversation(context.get("userId"), context.req.valid("param").id),
     ),
+  )
+  .post(
+    "/conversations/:id/items/:itemId/receipts/:directiveIndex/import",
+    requireAuth,
+    zValidator("param", receiptParams),
+    zValidator("json", receiptImportInputSchema),
+    async (context) => {
+      const { id, itemId, directiveIndex } = context.req.valid("param");
+      return resultToResponse(context, await chatService.importReceipt(
+        context.get("userId"), id, itemId, directiveIndex, context.req.valid("json"),
+      ));
+    },
   )
   .post(
     "/conversations/:id/stream",

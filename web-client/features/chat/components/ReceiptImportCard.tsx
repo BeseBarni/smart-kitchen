@@ -6,38 +6,40 @@ import { toast } from "sonner";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useText } from "@/lib/i18n";
-import { inventoryApi, inventoryKeys } from "@/features/inventory";
-import type { UiDirective } from "../types";
-import { useChatUiStore } from "../stores/chat-ui.store";
+import { inventoryKeys } from "@/features/inventory";
+import type { ChatTurn, UiDirective } from "../types";
+import { chatApi } from "../api/chat.api";
+import { chatKeys } from "../api/chat.keys";
 import { receiptBatchInput } from "../utils/receipt-import";
 
 type ReceiptDirective = Extract<UiDirective, { component: "receipt_import_card" }>;
 
-export function ReceiptImportCard({ directive }: { directive: ReceiptDirective }): React.JSX.Element {
+export function ReceiptImportCard({ directive, source, disabled }: {
+  directive: ReceiptDirective;
+  source?: NonNullable<ChatTurn["receiptSources"]>[number];
+  disabled: boolean;
+}): React.JSX.Element {
   const { t, formatDate, formatNumber } = useText();
   const queryClient = useQueryClient();
-  const receiptKey = [
-    directive.merchant ?? "",
-    directive.purchasedAt ?? "",
-    directive.totalAmount?.toString() ?? "",
-    directive.items.map((item) => `${item.tempId}:${item.name}`).join("|"),
-  ].join(":");
-  const alreadyImported = useChatUiStore((state) => state.importedReceiptKeys[receiptKey] === true);
-  const markReceiptImported = useChatUiStore((state) => state.markReceiptImported);
-  const [confirmed, setConfirmed] = useState(alreadyImported);
+  const [confirmed, setConfirmed] = useState(false);
   const [items, setItems] = useState(directive.items.map((item) => ({ ...item, selected: true })));
   const mutation = useMutation({
-    mutationFn: () => inventoryApi.batchCreate(receiptBatchInput(directive, items)),
+    mutationFn: () => {
+      if (!source) throw new Error("Receipt message has not been saved.");
+      return chatApi.importReceipt(source, receiptBatchInput(directive, items));
+    },
     onSuccess: async () => {
       setConfirmed(true);
-      markReceiptImported(receiptKey);
-      await queryClient.invalidateQueries({ queryKey: inventoryKeys.all });
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: inventoryKeys.all }),
+        queryClient.invalidateQueries({ queryKey: chatKeys.conversation(source?.conversationId ?? "") }),
+      ]);
       toast.message(t("chat.receiptImported"));
     },
     onError: () => toast.error(t("chat.receiptImportError")),
   });
 
-  if (confirmed) {
+  if (confirmed || source?.imported) {
     return (
       <section aria-label={t("chat.receiptImport")} className="flex items-center gap-2 rounded-xl border border-primary/20 bg-secondary p-3.5 text-body-sm">
         <Check size={18} aria-hidden="true" />{t("chat.receiptImported")}
@@ -81,7 +83,7 @@ export function ReceiptImportCard({ directive }: { directive: ReceiptDirective }
           </div>
         ))}
       </div>
-      <Button type="button" className="h-11 w-full" disabled={!items.some((item) => item.selected) || mutation.isPending}
+      <Button type="button" className="h-11 w-full" disabled={disabled || !source || !items.some((item) => item.selected) || mutation.isPending}
         onClick={() => mutation.mutate()}>
         {mutation.isPending ? t("chat.importingReceipt") : t("chat.addSelectedInventory")}
       </Button>

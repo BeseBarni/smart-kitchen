@@ -97,6 +97,33 @@ test("replays one receipt card for an uploaded receipt without hiding later revi
   assert.deepEqual(turns[1]?.uiDirectives, [receipt, { ...receipt, merchant: "Another shop" }]);
 });
 
+test("restores receipt import status and the original directive index independently for each message", () => {
+  const receipt = {
+    component: "receipt_import_card", merchant: "Shop", purchasedAt: null, currency: "USD",
+    totalAmount: 2, items: [],
+  };
+  const turns = mapConversationHistory([
+    item({ sequence: 0, type: "message", role: "user", payload: { kind: "message", text: "Scan" } }),
+    item({ sequence: 1, type: "skill_execution", role: "assistant", toolName: "vision_extractor",
+      payload: { kind: "skill_execution", input: {}, output: { kind: "receipt" } } }),
+    item({ sequence: 2, type: "message", role: "assistant", payload: {
+      kind: "message", text: "Review", uiDirectives: [
+        { component: "recommendation_chips", recommendations: ["Next"] }, receipt, receipt,
+      ], importedReceiptIndexes: [1],
+    } }),
+    item({ sequence: 3, type: "message", role: "user", payload: { kind: "message", text: "Again" } }),
+    item({ sequence: 4, type: "message", role: "assistant", payload: {
+      kind: "message", text: "Review", uiDirectives: [receipt],
+    } }),
+  ]);
+  assert.deepEqual(turns[0]?.receiptSources?.[1], {
+    conversationId, itemId: "00000000-0000-4000-8000-000000000003", directiveIndex: 1, imported: true,
+  });
+  assert.equal(turns[0]?.uiDirectives.length, 2);
+  assert.equal(turns[1]?.receiptSources?.[0]?.imported, false);
+  assert.notEqual(turns[0]?.receiptSources?.[1]?.itemId, turns[1]?.receiptSources?.[0]?.itemId);
+});
+
 test("replays assistant recommendation chips with their message", () => {
   const turns = mapConversationHistory([
     item({ sequence: 0, type: "message", role: "user", payload: { kind: "message", text: "Make soup" } }),

@@ -1,6 +1,7 @@
 import type {
   ConversationDto,
   ListConversationsQuery,
+  ReceiptImportInput,
 } from "@app/modules/schemas";
 import {
   conversationItemSchema,
@@ -61,5 +62,16 @@ export const chatApi = {
     unwrapApiResponse(
       await apiClient.api.conversations[":id"].$delete({ param: { id } }),
       z.object({ deleted: z.literal(true) }),
+    ),
+  importReceipt: async (
+    source: { conversationId: string; itemId: string; directiveIndex: number },
+    input: ReceiptImportInput,
+  ): Promise<{ imported: true }> =>
+    unwrapApiResponse(
+      await apiClient.api.conversations[":id"].items[":itemId"].receipts[":directiveIndex"].import.$post({
+        param: { id: source.conversationId, itemId: source.itemId, directiveIndex: String(source.directiveIndex) },
+        json: input,
+      }),
+      z.object({ imported: z.literal(true) }),
     ),
 };

@@ -31,7 +31,7 @@ export function ChatMessageList({
             <p role="status" className="text-label-md text-muted-foreground">{activeStatus.source === "ai" ? activeStatus.label : activeStatus.status === "running_tool" ? toolStatusLabel(turn.toolSteps.findLast((step) => step.status === "running")?.toolName ?? "", locale) : t(activeStatus.status === "running_skill" ? "chat.preparingSuggestion" : activeStatus.status === "delegating" ? "chat.delegating" : "chat.thinking")}</p>
           )}
           {turn.uiDirectives.map((directive, index) => (
-            <UiDirectiveRenderer key={`${turn.id}-directive-${index}`} directive={directive} onReply={onReply} disabled={streaming} recipeResponse={turn.assistantMessage.text} />
+            <UiDirectiveRenderer key={`${turn.id}-directive-${index}`} directive={directive} onReply={onReply} disabled={streaming} recipeResponse={turn.assistantMessage.text} receiptSource={turn.receiptSources?.[index]} />
           ))}
         </li>;
       })}
