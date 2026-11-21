@@ -23,7 +23,6 @@ function jsonValue(value: unknown) {
 
 export function mealPrepRecipeDirective(run: Pick<SkillRun<MealPrepInput, MealPrepOutput>, "input" | "output">): UiDirective {
   const { output, input } = run;
-  const storage = output.storageGuidance;
   return {
     component: "recipe_preview_card",
     status: "draft",
@@ -35,7 +34,7 @@ export function mealPrepRecipeDirective(run: Pick<SkillRun<MealPrepInput, MealPr
       cookTimeMin: output.cookTimeMin,
       isFreezerFriendly: output.isFreezerFriendly,
       ingredients: output.ingredients,
-      instructions: [...output.instructions, `Storage: refrigerate for ${storage.fridgeDays} days; freeze for ${storage.freezerMonths} months. ${storage.reheatingTip}`],
+      instructions: output.instructions,
       caloriesPerServing: output.estimatedMacrosPerServing.calories,
       proteinPerServing: output.estimatedMacrosPerServing.proteinG,
       carbsPerServing: output.estimatedMacrosPerServing.carbsG,

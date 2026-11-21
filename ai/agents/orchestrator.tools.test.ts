@@ -63,8 +63,8 @@ test("meal prep skill output becomes a complete recipe card", () => {
       title: "Lentil soup", description: "A batch.", servings: 2, prepTimeMin: 10, cookTimeMin: 20,
       isFreezerFriendly: true,
       ingredients: [{ name: "Lentils", quantity: 200, unit: "g", notes: "rinsed" }],
-      instructions: ["Simmer."],
-      storageGuidance: { fridgeDays: 3, freezerMonths: 2, reheatingTip: "Heat thoroughly." },
+      instructions: ["Forrald ossze.", "Hutes utan alaposan melegitsd at."],
+      storageGuidance: { fridgeDays: 3, freezerMonths: 2, reheatingTip: "Alaposan melegitsd at." },
       estimatedMacrosPerServing: { calories: 300, proteinG: 15, carbsG: 40, fatG: 5, fiberG: 8 },
       estimatedCostPerServing: 2,
     },
@@ -72,7 +72,7 @@ test("meal prep skill output becomes a complete recipe card", () => {
   assert.equal(directive.component, "recipe_preview_card");
   if (directive.component !== "recipe_preview_card") return;
   assert.equal(directive.recipe.ingredients[0]?.notes, "rinsed");
-  assert.match(directive.recipe.instructions[1] ?? "", /Heat thoroughly/);
+  assert.deepEqual(directive.recipe.instructions, ["Forrald ossze.", "Hutes utan alaposan melegitsd at."]);
   assert.equal(directive.recipe.proteinPerServing, 15);
   assert.equal(directive.recipe.currency, "USD");
   assert.equal(uiDirectiveSchema.safeParse(directive).success, true);
