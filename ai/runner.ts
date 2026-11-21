@@ -14,7 +14,7 @@ import { generateConversationTitle } from "./agents/conversation-title";
 import { isKitchenMessage } from "./agents/chat-restriction";
 import { isSafeKitchenMessage } from "./agents/kitchen-safety";
 import type { AgentContext, LedgerItem } from "./agents/agent.types";
-import { executeVisionExtractor } from "./skills/vision-extractor.skill";
+import { executeVisionExtractor, visionSkillImages } from "./skills/vision-extractor.skill";
 
 function jsonDirectives(directives: UiDirective[]) {
   const encoded = JSON.stringify(directives);
@@ -143,7 +143,6 @@ export async function runStreamingTurn(input: {
       }
     })() : Promise.resolve();
     try {
-      let orchestratorTask = taskText;
       if (input.userMessage.attachments?.length) {
         emit({
           type: "agent_status",
@@ -152,7 +151,7 @@ export async function runStreamingTurn(input: {
           label: "Analyzing photo...",
         });
         const extraction = await executeVisionExtractor({
-          images: input.userMessage.attachments,
+          images: visionSkillImages(input.userMessage.attachments),
           userCaption: userCaption || undefined,
           userLocale: context.locale,
           defaultCurrency: "HUF",
@@ -170,6 +169,7 @@ export async function runStreamingTurn(input: {
         await context.recordLedger([{
           type: "skill_execution",
           role: "assistant",
+          toolName: "vision_extractor",
           payload: {
             kind: "skill_execution",
             input: ledgerInput,
@@ -213,15 +213,9 @@ export async function runStreamingTurn(input: {
             invalidateDomains: [],
           });
         }
-        orchestratorTask = [
-          "<attached_image_analysis>",
-          JSON.stringify(output),
-          "</attached_image_analysis>",
-          userCaption ? `<user_caption>${userCaption}</user_caption>` : "<user_caption>No text was provided. Choose a sensible kitchen action.</user_caption>",
-        ].join("\n");
       }
       const result = await orchestratorAgent.execute(
-        { task: orchestratorTask },
+        { task: taskText },
         context,
       );
       if (signal.aborted) return;

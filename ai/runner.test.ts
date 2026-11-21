@@ -4,6 +4,41 @@ import { MockLanguageModelV4 } from "ai/test";
 import { generateConversationTitle } from "./agents/conversation-title";
 import { isKitchenMessage } from "./agents/chat-restriction";
 import { assistantMessagePayload } from "./runner";
+import { toModelMessages } from "./agents/orchestrator.agent";
+import { visionExtractorInputSchema, visionSkillImages } from "./skills/vision-extractor.skill";
+import type { ConversationItemDto } from "@app/modules";
+
+test("projects uploaded attachment metadata into strict vision input", () => {
+  const attachments = [{
+    name: "photo.jpg", mimeType: "image/jpeg" as const, base64Data: "YWJj",
+    width: 640, height: 480, sizeBytes: 3,
+  }];
+  const images = visionSkillImages(attachments);
+  assert.deepEqual(images, [{ mimeType: "image/jpeg", base64Data: "YWJj" }]);
+  assert.equal(visionExtractorInputSchema.safeParse({
+    images, userLocale: "en", defaultCurrency: "HUF",
+  }).success, true);
+});
+
+test("passes persisted image analysis to the orchestrator including on later turns", () => {
+  const common = {
+    conversationId: "00000000-0000-4000-8000-000000000001",
+    callId: null, metadata: null, createdAt: "2026-01-01T10:00:00.000Z",
+  };
+  const items: ConversationItemDto[] = [
+    { ...common, id: "00000000-0000-4000-8000-000000000002", sequence: 1,
+      type: "message", role: "user", toolName: null, payload: { kind: "message", text: "" } },
+    { ...common, id: "00000000-0000-4000-8000-000000000003", sequence: 2,
+      type: "skill_execution", role: "assistant", toolName: "vision_extractor",
+      payload: { kind: "skill_execution", input: { count: 1 }, output: { kind: "prepared_dish", dishName: "Soup" } } },
+    { ...common, id: "00000000-0000-4000-8000-000000000004", sequence: 3,
+      type: "message", role: "user", toolName: null, payload: { kind: "message", text: "What is in it?" } },
+  ];
+  assert.deepEqual(toModelMessages(items), [
+    { role: "user", content: '<attached_image_analysis>\n{"kind":"prepared_dish","dishName":"Soup"}\n</attached_image_analysis>' },
+    { role: "user", content: "What is in it?" },
+  ]);
+});
 
 test("assistant ledger payload preserves UI directives for history rendering", () => {
   const directive = {

@@ -2,6 +2,7 @@ import { z } from "zod";
 import { err, ok, type AppError, type Result } from "@app/shared";
 import { generateStructuredMultimodal } from "../core/llm.client";
 import type { SkillRun } from "./skill.types";
+import type { ConversationStreamInput } from "@app/modules/schemas";
 
 const confidenceSchema = z.enum(["high", "medium", "low"]);
 
@@ -94,6 +95,12 @@ export const visionExtractorOutputSchema = z.discriminatedUnion("kind", [
 ]);
 
 export type VisionExtractorOutput = z.output<typeof visionExtractorOutputSchema>;
+
+export function visionSkillImages(
+  attachments: NonNullable<ConversationStreamInput["attachments"]>,
+): z.output<typeof visionExtractorInputSchema>["images"] {
+  return attachments.map(({ mimeType, base64Data }) => ({ mimeType, base64Data }));
+}
 
 function prompt(input: z.output<typeof visionExtractorInputSchema>): string {
   return [

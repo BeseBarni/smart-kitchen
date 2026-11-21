@@ -7,14 +7,21 @@ import { runAgentLoop } from "./agent-loop";
 import type { AgentContext, SubAgent, SubAgentRequest, SubAgentResult } from "./agent.types";
 import type { ConversationItemDto } from "@app/modules";
 
-function toModelMessages(items: ConversationItemDto[]): ModelMessage[] {
-  return items.flatMap((item) =>
-    item.type === "message" &&
-    item.payload.kind === "message" &&
-    (item.role === "user" || item.role === "system" || item.role === "assistant")
-      ? [{ role: item.role, content: item.payload.text }]
-      : [],
-  );
+export function toModelMessages(items: ConversationItemDto[]): ModelMessage[] {
+  const messages: ModelMessage[] = [];
+  for (const item of items) {
+    if (item.type === "message" && item.payload.kind === "message" && item.payload.text.trim() &&
+        (item.role === "user" || item.role === "system" || item.role === "assistant")) {
+      messages.push({ role: item.role, content: item.payload.text });
+    } else if (item.type === "skill_execution" && item.toolName === "vision_extractor" &&
+               item.payload.kind === "skill_execution") {
+      messages.push({
+        role: "user",
+        content: `<attached_image_analysis>\n${JSON.stringify(item.payload.output)}\n</attached_image_analysis>`,
+      });
+    }
+  }
+  return messages;
 }
 
 async function loadPromptContext(context: AgentContext, conversationId: string) {
