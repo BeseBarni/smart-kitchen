@@ -4,6 +4,5 @@ export function formatChatTime(timestamp: string, locale: SupportedLocale = "en"
   return new Intl.DateTimeFormat(LOCALE_META[locale].tag, {
     hour: "numeric",
     minute: "2-digit",
-    timeZone: "UTC",
   }).format(new Date(timestamp));
 }

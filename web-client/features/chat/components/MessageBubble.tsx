@@ -22,7 +22,7 @@ export function MessageBubble({ message }: { message: ChatMessage }): React.JSX.
         ) : null}
         {user ? <span className="flex items-start gap-2"><span>{message.text}</span>{message.rejected && <TriangleAlert className="mt-0.5 shrink-0" size={20} aria-label={t("chat.rejected")} />}</span> : <MarkdownContent text={message.text} />}
       </div>
-      <time dateTime={message.createdAt} className="mx-1 mt-1 text-label-sm text-muted-foreground">{formatChatTime(message.createdAt, locale)} UTC</time>
+      <time dateTime={message.createdAt} className="mx-1 mt-1 text-label-sm text-muted-foreground">{formatChatTime(message.createdAt, locale)}</time>
     </div>
   );
 }

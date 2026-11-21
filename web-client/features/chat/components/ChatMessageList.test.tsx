@@ -56,7 +56,9 @@ test("saved recipe cards show stocking controls without another save action", ()
 });
 
 test("preserves completed text-only messages", () => {
-  assert.ok(render(false, false).includes("secret test ingredient"));
+  const markup = render(false, false);
+  assert.ok(markup.includes("secret test ingredient"));
+  assert.doesNotMatch(markup, /UTC/);
 });
 
 test("renders one inventory import action for a previously duplicated receipt", () => {
