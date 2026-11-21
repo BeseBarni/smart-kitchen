@@ -11,6 +11,15 @@ export function MessageBubble({ message }: { message: ChatMessage }): React.JSX.
     <div className={`flex flex-col ${user ? "items-end pl-8" : "items-start"}`}>
       <div className={`max-w-full rounded-2xl px-3 py-2 text-body-md leading-relaxed shadow-[0_1px_3px_rgba(17,24,39,0.04)] ${message.rejected ? "rounded-tr-sm bg-destructive/10 text-destructive" : user ? "rounded-tr-sm bg-foreground text-background" : "rounded-tl-sm border border-border bg-card"}`}>
         <span className="sr-only">{t(user ? "chat.you" : "chat.assistant")} </span>
+        {message.attachments?.length ? (
+          <div className="mb-2 flex gap-1" aria-label={t("chat.attachments")}>
+            {message.attachments.map((attachment) => (
+              attachment.previewUrl
+                ? <img key={attachment.id} src={attachment.previewUrl} alt={attachment.name} className="size-16 rounded-lg object-cover" />
+                : <span key={attachment.id} className="flex size-16 items-center justify-center rounded-lg bg-muted text-label-sm">{t("chat.photoBadge")}</span>
+            ))}
+          </div>
+        ) : null}
         {user ? <span className="flex items-start gap-2"><span>{message.text}</span>{message.rejected && <TriangleAlert className="mt-0.5 shrink-0" size={20} aria-label={t("chat.rejected")} />}</span> : <MarkdownContent text={message.text} />}
       </div>
       <time dateTime={message.createdAt} className="mx-1 mt-1 text-label-sm text-muted-foreground">{formatChatTime(message.createdAt, locale)} UTC</time>

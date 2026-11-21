@@ -1,5 +1,5 @@
 import { inventoryService } from "@app/modules";
-import { inventoryItemSchema, mealLogSchema, type InventoryItemDto } from "@app/modules";
+import { batchCreateInventoryInputSchema, batchCreateInventoryOutputSchema, inventoryItemSchema, mealLogSchema, type InventoryItemDto } from "@app/modules";
 import { z } from "zod";
 import { defineTool } from "./tool.types";
 
@@ -108,6 +108,27 @@ export const inventoryConsumeTool = defineTool({
   }),
 });
 
+export const inventoryAddBatchTool = defineTool({
+  name: "inventory_add_batch",
+  description: "Atomically add confirmed receipt or photo items to inventory after the user reviewed them.",
+  inputSchema: batchCreateInventoryInputSchema,
+  outputSchema: batchCreateInventoryOutputSchema,
+  annotations: { destructiveHint: false, idempotentHint: false },
+  invalidateDomains: ["inventory"],
+  execute: (input, context) => inventoryService.createBatch(context.userId, input),
+  toUiDirective: ({ items }) => ({
+    component: "inventory_action_card",
+    action: "added",
+    items: items.map((item) => ({
+      id: item.id,
+      name: item.name,
+      quantity: item.remainingQuantity,
+      unit: item.unit,
+      location: item.storageLocation,
+    })),
+  }),
+});
+
 export const inventoryDiscardTool = defineTool({
   name: "inventory_discard_item",
   description: "Mark one item discarded only after the user clearly confirms discarding it.",
@@ -127,6 +148,7 @@ export const inventoryDiscardTool = defineTool({
 
 export const inventoryWriteTools = [
   inventoryAddTool,
+  inventoryAddBatchTool,
   inventoryAdjustTool,
   inventoryConsumeTool,
   inventoryDiscardTool,

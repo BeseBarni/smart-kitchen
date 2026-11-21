@@ -6,7 +6,8 @@ export type AgentName =
   | "orchestrator"
   | "inventory_ops"
   | "recipe_architect"
-  | "kitchen_advisor";
+  | "kitchen_advisor"
+  | "vision_extractor";
 
 export type AgentStreamEvent =
   // turnId is the persisted user message's ID, shared with conversation history.
@@ -15,7 +16,7 @@ export type AgentStreamEvent =
   | {
       type: "agent_status";
       agent: AgentName;
-      status: "thinking" | "delegating" | "running_tool" | "running_skill";
+      status: "thinking" | "delegating" | "running_tool" | "running_skill" | "analyzing_image";
       label: string;
       source?: "ai";
     }

@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { MarkdownContent } from "@/components/MarkdownContent";
 import { ProfileTargetsConfirmation } from "./ProfileTargetsConfirmation";
 import { useText } from "@/lib/i18n";
+import { ReceiptImportCard } from "./ReceiptImportCard";
 
 export function UiDirectiveRenderer({
   directive,
@@ -69,6 +70,9 @@ export function UiDirectiveRenderer({
         </div>
       </section>
     );
+  }
+  if (directive.component === "receipt_import_card") {
+    return <ReceiptImportCard directive={directive} />;
   }
   if (directive.component === "consumption_summary_card") {
     const meal = directive.loggedMeal;

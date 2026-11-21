@@ -11,11 +11,13 @@ import {
   findInventoryItem,
   getInventoryRows,
   insertInventoryItem,
+  insertInventoryBatch,
   listInventoryRows,
   updateInventoryItemRow,
 } from "./inventory.repo";
 import { consumeInventoryRow } from "./inventory-consumption.repo";
 import type {
+  BatchCreateInventoryInput,
   ConsumeInventoryInput,
   CreateInventoryItemInput,
   InventoryItemDto,
@@ -104,6 +106,26 @@ export async function create(
   if (!user.success) return user;
   const row = await insertInventoryItem(userId, input);
   return row ? ok(toInventoryItemDto(row)) : err({ code: "INTERNAL_ERROR", message: "Item was not created." });
+}
+
+export async function createBatch(
+  userId: string,
+  input: BatchCreateInventoryInput,
+): Promise<Result<{ items: InventoryItemDto[] }, AppError>> {
+  if (input.items.length === 0) {
+    return err({ code: "VALIDATION_ERROR", message: "At least one inventory item is required." });
+  }
+  const user = await requireAuthUser(userId);
+  if (!user.success) return user;
+  try {
+    const rows = await insertInventoryBatch(userId, input);
+    return ok({ items: rows.map(toInventoryItemDto) });
+  } catch (error) {
+    return err({
+      code: "INTERNAL_ERROR",
+      message: error instanceof Error ? error.message : "Inventory batch could not be created.",
+    });
+  }
 }
 
 export async function update(

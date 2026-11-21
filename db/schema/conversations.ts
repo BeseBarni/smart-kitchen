@@ -16,7 +16,14 @@ export type ConversationItemPayload =
   | {
       kind: "message";
       text: string;
-      attachments?: { name: string; mimeType: string; url?: string }[];
+      attachments?: {
+        name: string;
+        mimeType: string;
+        url?: string;
+        width?: number;
+        height?: number;
+        sizeBytes?: number;
+      }[];
       uiDirectives?: ConversationJsonValue[];
     }
   | { kind: "tool_call"; arguments: ConversationJsonObject }

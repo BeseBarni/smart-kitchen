@@ -10,6 +10,7 @@ import type { z } from "zod";
 
 export const FAST_MODEL = process.env.FAST_MODEL ?? "gemini-3.5-flash-lite";
 export const REASONING_MODEL = process.env.REASONING_MODEL ?? "gemini-3.5-flash-lite";
+export const VISION_MODEL = process.env.AI_VISION_MODEL ?? "gemini-3.5-flash";
 
 let googleProvider: ReturnType<typeof createGoogleGenerativeAI> | undefined;
 
@@ -34,6 +35,55 @@ export function getReasoningModel(): LanguageModel {
 
 export function getChatModel(): LanguageModel {
   return getModel(process.env.AI_MODEL ?? FAST_MODEL);
+}
+
+export async function generateStructuredMultimodal<TSchema extends z.ZodType>(
+  input: {
+    schema: TSchema;
+    prompt: string;
+    system?: string;
+    images: Array<{ mimeType: string; base64Data: string }>;
+  },
+): Promise<Result<StructuredGeneration<z.output<TSchema>>, AppError>> {
+  const model = getModel(VISION_MODEL);
+  let correction: string | undefined;
+  for (let attempt = 0; attempt < 2; attempt += 1) {
+    try {
+      const response = await generateObject({
+        model,
+        schema: input.schema,
+        system: input.system,
+        messages: [{
+          role: "user",
+          content: [
+            { type: "text", text: correction ? `${input.prompt}\n\nCorrect the prior output: ${correction}` : input.prompt },
+            ...input.images.map((image) => ({
+              type: "image" as const,
+              mediaType: image.mimeType,
+              image: image.base64Data,
+            })),
+          ],
+        }],
+      });
+      return ok({
+        output: input.schema.parse(response.object),
+        usage: {
+          inputTokens: response.usage.inputTokens ?? 0,
+          outputTokens: response.usage.outputTokens ?? 0,
+        },
+      });
+    } catch (error) {
+      if (attempt === 0 && NoObjectGeneratedError.isInstance(error)) {
+        correction = error.message;
+        continue;
+      }
+      return err({
+        code: NoObjectGeneratedError.isInstance(error) ? "VALIDATION_ERROR" : "INTERNAL_ERROR",
+        message: error instanceof Error ? error.message : "Vision extraction failed.",
+      });
+    }
+  }
+  return err({ code: "VALIDATION_ERROR", message: "Vision output could not be validated." });
 }
 
 export function streamWithTools(options: Parameters<typeof streamText>[0]) {

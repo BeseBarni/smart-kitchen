@@ -14,6 +14,7 @@ import { generateConversationTitle } from "./agents/conversation-title";
 import { isKitchenMessage } from "./agents/chat-restriction";
 import { isSafeKitchenMessage } from "./agents/kitchen-safety";
 import type { AgentContext, LedgerItem } from "./agents/agent.types";
+import { executeVisionExtractor } from "./skills/vision-extractor.skill";
 
 function jsonDirectives(directives: UiDirective[]) {
   const encoded = JSON.stringify(directives);
@@ -44,6 +45,10 @@ export async function runStreamingTurn(input: {
   userMessage: ConversationStreamInput;
   abortSignal: AbortSignal;
 }): Promise<Result<ReadableStream<Uint8Array>, AppError>> {
+  const userCaption = input.userMessage.message?.trim() ?? "";
+  const taskText = userCaption || (input.userMessage.attachments?.length
+    ? "Analyze the attached kitchen photo."
+    : "");
   const existing = await chatService.getConversationWithItems(input.userId, input.conversationId, { limit: 1 });
   if (!existing.success) return err(existing.error);
   const recent = await chatService.getRecentContextItems(input.userId, input.conversationId, { maxItems: 20 });
@@ -55,7 +60,7 @@ export async function runStreamingTurn(input: {
       : [],
   ).slice(-4);
   const allowed = await isKitchenMessage({
-    message: input.userMessage.message,
+    message: taskText,
     recentMessages,
     abortSignal: input.abortSignal,
   });
@@ -67,7 +72,7 @@ export async function runStreamingTurn(input: {
     });
   }
   const safe = await isSafeKitchenMessage({
-    message: input.userMessage.message,
+    message: taskText,
     recentMessages,
     abortSignal: input.abortSignal,
   });
@@ -79,13 +84,20 @@ export async function runStreamingTurn(input: {
     });
   }
   input.abortSignal.throwIfAborted();
+  const attachmentMetadata = input.userMessage.attachments?.map((attachment) => ({
+    name: attachment.name,
+    mimeType: attachment.mimeType,
+    ...(attachment.width ? { width: attachment.width } : {}),
+    ...(attachment.height ? { height: attachment.height } : {}),
+    ...(attachment.sizeBytes ? { sizeBytes: attachment.sizeBytes } : {}),
+  }));
   const userItem = await chatService.appendItems(input.userId, input.conversationId, [{
     type: "message",
     role: "user",
     payload: {
       kind: "message",
-      text: input.userMessage.message,
-      attachments: input.userMessage.attachments,
+      text: userCaption,
+      attachments: attachmentMetadata,
     },
   }]);
   if (!userItem.success) return err(userItem.error);
@@ -119,7 +131,7 @@ export async function runStreamingTurn(input: {
     emit({ type: "turn_started", conversationId: input.conversationId, turnId });
     const titleUpdate = isFirstMessage ? (async () => {
       try {
-        const title = await generateConversationTitle(input.userMessage.message, undefined, context.locale);
+        const title = await generateConversationTitle(taskText, undefined, context.locale);
         const updated = await chatService.updateTitleIfUntitled(input.userId, input.conversationId, title);
         if (!updated.success) {
           console.error("Conversation title update failed:", updated.error.message);
@@ -131,8 +143,85 @@ export async function runStreamingTurn(input: {
       }
     })() : Promise.resolve();
     try {
+      let orchestratorTask = taskText;
+      if (input.userMessage.attachments?.length) {
+        emit({
+          type: "agent_status",
+          agent: "vision_extractor",
+          status: "analyzing_image",
+          label: "Analyzing photo...",
+        });
+        const extraction = await executeVisionExtractor({
+          images: input.userMessage.attachments,
+          userCaption: userCaption || undefined,
+          userLocale: context.locale,
+          defaultCurrency: "HUF",
+        });
+        if (!extraction.success) throw new Error(extraction.error.message);
+        const output = extraction.data.output;
+        context.usage.inputTokens += extraction.data.usage.inputTokens;
+        context.usage.outputTokens += extraction.data.usage.outputTokens;
+        const ledgerInput = chatJsonValueSchema.parse({
+          count: input.userMessage.attachments.length,
+          mimeTypes: input.userMessage.attachments.map((attachment) => attachment.mimeType),
+          caption: userCaption || null,
+        });
+        const ledgerOutput = chatJsonValueSchema.parse(JSON.parse(JSON.stringify(output)));
+        await context.recordLedger([{
+          type: "skill_execution",
+          role: "assistant",
+          payload: {
+            kind: "skill_execution",
+            input: ledgerInput,
+            output: ledgerOutput,
+          },
+          metadata: {
+            model: process.env.AI_VISION_MODEL ?? "gemini-3.5-flash",
+            inputTokens: extraction.data.usage.inputTokens,
+            outputTokens: extraction.data.usage.outputTokens,
+            latencyMs: extraction.data.latencyMs,
+          },
+        }]);
+        emit({ type: "skill_completed", skillName: "vision_extractor", latencyMs: extraction.data.latencyMs });
+
+        if (output.kind === "receipt") {
+          const directive: UiDirective = {
+            component: "receipt_import_card",
+            merchant: output.merchant,
+            purchasedAt: output.purchasedAt,
+            currency: output.currency,
+            totalAmount: output.totalAmount,
+            items: output.lineItems
+              .filter((item) => item.isFoodItem)
+              .map((item, index) => ({
+                tempId: `receipt-${index}`,
+                name: item.normalizedName,
+                quantity: item.quantity,
+                unit: item.unit,
+                priceAmount: item.unitPrice ?? (
+                  item.totalPrice != null ? item.totalPrice / item.quantity : null
+                ),
+                storageLocation: item.suggestedStorageLocation,
+                estimatedShelfLifeDays: item.estimatedShelfLifeDays,
+                isFoodItem: item.isFoodItem,
+                confidence: item.confidence,
+              })),
+          };
+          emit({
+            type: "ui_directive",
+            directive,
+            invalidateDomains: [],
+          });
+        }
+        orchestratorTask = [
+          "<attached_image_analysis>",
+          JSON.stringify(output),
+          "</attached_image_analysis>",
+          userCaption ? `<user_caption>${userCaption}</user_caption>` : "<user_caption>No text was provided. Choose a sensible kitchen action.</user_caption>",
+        ].join("\n");
+      }
       const result = await orchestratorAgent.execute(
-        { task: input.userMessage.message },
+        { task: orchestratorTask },
         context,
       );
       if (signal.aborted) return;

@@ -13,6 +13,7 @@ import type { ChatToolStep, ChatTurn } from "../types";
 import { useChatUiStore } from "../stores/chat-ui.store";
 import { getText } from "@/lib/i18n";
 import { getErrorText } from "@/lib/i18n/error-text";
+import type { ChatAttachment } from "../types";
 
 export function useChatStream(
   conversationId: string | null,
@@ -23,7 +24,7 @@ export function useChatStream(
   toolSteps: ChatToolStep[];
   activeStatus: ChatTurn["activeStatus"];
   isStreaming: boolean;
-  sendMessage: (text: string) => Promise<void>;
+  sendMessage: (text: string, attachments?: readonly ChatAttachment[]) => Promise<void>;
   stopStreaming: () => void;
 } {
   const queryClient = useQueryClient();
@@ -32,9 +33,9 @@ export function useChatStream(
   const controller = useRef<AbortController | null>(null);
   const addRejectedTurn = useChatUiStore((state) => state.addRejectedTurn);
 
-  const sendMessage = useCallback(async (value: string): Promise<void> => {
+  const sendMessage = useCallback(async (value: string, attachments: readonly ChatAttachment[] = []): Promise<void> => {
     const message = value.trim();
-    if (!message) return;
+    if (!message && attachments.length === 0) return;
     if (controller.current) {
       toast.error(getText("chat.alreadyStreaming"));
       return;
@@ -48,6 +49,7 @@ export function useChatStream(
         id: crypto.randomUUID(),
         role: "user",
         text: message,
+        attachments: attachments.map((attachment) => ({ ...attachment })),
         createdAt: new Date().toISOString(),
       },
       assistantMessage: {
@@ -67,6 +69,7 @@ export function useChatStream(
       await streamChatTurn({
         conversationId,
         message,
+        attachments,
         signal: abortController.signal,
         onConversationId: (id) => {
           activeConversationId = id;
@@ -84,11 +87,13 @@ export function useChatStream(
               ...current,
               activeStatus: event.source === "ai" ? event : current.activeStatus?.source === "ai"
                 ? { ...event, label: current.activeStatus.label, source: "ai" }
-                : { ...event, label: event.status === "running_skill"
-                ? current.activeStatus?.label ?? getText("chat.preparingSuggestion")
-                : event.status === "delegating"
-                  ? getText("chat.delegating")
-                  : getText("chat.thinking") },
+                : { ...event, label: event.status === "analyzing_image"
+                ? getText("chat.analyzingPhoto")
+                : event.status === "running_skill"
+                  ? current.activeStatus?.label ?? getText("chat.preparingSuggestion")
+                  : event.status === "delegating"
+                    ? getText("chat.delegating")
+                    : getText("chat.thinking") },
             } : current);
           } else if (event.type === "text_delta") {
             setTurn((current) => current ? {

@@ -10,6 +10,18 @@ export interface ChatMessage {
   text: string;
   createdAt: string;
   rejected?: boolean;
+  attachments?: ChatAttachment[];
+}
+
+export interface ChatAttachment {
+  id: string;
+  name: string;
+  mimeType: "image/jpeg" | "image/png" | "image/webp" | "image/heic" | "image/heif";
+  base64Data?: string;
+  previewUrl?: string;
+  width?: number;
+  height?: number;
+  sizeBytes?: number;
 }
 
 export interface ChatToolStep {

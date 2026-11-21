@@ -76,4 +76,37 @@ export const presentRecommendationsTool = defineTool({
   toUiDirective: ({ recommendations }) => ({ component: "recommendation_chips", recommendations }),
 });
 
-export const uiTools = [presentRecipeDraftTool, requestConfirmationTool, presentRecommendationsTool] as const;
+const receiptImportSchema = z.object({
+  merchant: z.string().nullable(),
+  purchasedAt: z.string().nullable(),
+  currency: z.string(),
+  totalAmount: z.number().nonnegative().nullable(),
+  items: z.array(z.object({
+    tempId: z.string(),
+    name: z.string(),
+    quantity: z.number().positive(),
+    unit: z.string(),
+    priceAmount: z.number().nonnegative().nullable(),
+    storageLocation: z.enum(["fridge", "freezer", "pantry"]),
+    estimatedShelfLifeDays: z.number().positive().nullable(),
+    isFoodItem: z.boolean(),
+    confidence: z.enum(["high", "medium", "low"]),
+  }).strict()).describe("Editable extracted receipt food lines."),
+}).strict();
+
+export const presentReceiptImportTool = defineTool({
+  name: "ui_present_receipt_import",
+  description: "Present extracted receipt data for review without mutating inventory.",
+  inputSchema: receiptImportSchema,
+  outputSchema: receiptImportSchema,
+  annotations: { readOnlyHint: true, idempotentHint: true },
+  execute: async (input) => toolOk(input),
+  toUiDirective: (input) => ({ component: "receipt_import_card", ...input }),
+});
+
+export const uiTools = [
+  presentRecipeDraftTool,
+  requestConfirmationTool,
+  presentRecommendationsTool,
+  presentReceiptImportTool,
+] as const;

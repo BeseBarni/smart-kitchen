@@ -40,4 +40,13 @@ export const chat = {
   estimating: "Estimating nutrition and cost...", preparingRecipe: "Preparing your recipe...",
   preparingConfirmation: "Preparing a confirmation...", savingRecipe: "Saving your recipe...",
   updatingInventory: "Updating your inventory...", addingIngredient: "Adding an ingredient...",
+  addPhoto: "Add photo", takePhoto: "Take photo", chooseLibrary: "Choose from library",
+  attachments: "Photo attachments", ready: "Ready", removePhoto: "Remove photo", photoBadge: "Photo",
+  analyzingPhoto: "Analyzing photo...", tooManyAttachments: "You can attach up to 3 photos.",
+  unsupportedAttachment: "This photo format is not supported.", imageUnsupported: "Photo reading is not supported in this browser.",
+  compressionFailed: "The photo could not be compressed.", attachmentTooLarge: "A photo is too large after compression.",
+  receiptImport: "Receipt import", receipt: "Receipt", lowConfidence: "Low-confidence item",
+  storageFridge: "Fridge", storageFreezer: "Freezer", storagePantry: "Pantry",
+  addSelectedInventory: "Add Selected to Inventory", importingReceipt: "Adding selected items...",
+  receiptImported: "Receipt items added to inventory.", receiptImportError: "The receipt items could not be added.",
 } as const;

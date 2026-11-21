@@ -1,6 +1,8 @@
 import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
 import { setTimeout as delay } from "node:timers/promises";
+import { readFile } from "node:fs/promises";
+import { extname } from "node:path";
 import { chatService, inventoryItemSchema, recipeSchema } from "@app/modules";
 import { runStreamingTurn } from "../runner";
 import type { AgentStreamEvent } from "../core/stream.types";
@@ -10,11 +12,12 @@ async function collectTurn(
   conversationId: string,
   message: string,
   label: string,
+  attachments?: Array<{ name: string; mimeType: "image/jpeg" | "image/png" | "image/webp" | "image/heic" | "image/heif"; base64Data: string }>,
 ): Promise<AgentStreamEvent[]> {
   const result = await runStreamingTurn({
     userId,
     conversationId,
-    userMessage: { message },
+    userMessage: { message: message || undefined, ...(attachments ? { attachments } : {}) },
     abortSignal: new AbortController().signal,
   });
   if (!result.success) throw new Error(result.error.message);
@@ -46,6 +49,21 @@ async function collectTurn(
   return events;
 }
 
+async function localImageAttachment(path: string): Promise<{
+  name: string;
+  mimeType: "image/jpeg" | "image/png" | "image/webp" | "image/heic" | "image/heif";
+  base64Data: string;
+}> {
+  const bytes = await readFile(path);
+  const extension = extname(path).toLowerCase();
+  const mimeType = extension === ".png" ? "image/png" : extension === ".webp" ? "image/webp" : "image/jpeg";
+  return {
+    name: path.split(/[/\\]/).at(-1) ?? "photo.jpg",
+    mimeType,
+    base64Data: bytes.toString("base64"),
+  };
+}
+
 async function main(): Promise<void> {
   const userId = process.env.AI_SMOKE_TEST_USER_ID;
   if (!userId) throw new Error("AI_SMOKE_TEST_USER_ID must identify a seeded development user.");
@@ -63,6 +81,30 @@ async function main(): Promise<void> {
   const conversation = await chatService.createConversation(userId, { title: "AI backend smoke test" });
   if (!conversation.success) throw new Error(conversation.error.message);
   const conversationId = conversation.data.id;
+
+  const receiptPath = process.env.AI_SMOKE_TEST_RECEIPT_IMAGE;
+  if (receiptPath) {
+    const receipt = await collectTurn(
+      userId,
+      conversationId,
+      "",
+      "receipt photo",
+      [await localImageAttachment(receiptPath)],
+    );
+    assert.ok(receipt.some((event) => event.type === "agent_status" && event.agent === "vision_extractor"));
+  }
+  if (receiptPath && delayMs > 0) await delay(delayMs);
+  const dishPath = process.env.AI_SMOKE_TEST_DISH_IMAGE;
+  if (dishPath) {
+    const dish = await collectTurn(
+      userId,
+      conversationId,
+      "How can I meal prep this dish?",
+      "dish photo",
+      [await localImageAttachment(dishPath)],
+    );
+    assert.ok(dish.some((event) => event.type === "skill_completed" && event.skillName === "vision_extractor"));
+  }
 
   const lookup = await collectTurn(
     userId,
@@ -139,6 +181,10 @@ async function main(): Promise<void> {
     item.type === "message" && item.role === "assistant" &&
     item.payload.kind === "message" && (item.payload.uiDirectives?.length ?? 0) > 0
   ));
+  assert.ok(
+    ledger.data.items.every((item) => !JSON.stringify(item.payload).includes("base64Data")),
+    "conversation ledger contains raw base64 image data",
+  );
   console.log(`Smoke test passed for conversation ${conversationId}.`);
 }
 

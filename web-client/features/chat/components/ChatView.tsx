@@ -14,6 +14,8 @@ import { useChatUiStore } from "../stores/chat-ui.store";
 import type { QuickPrompt } from "../types";
 import { mergeChatTurns } from "../utils/merge-chat-turns";
 import { getText, useText, type TranslationKey } from "@/lib/i18n";
+import { compressImageFiles, revokeAttachmentPreviews } from "../utils/image-capture.utils";
+import type { ChatAttachment } from "../types";
 
 const promptText: Record<QuickPrompt["id"], TranslationKey> = {
   plan: "chat.promptPlanText",
@@ -29,6 +31,8 @@ export function ChatView(): React.JSX.Element {
   const setActiveConversationId = useChatUiStore((state) => state.setActiveConversationId);
   const draft = useChatUiStore((state) => state.draft);
   const setDraft = useChatUiStore((state) => state.setDraft);
+  const attachments = useChatUiStore((state) => state.attachments);
+  const setAttachments = useChatUiStore((state) => state.setAttachments);
   const rejectedTurns = useChatUiStore((state) => state.rejectedTurns);
   const initializedSelection = useRef(false);
   const { data: history, isPending, isError, error: historyError, refetch } = useConversationHistory(activeConversationId);
@@ -54,10 +58,32 @@ export function ChatView(): React.JSX.Element {
   }, [activeConversationId, history?.turns, rejectedTurns, stream.turn]);
 
   const submitMessage = (): void => {
-    if (!draft.trim() || stream.isStreaming) return;
+    if ((!draft.trim() && attachments.length === 0) || stream.isStreaming) return;
     const message = draft;
+    const sendingAttachments = [...attachments];
     setDraft("");
-    void stream.sendMessage(message);
+    setAttachments([]);
+    void stream.sendMessage(message, sendingAttachments);
+  };
+
+  const onFiles = (files: readonly File[]): void => {
+    void compressImageFiles(files)
+      .then((prepared) => setAttachments([...attachments, ...prepared].slice(0, 3)))
+      .catch((error: unknown) => {
+        let key: TranslationKey = "chat.compressionFailed";
+        if (error instanceof Error) {
+          if (error.message === "chat.tooManyAttachments") key = "chat.tooManyAttachments";
+          if (error.message === "chat.unsupportedAttachment") key = "chat.unsupportedAttachment";
+          if (error.message === "chat.imageUnsupported") key = "chat.imageUnsupported";
+          if (error.message === "chat.attachmentTooLarge") key = "chat.attachmentTooLarge";
+        }
+        toast.error(getText(key));
+      });
+  };
+  const onAttachmentsChange = (next: ChatAttachment[]): void => {
+    const removed = attachments.filter((item) => !next.some((entry) => entry.id === item.id));
+    revokeAttachmentPreviews(removed);
+    setAttachments(next);
   };
 
   const createConversation = (): void => {
@@ -111,6 +137,9 @@ export function ChatView(): React.JSX.Element {
           { id: "meal", label: t("chat.promptMeal") },
           { id: "quick", label: t("chat.promptQuick") },
         ]} onSelect={selectPrompt} />}
+        attachments={attachments}
+        onAttachmentsChange={onAttachmentsChange}
+        onFiles={onFiles}
       />
     </>
   );

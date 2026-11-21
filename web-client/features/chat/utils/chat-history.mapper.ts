@@ -1,6 +1,15 @@
 import { uiDirectiveSchema } from "@app/ai/stream-schema";
 import type { ChatJsonValue, ConversationItemDto } from "@app/modules/schemas";
 import type { ChatTurn, ChatToolStep } from "../types";
+import type { ChatAttachment } from "../types";
+
+function persistedAttachmentMime(mimeType: string): ChatAttachment["mimeType"] {
+  if (mimeType === "image/png") return "image/png";
+  if (mimeType === "image/webp") return "image/webp";
+  if (mimeType === "image/heic") return "image/heic";
+  if (mimeType === "image/heif") return "image/heif";
+  return "image/jpeg";
+}
 
 function jsonSummary(value: ChatJsonValue | undefined): string {
   if (value === undefined) return "Completed";
@@ -38,6 +47,19 @@ export function mapConversationHistory(items: readonly ConversationItemDto[]): C
     if (item.type === "message" && item.payload.kind === "message") {
       if (item.role === "user") {
         current = createTurn(item.id, item.createdAt, item.payload.text);
+        if (item.payload.attachments?.length) {
+          current.userMessage = {
+            ...current.userMessage!,
+            attachments: item.payload.attachments.map((attachment, index) => ({
+              id: `${item.id}-attachment-${index}`,
+              name: attachment.name,
+              mimeType: persistedAttachmentMime(attachment.mimeType),
+              width: attachment.width,
+              height: attachment.height,
+              sizeBytes: attachment.sizeBytes,
+            })),
+          };
+        }
         turns.push(current);
       } else if (item.role === "assistant") {
         const turn = ensureTurn(item.id, item.createdAt);

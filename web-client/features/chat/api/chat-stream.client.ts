@@ -2,11 +2,13 @@ import { agentStreamEventSchema } from "@app/ai/stream-schema";
 import type { AgentStreamEvent } from "@app/ai/types";
 import { throwApiResponseError } from "@/lib/api-client";
 import { languageStore } from "@/lib/i18n/language.store";
+import type { ChatAttachment } from "../types";
 
 export interface StreamTurnOptions {
   conversationId: string | null;
   message: string;
   signal: AbortSignal;
+  attachments?: readonly ChatAttachment[];
   onConversationId: (id: string) => void;
   onEvent: (event: AgentStreamEvent) => void | Promise<void>;
 }
@@ -57,7 +59,20 @@ export async function streamChatTurn(options: StreamTurnOptions): Promise<void> 
   const endpoint = options.conversationId
     ? `/api/conversations/${encodeURIComponent(options.conversationId)}/stream`
     : "/api/chat";
-  const body = { message: options.message, locale: languageStore.getState().locale };
+  const body = {
+    message: options.message,
+    ...(options.attachments?.length ? {
+      attachments: options.attachments.map((attachment) => ({
+        name: attachment.name,
+        mimeType: attachment.mimeType,
+        base64Data: attachment.base64Data,
+        ...(attachment.width ? { width: attachment.width } : {}),
+        ...(attachment.height ? { height: attachment.height } : {}),
+        ...(attachment.sizeBytes ? { sizeBytes: attachment.sizeBytes } : {}),
+      })),
+    } : {}),
+    locale: languageStore.getState().locale,
+  };
   const response = await fetch(`${baseUrl}${endpoint}`, {
     method: "POST",
     credentials: "include",

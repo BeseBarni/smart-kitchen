@@ -2,7 +2,7 @@ import { z } from "zod";
 import { nutritionTargetChangesSchema } from "@app/modules/schemas";
 import type { AgentStreamEvent } from "./stream.types";
 
-const agentNameSchema = z.enum(["orchestrator", "inventory_ops", "recipe_architect", "kitchen_advisor"]);
+const agentNameSchema = z.enum(["orchestrator", "inventory_ops", "recipe_architect", "kitchen_advisor", "vision_extractor"]);
 const appDomainSchema = z.enum(["inventory", "recipes", "ingredients", "meal-logs", "profile"]);
 const inventoryActionSchema = z.object({
   id: z.string(),
@@ -93,6 +93,24 @@ export const uiDirectiveSchema = z.discriminatedUnion("component", [
     confirmLabel: z.string(),
     payload: z.record(z.string(), z.unknown()),
   }),
+  z.object({
+    component: z.literal("receipt_import_card"),
+    merchant: z.string().nullable(),
+    purchasedAt: z.string().nullable(),
+    currency: z.string(),
+    totalAmount: z.number().nullable(),
+    items: z.array(z.object({
+      tempId: z.string(),
+      name: z.string(),
+      quantity: z.number().positive(),
+      unit: z.string(),
+      priceAmount: z.number().nonnegative().nullable(),
+      storageLocation: z.enum(["fridge", "freezer", "pantry"]),
+      estimatedShelfLifeDays: z.number().positive().nullable(),
+      isFoodItem: z.boolean(),
+      confidence: z.enum(["high", "medium", "low"]),
+    })),
+  }),
 ]);
 
 export const agentStreamEventSchema: z.ZodType<AgentStreamEvent> = z.discriminatedUnion("type", [
@@ -101,7 +119,7 @@ export const agentStreamEventSchema: z.ZodType<AgentStreamEvent> = z.discriminat
   z.object({
     type: z.literal("agent_status"),
     agent: agentNameSchema,
-    status: z.enum(["thinking", "delegating", "running_tool", "running_skill"]),
+    status: z.enum(["thinking", "delegating", "running_tool", "running_skill", "analyzing_image"]),
     label: z.string(),
     source: z.literal("ai").optional(),
   }),

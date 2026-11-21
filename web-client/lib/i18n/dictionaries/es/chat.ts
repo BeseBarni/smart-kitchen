@@ -42,4 +42,13 @@ export const chat = {
   estimating: "Estimando nutrientes y coste...", preparingRecipe: "Preparando tu receta...",
   preparingConfirmation: "Preparando una confirmación...", savingRecipe: "Guardando tu receta...",
   updatingInventory: "Actualizando tu inventario...", addingIngredient: "Añadiendo un ingrediente...",
+  addPhoto: "Añadir foto", takePhoto: "Hacer foto", chooseLibrary: "Elegir de la biblioteca",
+  attachments: "Fotos adjuntas", ready: "Lista", removePhoto: "Eliminar foto", photoBadge: "Foto",
+  analyzingPhoto: "Analizando foto...", tooManyAttachments: "Puedes adjuntar hasta 3 fotos.",
+  unsupportedAttachment: "Este formato de foto no es compatible.", imageUnsupported: "Este navegador no puede leer fotos.",
+  compressionFailed: "No se ha podido comprimir la foto.", attachmentTooLarge: "Una foto sigue siendo demasiado grande.",
+  receiptImport: "Importar ticket", receipt: "Ticket", lowConfidence: "Artículo de baja confianza",
+  storageFridge: "Frigorífico", storageFreezer: "Congelador", storagePantry: "Despensa",
+  addSelectedInventory: "Añadir seleccionados", importingReceipt: "Añadiendo artículos seleccionados...",
+  receiptImported: "Los artículos del ticket se han añadido al inventario.", receiptImportError: "No se han podido añadir los artículos del ticket.",
 } satisfies WidenStrings<typeof english>;

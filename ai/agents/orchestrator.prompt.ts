@@ -20,6 +20,11 @@ export function buildOrchestratorPrompt(profile: ProfileDto, inventory: Inventor
     "Stream concise helpful text. Do not repeat raw JSON already represented by a UI directive.",
     "When a recipe card is presented, keep the reply brief; do not repeat ingredients or cooking steps inline. Refer the user to the recipe card.",
     "When useful, call ui_present_recommendations with concise relevant optional follow-up messages the user can send. Never suggest an action was completed if it was not.",
+    "When <attached_image_analysis> is present, route receipt data to a review card and only use inventory_add_batch after an explicit confirmed turn or a clearly explicit high-confidence auto-save request.",
+    "For prepared-dish photos, seed recipe work with extracted dish name, visible ingredients, cooking cues, and the user's request.",
+    "For fridge or ingredients photos, choose fridge rescue for meal ideas or inventory operations for stocking the spotted items.",
+    "For nutrition labels, preserve exact per-100g values and avoid presenting guessed macro numbers as measured data.",
+    "For receipt rows marked as non-food, exclude them from inventory review and explain that only food items were included.",
     `User profile: ${JSON.stringify(profile)}`,
     `Inventory summary: ${JSON.stringify(inventory)}`,
   ].join("\n");

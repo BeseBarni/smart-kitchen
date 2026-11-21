@@ -76,6 +76,33 @@ export const adjustInventoryInputSchema = z
   .object({ delta: z.number().finite().refine((value) => value !== 0).describe("Quantity adjustment.") })
   .describe("Inventory quantity adjustment.");
 
+export const batchInventoryItemSchema = z
+  .object({
+    name: z.string().trim().min(1).describe("Inventory item name."),
+    quantity: z.number().positive().describe("Initial and remaining quantity."),
+    unit: z.string().trim().min(1).describe("Quantity unit."),
+    storageLocation: z.enum(["fridge", "freezer", "pantry"]).describe("Where the item is stored."),
+    expiresAt: z.iso.datetime().nullable().optional().describe("Optional expiration timestamp."),
+    costPerUnit: z.number().nonnegative().nullable().optional().describe("Optional unit cost."),
+    currency: z.string().trim().min(1).max(8).optional().describe("Optional ISO-style currency code."),
+  })
+  .strict()
+  .describe("One item in a receipt or photo inventory batch.");
+
+export const batchCreateInventoryInputSchema = z
+  .object({
+    items: z.array(batchInventoryItemSchema).min(1).max(100).describe("Items to add atomically."),
+  })
+  .strict()
+  .describe("Atomic batch inventory input.");
+
+export const batchCreateInventoryOutputSchema = z
+  .object({
+    items: z.array(inventoryItemSchema).describe("Created inventory records."),
+  })
+  .strict()
+  .describe("Created inventory records.");
+
 export const consumeInventoryInputSchema = z
   .object({
     quantity: z.number().positive().describe("Amount to consume."),
@@ -94,3 +121,6 @@ export type UpdateInventoryItemInput = z.infer<typeof updateInventoryItemSchema>
 export type ListInventoryQuery = z.infer<typeof listInventoryQuerySchema>;
 export type AdjustInventoryInput = z.infer<typeof adjustInventoryInputSchema>;
 export type ConsumeInventoryInput = z.infer<typeof consumeInventoryInputSchema>;
+export type BatchInventoryItemInput = z.infer<typeof batchInventoryItemSchema>;
+export type BatchCreateInventoryInput = z.infer<typeof batchCreateInventoryInputSchema>;
+export type BatchCreateInventoryOutput = z.infer<typeof batchCreateInventoryOutputSchema>;

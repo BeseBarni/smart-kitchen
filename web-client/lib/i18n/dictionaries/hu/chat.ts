@@ -42,4 +42,13 @@ export const chat = {
   estimating: "Tápanyagok és költség becslése...", preparingRecipe: "Recept előkészítése...",
   preparingConfirmation: "Megerősítés előkészítése...", savingRecipe: "Recept mentése...",
   updatingInventory: "Készlet frissítése...", addingIngredient: "Hozzávaló hozzáadása...",
+  addPhoto: "Fotó hozzáadása", takePhoto: "Fotó készítése", chooseLibrary: "Kiválasztás a galériából",
+  attachments: "Fotómellékletek", ready: "Kész", removePhoto: "Fotó eltávolítása", photoBadge: "Fotó",
+  analyzingPhoto: "Fotó elemzése...", tooManyAttachments: "Legfeljebb 3 fotót csatolhatsz.",
+  unsupportedAttachment: "Ez a fotóformátum nem támogatott.", imageUnsupported: "A böngésző nem támogatja a fotók olvasását.",
+  compressionFailed: "A fotót nem sikerült tömöríteni.", attachmentTooLarge: "A tömörített fotó túl nagy.",
+  receiptImport: "Blokk importálása", receipt: "Blokk", lowConfidence: "Alacsony bizonyosságú elem",
+  storageFridge: "Hűtő", storageFreezer: "Fagyasztó", storagePantry: "Kamra",
+  addSelectedInventory: "Kijelöltek hozzáadása", importingReceipt: "Kijelölt tételek hozzáadása...",
+  receiptImported: "A blokk tételei hozzáadva a készlethez.", receiptImportError: "A blokk tételeit nem sikerült hozzáadni.",
 } satisfies WidenStrings<typeof english>;

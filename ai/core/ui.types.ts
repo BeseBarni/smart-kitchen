@@ -98,4 +98,22 @@ export type UiDirective =
       description: string;
       confirmLabel: string;
       payload: Record<string, unknown>;
+    }
+  | {
+      component: "receipt_import_card";
+      merchant: string | null;
+      purchasedAt: string | null;
+      currency: string;
+      totalAmount: number | null;
+      items: Array<{
+        tempId: string;
+        name: string;
+        quantity: number;
+        unit: string;
+        priceAmount: number | null;
+        storageLocation: "fridge" | "freezer" | "pantry";
+        estimatedShelfLifeDays: number | null;
+        isFoodItem: boolean;
+        confidence: "high" | "medium" | "low";
+      }>;
     };

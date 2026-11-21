@@ -28,8 +28,24 @@ export const conversationAttachmentSchema = z
     name: z.string().describe("Attachment file name."),
     mimeType: z.string().describe("Attachment media type."),
     url: z.string().url().optional().describe("Optional URL for the attachment."),
+    width: z.number().int().positive().optional().describe("Optional attachment width."),
+    height: z.number().int().positive().optional().describe("Optional attachment height."),
+    sizeBytes: z.number().int().nonnegative().optional().describe("Optional attachment byte size."),
   })
   .describe("A conversation message attachment.");
+
+export const chatImageAttachmentSchema = z
+  .object({
+    name: z.string().trim().min(1).max(255).describe("Attachment file name."),
+    mimeType: z.enum(["image/jpeg", "image/png", "image/webp", "image/heic", "image/heif"])
+      .describe("Compressed attachment media type."),
+    base64Data: z.string().min(1).max(3_400_000).describe("Base64-encoded compressed image data."),
+    width: z.number().int().positive().max(1600).optional().describe("Optional attachment width."),
+    height: z.number().int().positive().max(1600).optional().describe("Optional attachment height."),
+    sizeBytes: z.number().int().positive().optional().describe("Optional attachment byte size."),
+  })
+  .strict()
+  .describe("A photo attachment in a chat turn.");
 
 export const conversationItemPayloadSchema = z
   .discriminatedUnion("kind", [
@@ -154,9 +170,28 @@ export const conversationIdSchema = z.string().uuid().describe("Conversation ide
 
 export const conversationStreamInputSchema = z
   .object({
-    message: z.string().trim().min(1).describe("Message sent by the user."),
-    attachments: z.array(conversationAttachmentSchema).optional().describe("Optional message attachments."),
+    message: z.string().trim().max(4000).optional().describe("Optional message sent by the user."),
+    attachments: z.array(chatImageAttachmentSchema).min(1).max(3).optional().describe("Optional compressed photo attachments."),
     locale: z.enum(["en", "hu", "es"]).optional().describe("Selected application language."),
+  })
+  .superRefine((value, context) => {
+    if (!value.message?.trim() && (!value.attachments || value.attachments.length === 0)) {
+      context.addIssue({
+        code: "custom",
+        path: ["message"],
+        message: "A message or at least one attachment is required.",
+      });
+    }
+    if (value.attachments) {
+      const encodedLength = value.attachments.reduce((total, attachment) => total + attachment.base64Data.length, 0);
+      if (encodedLength > 4_500_000) {
+        context.addIssue({
+          code: "custom",
+          path: ["attachments"],
+          message: "The combined photo payload is too large.",
+        });
+      }
+    }
   })
   .describe("Input for streaming a conversation turn.");
 

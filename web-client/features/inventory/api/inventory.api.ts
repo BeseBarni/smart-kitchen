@@ -1,5 +1,7 @@
 import type {
   AdjustInventoryInput,
+  BatchCreateInventoryInput,
+  BatchCreateInventoryOutput,
   ConsumeInventoryInput,
   CreateInventoryItemInput,
   InventoryItemDto,
@@ -9,6 +11,7 @@ import type {
   UpdateInventoryItemInput,
 } from "@app/modules/schemas";
 import {
+  batchCreateInventoryOutputSchema,
   inventoryItemSchema,
   inventorySummarySchema,
   mealLogSchema,
@@ -43,6 +46,11 @@ export const inventoryApi = {
     unwrapApiResponse(await apiClient.api.inventory[":id"].$get({ param: { id } }), inventoryItemSchema),
   create: async (input: CreateInventoryItemInput): Promise<InventoryItemDto> =>
     unwrapApiResponse(await apiClient.api.inventory.$post({ json: input }), inventoryItemSchema),
+  batchCreate: async (input: BatchCreateInventoryInput): Promise<BatchCreateInventoryOutput> =>
+    unwrapApiResponse(
+      await apiClient.api.inventory.batch.$post({ json: input }),
+      batchCreateInventoryOutputSchema,
+    ),
   update: async (id: string, input: UpdateInventoryItemInput): Promise<InventoryItemDto> =>
     unwrapApiResponse(await apiClient.api.inventory[":id"].$patch({ param: { id }, json: input }), inventoryItemSchema),
   remove: async (id: string): Promise<{ deleted: true }> =>

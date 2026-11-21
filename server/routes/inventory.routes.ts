@@ -1,6 +1,7 @@
 import { zValidator } from "@hono/zod-validator";
 import {
   adjustInventoryInputSchema,
+  batchCreateInventoryInputSchema,
   consumeInventoryInputSchema,
   createInventoryItemSchema,
   expiringInventoryQuerySchema,
@@ -40,6 +41,13 @@ export const inventoryRoutes = new Hono<AuthEnvironment>()
     resultToResponse(
       context,
       await inventoryService.create(context.get("userId"), context.req.valid("json")),
+      201,
+    ),
+  )
+  .post("/batch", requireAuth, zValidator("json", batchCreateInventoryInputSchema), async (context) =>
+    resultToResponse(
+      context,
+      await inventoryService.createBatch(context.get("userId"), context.req.valid("json")),
       201,
     ),
   )
