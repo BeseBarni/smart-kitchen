@@ -7,7 +7,7 @@ import {
 import { err, ok, type AppError, type Result } from "@app/shared";
 import { FAST_MODEL } from "./core/llm.client";
 import { createSseStream } from "./core/sse.encoder";
-import type { AgentStreamEvent } from "./core/stream.types";
+import type { AgentStreamEvent, UiDirectiveEvent } from "./core/stream.types";
 import type { UiDirective } from "./core/ui.types";
 import { orchestratorAgent } from "./agents/orchestrator.agent";
 import { generateConversationTitle } from "./agents/conversation-title";
@@ -25,6 +25,28 @@ function jsonDirectives(directives: UiDirective[]) {
 function failureMessage(error: unknown): string {
   if (error instanceof Error) return error.message;
   return typeof error === "string" ? error : "The AI turn failed unexpectedly.";
+}
+
+export function createTurnEmitter(send: (event: AgentStreamEvent) => void): {
+  directives: UiDirective[];
+  emit: (event: AgentStreamEvent) => void;
+  emitReceipt: (directive: Extract<UiDirective, { component: "receipt_import_card" }>) => void;
+} {
+  const directives: UiDirective[] = [];
+  let automaticReceiptPresented = false;
+  const emit = (event: AgentStreamEvent): void => {
+    if (event.type === "ui_directive") {
+      if (automaticReceiptPresented && event.directive.component === "receipt_import_card") return;
+      directives.push(event.directive);
+    }
+    send(event);
+  };
+  const emitReceipt = (directive: Extract<UiDirective, { component: "receipt_import_card" }>): void => {
+    const event: UiDirectiveEvent = { type: "ui_directive", directive, invalidateDomains: [] };
+    emit(event);
+    automaticReceiptPresented = true;
+  };
+  return { directives, emit, emitReceipt };
 }
 
 export function assistantMessagePayload(
@@ -108,11 +130,7 @@ export async function runStreamingTurn(input: {
   const turnId = persistedUserItem.id;
   return ok(createSseStream(async (send, signal) => {
     const startedAt = Date.now();
-    const directives: UiDirective[] = [];
-    const emit = (event: AgentStreamEvent) => {
-      if (event.type === "ui_directive") directives.push(event.directive);
-      send(event);
-    };
+    const { directives, emit, emitReceipt } = createTurnEmitter(send);
     const context: AgentContext = {
       userId: input.userId,
       conversationId: input.conversationId,
@@ -185,7 +203,7 @@ export async function runStreamingTurn(input: {
         emit({ type: "skill_completed", skillName: "vision_extractor", latencyMs: extraction.data.latencyMs });
 
         if (output.kind === "receipt") {
-          const directive: UiDirective = {
+          const directive: Extract<UiDirective, { component: "receipt_import_card" }> = {
             component: "receipt_import_card",
             merchant: output.merchant,
             purchasedAt: output.purchasedAt,
@@ -207,11 +225,7 @@ export async function runStreamingTurn(input: {
                 confidence: item.confidence,
               })),
           };
-          emit({
-            type: "ui_directive",
-            directive,
-            invalidateDomains: [],
-          });
+          emitReceipt(directive);
         }
       }
       const result = await orchestratorAgent.execute(

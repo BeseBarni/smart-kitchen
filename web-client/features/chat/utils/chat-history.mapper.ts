@@ -34,6 +34,7 @@ function createTurn(id: string, createdAt: string, text = ""): ChatTurn {
 export function mapConversationHistory(items: readonly ConversationItemDto[]): ChatTurn[] {
   const turns: ChatTurn[] = [];
   const legacyRecipes = new Map<ChatTurn, ChatTurn["uiDirectives"]>();
+  const receiptExtractionTurns = new Set<ChatTurn>();
   let current: ChatTurn | undefined;
   const ensureTurn = (id: string, createdAt: string): ChatTurn => {
     if (!current) {
@@ -69,7 +70,10 @@ export function mapConversationHistory(items: readonly ConversationItemDto[]): C
           createdAt: item.createdAt,
         };
         for (const directive of item.payload.uiDirectives ?? []) {
-          turn.uiDirectives.push(uiDirectiveSchema.parse(directive));
+          const parsed = uiDirectiveSchema.parse(directive);
+          if (receiptExtractionTurns.has(turn) && parsed.component === "receipt_import_card" &&
+              turn.uiDirectives.some((existing) => existing.component === "receipt_import_card")) continue;
+          turn.uiDirectives.push(parsed);
         }
       }
       continue;
@@ -121,6 +125,11 @@ export function mapConversationHistory(items: readonly ConversationItemDto[]): C
         };
       }
     } else if (item.type === "skill_execution" && item.payload.kind === "skill_execution") {
+      const output = item.payload.output;
+      if (item.toolName === "vision_extractor" && typeof output === "object" && output !== null &&
+          !Array.isArray(output) && "kind" in output && output.kind === "receipt") {
+        receiptExtractionTurns.add(turn);
+      }
       turn.toolSteps.push({
         id: item.id,
         agent: null,

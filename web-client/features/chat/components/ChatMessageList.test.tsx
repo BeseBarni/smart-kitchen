@@ -2,7 +2,9 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { renderToStaticMarkup } from "react-dom/server";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import type { ConversationItemDto } from "@app/modules/schemas";
 import type { ChatTurn } from "../types";
+import { mapConversationHistory } from "../utils/chat-history.mapper";
 import { ChatMessageList } from "./ChatMessageList";
 
 function turn(withRecipe: boolean): ChatTurn {
@@ -55,6 +57,31 @@ test("saved recipe cards show stocking controls without another save action", ()
 
 test("preserves completed text-only messages", () => {
   assert.ok(render(false, false).includes("secret test ingredient"));
+});
+
+test("renders one inventory import action for a previously duplicated receipt", () => {
+  const receipt = {
+    component: "receipt_import_card", merchant: "Shop", purchasedAt: null, currency: "USD",
+    totalAmount: 2, items: [{
+      tempId: "receipt-0", name: "Tomatoes", quantity: 1, unit: "piece", priceAmount: 2,
+      storageLocation: "fridge", estimatedShelfLifeDays: 3, isFoodItem: true, confidence: "high",
+    }],
+  };
+  const base = {
+    conversationId: "conversation", callId: null, metadata: null, createdAt: "2026-01-01T10:00:00Z",
+  };
+  const history: ConversationItemDto[] = [
+    { ...base, id: "user", sequence: 1, type: "message", role: "user", toolName: null,
+      payload: { kind: "message", text: "Scan this receipt" } },
+    { ...base, id: "vision", sequence: 2, type: "skill_execution", role: "assistant", toolName: "vision_extractor",
+      payload: { kind: "skill_execution", input: {}, output: { kind: "receipt" } } },
+    { ...base, id: "assistant", sequence: 3, type: "message", role: "assistant", toolName: null,
+      payload: { kind: "message", text: "Review the receipt.", uiDirectives: [receipt, receipt] } },
+  ];
+  const markup = renderToStaticMarkup(<QueryClientProvider client={new QueryClient()}><ChatMessageList
+    turns={mapConversationHistory(history)} activeStatus={null} onReply={() => {}} streaming={false}
+  /></QueryClientProvider>);
+  assert.equal((markup.match(/Add Selected to Inventory/g) ?? []).length, 1);
 });
 
 test("shows AI-generated progress instead of generic tool status", () => {

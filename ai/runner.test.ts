@@ -3,10 +3,40 @@ import { test } from "node:test";
 import { MockLanguageModelV4 } from "ai/test";
 import { generateConversationTitle } from "./agents/conversation-title";
 import { isKitchenMessage } from "./agents/chat-restriction";
-import { assistantMessagePayload } from "./runner";
+import { assistantMessagePayload, createTurnEmitter } from "./runner";
 import { toModelMessages } from "./agents/orchestrator.agent";
 import { visionExtractorInputSchema, visionSkillImages } from "./skills/vision-extractor.skill";
 import type { ConversationItemDto } from "@app/modules";
+import type { AgentStreamEvent } from "./core/stream.types";
+import type { UiDirective } from "./core/ui.types";
+
+test("streams and persists only the automatic receipt card for an uploaded receipt", () => {
+  const events: AgentStreamEvent[] = [];
+  const turn = createTurnEmitter((event) => events.push(event));
+  const receipt: Extract<UiDirective, { component: "receipt_import_card" }> = {
+    component: "receipt_import_card", merchant: "Shop", purchasedAt: null, currency: "USD",
+    totalAmount: 2, items: [],
+  };
+  const recommendation: UiDirective = { component: "recommendation_chips", recommendations: ["Plan a meal"] };
+  turn.emitReceipt(receipt);
+  turn.emit({ type: "ui_directive", directive: { ...receipt, merchant: "Shop Inc." }, invalidateDomains: [] });
+  turn.emit({ type: "ui_directive", directive: recommendation, invalidateDomains: [] });
+  turn.emit({ type: "text_delta", delta: "Review your receipt." });
+  assert.deepEqual(events.map((event) => event.type), ["ui_directive", "ui_directive", "text_delta"]);
+  assert.deepEqual(assistantMessagePayload("Review your receipt.", turn.directives).uiDirectives, [receipt, recommendation]);
+});
+
+test("allows a receipt review tool on a turn without an automatic receipt", () => {
+  const events: AgentStreamEvent[] = [];
+  const turn = createTurnEmitter((event) => events.push(event));
+  const directive: UiDirective = {
+    component: "receipt_import_card", merchant: null, purchasedAt: null, currency: "USD",
+    totalAmount: null, items: [],
+  };
+  turn.emit({ type: "ui_directive", directive, invalidateDomains: [] });
+  assert.deepEqual(turn.directives, [directive]);
+  assert.equal(events.length, 1);
+});
 
 test("projects uploaded attachment metadata into strict vision input", () => {
   const attachments = [{

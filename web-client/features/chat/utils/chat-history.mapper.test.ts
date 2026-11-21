@@ -75,6 +75,28 @@ test("validates persisted UI directives while mapping assistant messages", () =>
   assert.equal(turns[0]?.uiDirectives[0]?.component, "inventory_action_card");
 });
 
+test("replays one receipt card for an uploaded receipt without hiding later reviews", () => {
+  const receipt = {
+    component: "receipt_import_card", merchant: "Shop", purchasedAt: null, currency: "USD",
+    totalAmount: 2, items: [],
+  };
+  const other = { component: "recommendation_chips", recommendations: ["Plan a meal"] };
+  const turns = mapConversationHistory([
+    item({ sequence: 0, type: "message", role: "user", payload: { kind: "message", text: "Scan receipt" } }),
+    item({ sequence: 1, type: "skill_execution", role: "assistant", toolName: "vision_extractor",
+      payload: { kind: "skill_execution", input: {}, output: { kind: "receipt" } } }),
+    item({ sequence: 2, type: "message", role: "assistant", payload: {
+      kind: "message", text: "Review it.", uiDirectives: [receipt, { ...receipt, merchant: "Shop Inc." }, other],
+    } }),
+    item({ sequence: 3, type: "message", role: "user", payload: { kind: "message", text: "Show my receipts" } }),
+    item({ sequence: 4, type: "message", role: "assistant", payload: {
+      kind: "message", text: "Here they are.", uiDirectives: [receipt, { ...receipt, merchant: "Another shop" }],
+    } }),
+  ]);
+  assert.deepEqual(turns[0]?.uiDirectives, [receipt, other]);
+  assert.deepEqual(turns[1]?.uiDirectives, [receipt, { ...receipt, merchant: "Another shop" }]);
+});
+
 test("replays assistant recommendation chips with their message", () => {
   const turns = mapConversationHistory([
     item({ sequence: 0, type: "message", role: "user", payload: { kind: "message", text: "Make soup" } }),
