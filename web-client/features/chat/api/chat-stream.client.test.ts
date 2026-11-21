@@ -3,6 +3,7 @@ import test from "node:test";
 import { parseSseStream, streamChatTurn } from "./chat-stream.client";
 import { ApiClientError } from "@/lib/api-client";
 import { languageStore } from "@/lib/i18n/language.store";
+import { conversationStreamInputSchema } from "@app/modules/schemas";
 
 function readableChunks(chunks: readonly string[]): ReadableStream<Uint8Array> {
   const encoder = new TextEncoder();
@@ -38,6 +39,56 @@ test("sends the selected language to both chat endpoints", async () => {
     languageStore.getState().setLocale(previous);
     globalThis.fetch = originalFetch;
   }
+});
+
+test("sends nonempty uploaded and legacy attachment fields accepted by the server schema", async () => {
+  const originalFetch = globalThis.fetch;
+  const requests: unknown[] = [];
+  globalThis.fetch = async (_url, init) => {
+    requests.push(JSON.parse(String(init?.body)));
+    return new Response(readableChunks([
+      'event: turn_completed\ndata: {"type":"turn_completed","conversationId":"c","usage":{"inputTokens":0,"outputTokens":0},"latencyMs":1}\n\n',
+    ]));
+  };
+  const assetId = "d2166458-1dcf-4eac-9014-d388b5f4a492";
+  const uploaded = { id: "1", assetId, name: "photo.webp", mimeType: "image/webp" as const };
+  const legacy = { id: "2", name: "photo.jpg", mimeType: "image/jpeg" as const, base64Data: "YWJj" };
+  try {
+    for (const [conversationId, attachments] of [
+      [null, [uploaded]],
+      ["conversation-1", [legacy]],
+      [null, [uploaded, legacy]],
+    ] as const) {
+      await streamChatTurn({
+        conversationId,
+        message: "",
+        attachments,
+        signal: new AbortController().signal,
+        onConversationId: () => {},
+        onEvent: () => {},
+      });
+    }
+    for (const request of requests) assert.equal(conversationStreamInputSchema.safeParse(request).success, true);
+    assert.deepEqual((requests[0] as { attachmentAssetIds: string[] }).attachmentAssetIds, [assetId]);
+    assert.equal(Object.hasOwn(requests[0] as object, "attachments"), false);
+    assert.equal(Object.hasOwn(requests[1] as object, "attachmentAssetIds"), false);
+    assert.equal((requests[1] as { attachments: unknown[] }).attachments.length, 1);
+    assert.equal((requests[2] as { attachments: unknown[] }).attachments.length, 1);
+    assert.deepEqual((requests[2] as { attachmentAssetIds: string[] }).attachmentAssetIds, [assetId]);
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
+test("does not silently drop an attachment that is not ready to send", async () => {
+  await assert.rejects(streamChatTurn({
+    conversationId: null,
+    message: "",
+    attachments: [{ id: "1", name: "photo.jpg", mimeType: "image/jpeg" }],
+    signal: new AbortController().signal,
+    onConversationId: () => {},
+    onEvent: () => {},
+  }), /attachment is not ready/i);
 });
 
 test("parses chunked SSE frames and normalizes CRLF boundaries", async () => {

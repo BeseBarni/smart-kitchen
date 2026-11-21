@@ -59,23 +59,35 @@ export async function streamChatTurn(options: StreamTurnOptions): Promise<void> 
   const endpoint = options.conversationId
     ? `/api/conversations/${encodeURIComponent(options.conversationId)}/stream`
     : "/api/chat";
-  const body = {
-    message: options.message,
-    ...(options.attachments?.length ? {
-      attachmentAssetIds: options.attachments.flatMap((attachment) =>
-        attachment.assetId ? [attachment.assetId] : []
-      ),
-      attachments: options.attachments.filter((attachment) =>
-        !attachment.assetId && attachment.base64Data
-      ).map((attachment) => ({
+  const attachmentAssetIds: string[] = [];
+  const attachments: Array<{
+    name: string;
+    mimeType: ChatAttachment["mimeType"];
+    base64Data: string;
+    width?: number;
+    height?: number;
+    sizeBytes?: number;
+  }> = [];
+  for (const attachment of options.attachments ?? []) {
+    if (attachment.assetId) {
+      attachmentAssetIds.push(attachment.assetId);
+    } else if (attachment.base64Data) {
+      attachments.push({
         name: attachment.name,
         mimeType: attachment.mimeType,
         base64Data: attachment.base64Data,
         ...(attachment.width ? { width: attachment.width } : {}),
         ...(attachment.height ? { height: attachment.height } : {}),
         ...(attachment.sizeBytes ? { sizeBytes: attachment.sizeBytes } : {}),
-      })),
-    } : {}),
+      });
+    } else {
+      throw new Error("Chat attachment is not ready to send.");
+    }
+  }
+  const body = {
+    message: options.message,
+    ...(attachmentAssetIds.length ? { attachmentAssetIds } : {}),
+    ...(attachments.length ? { attachments } : {}),
     locale: languageStore.getState().locale,
   };
   const response = await fetch(`${baseUrl}${endpoint}`, {
