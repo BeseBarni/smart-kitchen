@@ -4,6 +4,7 @@ import {
 } from "@app/modules/schemas";
 import { z } from "zod";
 import { apiClient, unwrapApiResponse } from "@/lib/api-client";
+import type { SupportedLocale } from "@/lib/i18n";
 
 export const mealTrackerApi = {
   summary: async (date: string, range: { from: string; to: string }) =>
@@ -33,8 +34,8 @@ export const mealTrackerApi = {
   profile: async () => unwrapApiResponse(await apiClient.api.profile.$get(), profileSchema),
   updateProfile: async (input: UpdateProfileInput) =>
     unwrapApiResponse(await apiClient.api.profile.$patch({ json: input }), profileSchema),
-  suggestions: async (date: string, range: { from: string; to: string }) =>
+  suggestions: async (date: string, range: { from: string; to: string }, locale: SupportedLocale) =>
     unwrapApiResponse(await apiClient.api["meal-suggestions"].$post({
-      json: { date, ...range },
+      json: { date, ...range, locale },
     }), mealSuggestionsResponseSchema),
 };

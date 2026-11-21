@@ -15,8 +15,8 @@ export const mealSuggestionsRoutes = new Hono<AuthEnvironment>()
     }
     const prepared = await mealSuggestionsService.buildSuggestionContext(context.get("userId"), { date: input.date, from: input.from, to: input.to });
     if (!prepared.success) return resultToResponse(context, prepared);
-    if (prepared.data.stock.length === 0) return resultToResponse(context, ok({ suggestions: [], note: "Add stock to receive suggestions." }));
-    const generated = await dailyMealSuggestionsSkill.execute(prepared.data, () => {});
+    if (prepared.data.stock.length === 0) return resultToResponse(context, ok({ suggestions: [], note: "", noStock: true }));
+    const generated = await dailyMealSuggestionsSkill.execute(prepared.data, () => {}, input.locale);
     if (!generated.success) return resultToResponse(context, generated);
     return resultToResponse(context, mealSuggestionsService.validateSuggestions(prepared.data, generated.data.output));
   });

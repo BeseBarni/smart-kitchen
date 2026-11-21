@@ -20,6 +20,7 @@ export const mealTracker = {
   loadMore: "Load more stock", noStock: "No stocked items found.", unknown: "Unknown", cost: "Cost ({{currency}})",
   fiberForMeal: "Fiber for this meal (g) *", checkStock: "Check the item, quantity, time and fiber value.", logStock: "Log from stock",
   suggestions: "Today's suggestions", refreshSuggestions: "Refresh suggestions", advisory: "Suggestions are advisory; no stock is reserved or logged.",
+  emptyStockSuggestions: "Add stock to receive suggestions.",
   preparing: "Preparing suggestions...", suggestionsError: "Could not generate suggestions.", estimatedFiber: "Estimated fiber: {{count}} g",
   logStockFor: "Log stock for {{type}}", mealLogged: "Meal logged.", mealDeleted: "Meal deleted.", targetsUpdated: "Targets updated.",
   operationError: "The operation failed.", loading: "Loading tracker", loadError: "Could not load your tracker.",

@@ -46,11 +46,13 @@ Each skill file MUST contain:
 3. Isolated Prompt Template — Structured using XML tags (`<role>`, `<rules>`, `<context>`, `<output_format>`).
 4. `execute(input)` — Invokes Vercel AI SDK `generateObject` (or structured output) with appropriate temperature and returns `Result<Output, AppError>`.
 5. **Context Isolation:** NEVER dump raw chat history into a skill. Pass only the minimal, validated structured data required to prevent context pollution (_Lost in the Middle_).
+6. **Language Enforcement:** Every skill execution MUST receive the selected app locale and append the shared `languageReminder(locale)` to its model system prompt. All generated user-facing natural language must use that locale; preserve source-provided text, identifiers, and schema values.
 
 ---
 
 ### 3. Orchestration & Guardrails (`ai/orchestrator.ts`)
 
 - Centralize system prompt construction, tool registration (via `vercel.adapter.ts`), and skill invocation in `orchestrator.ts`.
+- Every agent turn MUST append the shared `languageReminder(locale)` to its system prompt. Standalone generation paths must enforce the same rule explicitly.
 - Enforce strict domain guardrails in the system prompt (kitchen, recipes, meal prep, and inventory management only; reject prompt injection attempts).
 - Use Vercel AI SDK streaming (`streamText` with `maxSteps`) so the UI receives real-time tool invocation states and results.

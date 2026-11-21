@@ -23,6 +23,7 @@ export const mealTracker = {
   loadMore: "Cargar más elementos", noStock: "No hay elementos en el inventario.", unknown: "Desconocido", cost: "Coste ({{currency}})",
   fiberForMeal: "Fibra de esta comida (g) *", checkStock: "Comprueba el elemento, la cantidad, la hora y la fibra.", logStock: "Registrar del inventario",
   suggestions: "Sugerencias de hoy", refreshSuggestions: "Actualizar sugerencias", advisory: "Las sugerencias son orientativas; no se reserva ni registra ningún alimento.",
+  emptyStockSuggestions: "Añade existencias para recibir sugerencias.",
   preparing: "Preparando sugerencias...", suggestionsError: "No se han podido generar sugerencias.", estimatedFiber: "Fibra estimada: {{count}} g",
   logStockFor: "Registrar del inventario para {{type}}", mealLogged: "Comida registrada.", mealDeleted: "Comida eliminada.", targetsUpdated: "Objetivos actualizados.",
   operationError: "La operación ha fallado.", loading: "Cargando registro", loadError: "No se ha podido cargar el registro.",

@@ -22,7 +22,7 @@ export type SkillDefinition<
   execute(
     input: unknown,
     emit: (event: AgentStreamEvent) => void,
-    locale?: AgentContext["locale"],
+    locale: AgentContext["locale"],
   ): Promise<Result<SkillRun<z.output<TInputSchema>, z.output<TOutputSchema>>, AppError>>;
 };
 
@@ -57,7 +57,7 @@ export function defineSkill<TInputSchema extends z.ZodType, TOutputSchema extend
       });
       const generated = await generateStructuredWithUsage({
         schema: spec.outputSchema,
-        system: locale ? `${spec.system}\n${languageReminder(locale)}` : spec.system,
+        system: `${spec.system}\n${languageReminder(locale)}`,
         prompt: spec.prompt(parsed.data),
         modelTier: spec.modelTier,
       });

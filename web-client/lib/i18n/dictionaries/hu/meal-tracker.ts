@@ -23,6 +23,7 @@ export const mealTracker = {
   loadMore: "További készletelemek", noStock: "Nincs elérhető készletelem.", unknown: "Ismeretlen", cost: "Költség ({{currency}})",
   fiberForMeal: "Az étkezés rosttartalma (g) *", checkStock: "Ellenőrizd az elemet, a mennyiséget, az időt és a rostértéket.", logStock: "Naplózás a készletből",
   suggestions: "Mai ajánlatok", refreshSuggestions: "Ajánlatok frissítése", advisory: "Az ajánlatok tájékoztató jellegűek; semmit nem foglalunk le vagy naplózunk.",
+  emptyStockSuggestions: "Adj készletet a javaslatok fogadásához.",
   preparing: "Ajánlatok készítése...", suggestionsError: "Nem sikerült ajánlatokat készíteni.", estimatedFiber: "Becsült rost: {{count}} g",
   logStockFor: "{{type}} naplózása a készletből", mealLogged: "Az étkezést naplóztuk.", mealDeleted: "Az étkezést töröltük.", targetsUpdated: "A célokat frissítettük.",
   operationError: "A művelet sikertelen volt.", loading: "Napló betöltése", loadError: "Nem sikerült betölteni a naplót.",

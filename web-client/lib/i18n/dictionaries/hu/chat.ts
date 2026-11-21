@@ -4,6 +4,7 @@ export const chat = {
   message: "Üzenet", placeholder: "Kérdezd a PrepPilotot, vagy naplózz étkezést...", stop: "Válasz leállítása", send: "Üzenet küldése",
   messages: "Beszélgetés üzenetei", preparingResponse: "Válasz készítése...", quickPrompts: "Gyors kérdések",
   you: "Te:", assistant: "Asszisztens:", rejected: "Üzenet elutasítva", toolActivity: "Asszisztens eszköztevékenysége",
+  toolStepRunning: "Folyamatban", toolStepCompleted: "Kész", toolStepFailed: "Nem sikerült",
   title: "AI konyhai asszisztens", conversationsError: "Nem sikerült betölteni a beszélgetéseket. Próbáld újra.",
   historyError: "Nem sikerült betölteni a beszélgetést. Próbáld újra.", loading: "Beszélgetés betöltése",
   emptyHistory: "Ebben a beszélgetésben még nincs üzenet.", emptyChat: "Kezdj beszélgetést a konyhai asszisztenseddel.",

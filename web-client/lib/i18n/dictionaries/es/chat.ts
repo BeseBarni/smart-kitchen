@@ -4,6 +4,7 @@ export const chat = {
   message: "Mensaje", placeholder: "Pregunta a PrepPilot o registra una comida...", stop: "Detener respuesta", send: "Enviar mensaje",
   messages: "Mensajes de la conversación", preparingResponse: "Preparando respuesta...", quickPrompts: "Acciones rápidas",
   you: "Tú:", assistant: "Asistente:", rejected: "Mensaje rechazado", toolActivity: "Actividad de herramientas del asistente",
+  toolStepRunning: "En curso", toolStepCompleted: "Completado", toolStepFailed: "No se pudo completar",
   title: "Chat del asistente de cocina con IA", conversationsError: "No se han podido cargar las conversaciones. Inténtalo de nuevo.",
   historyError: "No se ha podido cargar esta conversación. Inténtalo de nuevo.", loading: "Cargando conversación",
   emptyHistory: "Todavía no hay mensajes en esta conversación.", emptyChat: "Inicia una conversación con tu asistente de cocina.",

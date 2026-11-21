@@ -3,7 +3,9 @@ import { dailySummaryQuerySchema } from "../meal-logs/meal-logs.schema";
 import { inventoryItemSchema } from "../inventory/inventory.schema";
 import { profileSchema } from "../profile/profile.schema";
 
-export const mealSuggestionsRequestSchema = dailySummaryQuerySchema.refine(
+export const mealSuggestionsRequestSchema = dailySummaryQuerySchema.safeExtend({
+  locale: z.enum(["en", "hu", "es"]).default("en").describe("Selected application language for generated suggestions."),
+}).refine(
   (value) => value.from !== undefined && value.to !== undefined,
   { message: "Local-day bounds are required." },
 );
@@ -26,6 +28,7 @@ export const mealSuggestionsSchema = z.object({
   note: z.string().max(500).describe("Missing information, safety, and estimate caveats."),
 }).strict();
 export const mealSuggestionsResponseSchema = mealSuggestionsSchema.extend({
+  noStock: z.boolean().optional().describe("Whether the user needs to add inventory before receiving suggestions."),
   suggestions: z.array(mealSuggestionSchema.extend({
     items: z.array(suggestionItemSchema.extend({
       name: z.string().min(1),

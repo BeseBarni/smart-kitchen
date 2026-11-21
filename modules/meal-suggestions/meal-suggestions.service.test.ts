@@ -1,7 +1,9 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { validateSuggestions } from "./meal-suggestions.service";
-import type { MealSuggestions, SuggestionContext } from "./meal-suggestions.schema";
+import {
+  mealSuggestionsRequestSchema, mealSuggestionsResponseSchema, type MealSuggestions, type SuggestionContext,
+} from "./meal-suggestions.schema";
 
 const id = "10000000-0000-4000-8000-000000000001";
 const context: SuggestionContext = {
@@ -17,6 +19,18 @@ const plan: MealSuggestions = {
   note: "Estimated fiber.",
   suggestions: [{ mealType: "lunch", title: "Beans", explanation: "Cook thoroughly.", estimatedFiberG: 4, items: [{ inventoryItemId: id, quantity: 1 }] }],
 };
+
+test("meal suggestions requests carry a supported locale and default to English", () => {
+  const request = {
+    date: "2026-03-29",
+    from: "2026-03-29T00:00:00.000Z",
+    to: "2026-03-30T00:00:00.000Z",
+  };
+  assert.equal(mealSuggestionsRequestSchema.parse(request).locale, "en");
+  assert.equal(mealSuggestionsRequestSchema.parse({ ...request, locale: "hu" }).locale, "hu");
+  assert.equal(mealSuggestionsRequestSchema.safeParse({ ...request, locale: "fr" }).success, false);
+  assert.equal(mealSuggestionsResponseSchema.parse({ suggestions: [], note: "", noStock: true }).noStock, true);
+});
 
 test("valid suggestions include authoritative stock names", () => {
   const result = validateSuggestions(context, plan);

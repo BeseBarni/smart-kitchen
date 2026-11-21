@@ -3,6 +3,7 @@ import { err, ok, type AppError, type Result } from "@app/shared";
 import { generateStructuredMultimodal } from "../core/llm.client";
 import type { SkillRun } from "./skill.types";
 import { estimatedMacrosPerUnitSchema, generatedShelfLifeDaysSchema, type ConversationStreamInput } from "@app/modules/schemas";
+import { languageReminder } from "../agents/language";
 
 const confidenceSchema = z.enum(["high", "medium", "low"]);
 const suggestedTagSchema = z.object({
@@ -143,7 +144,7 @@ export async function executeVisionExtractor(
   const started = Date.now();
   const generated = await generateStructuredMultimodal({
     schema: visionExtractorOutputSchema,
-    system: "You are a strict multimodal kitchen image extractor. No chat history is available.",
+    system: `You are a strict multimodal kitchen image extractor. No chat history is available.\n${languageReminder(parsed.data.userLocale)}`,
     prompt: prompt(parsed.data),
     images: parsed.data.images,
   });

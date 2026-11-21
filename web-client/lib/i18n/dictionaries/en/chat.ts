@@ -2,6 +2,7 @@ export const chat = {
   message: "Message", placeholder: "Ask PrepPilot or log meal...", stop: "Stop response", send: "Send message",
   messages: "Conversation messages", preparingResponse: "Preparing response...", quickPrompts: "Quick prompts",
   you: "You:", assistant: "Assistant:", rejected: "Message rejected", toolActivity: "Assistant tool activity",
+  toolStepRunning: "In progress", toolStepCompleted: "Completed", toolStepFailed: "Could not complete",
   title: "AI Kitchen Assistant Chat", conversationsError: "Could not load conversations. Please try again.",
   historyError: "Could not load this conversation. Please try again.", loading: "Loading conversation",
   emptyHistory: "No messages in this conversation yet.", emptyChat: "Start a conversation with your kitchen assistant.",
