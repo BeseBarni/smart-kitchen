@@ -21,7 +21,10 @@ export function ItemDetailModal(): React.JSX.Element {
   const mutations = useInventoryMutations();
   return (
     <Sheet open={Boolean(id)} onOpenChange={(open) => { if (!open) close(); }}>
-      <SheetContent side="bottom" className="max-h-[92vh] overflow-y-auto rounded-t-3xl px-4 pb-[env(safe-area-inset-bottom)] sm:bottom-4 sm:left-1/2 sm:right-auto sm:w-[520px] sm:-translate-x-1/2 sm:rounded-2xl">
+      <SheetContent
+        side="bottom"
+        className="max-h-[92vh] overflow-y-auto rounded-t-3xl px-4 pb-[env(safe-area-inset-bottom)] sm:data-[side=bottom]:inset-x-auto sm:data-[side=bottom]:bottom-auto sm:data-[side=bottom]:left-1/2 sm:data-[side=bottom]:right-auto sm:data-[side=bottom]:top-1/2 sm:data-[side=bottom]:h-[min(90vh,800px)] sm:data-[side=bottom]:w-[520px] sm:data-[side=bottom]:-translate-x-1/2 sm:data-[side=bottom]:-translate-y-1/2 sm:data-[side=bottom]:rounded-2xl sm:data-[side=bottom]:border"
+      >
         {detail.isPending ? (
           <div className="space-y-3 pt-10" role="status" aria-label={t("inventory.detailLoading")}>
             <SheetTitle className="sr-only">{t("inventory.detailLoading")}</SheetTitle>
