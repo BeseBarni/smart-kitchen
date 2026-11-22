@@ -58,6 +58,15 @@ not cached or available offline.
 
 Run `pnpm typecheck` and `pnpm --filter @app/web-client build` from the root.
 
+## Vercel execution limit
+
+The shared API route requests a 300-second function duration to accommodate
+receipt vision processing and streamed chat. On Vercel this requires Fluid
+Compute and a plan supporting that duration; verify the project settings
+before deploying. The limit covers all API requests, not only receipt scans.
+It does not guarantee completion if the AI provider or other dependencies are
+slow or unavailable.
+
 ## Language
 
 Choose English, Magyar, or Español in Account. The preference is stored in this

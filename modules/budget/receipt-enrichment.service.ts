@@ -75,17 +75,22 @@ export async function enrichReceiptPreview(
   if (!categories.success) return categories;
   const merchant = await resolveMerchant(userId, input.merchant);
   const other = categories.data.find((category) => category.slug === "other") ?? categories.data[0];
+  const imageResults = await Promise.all(input.lines.map((line) =>
+    line.isFoodItem ? searchIngredientImages(line.normalizedName, 1) : null,
+  ));
+  const imageError = imageResults.find((result) => result && !result.success);
+  if (imageError && !imageError.success) {
+    console.warn("Receipt ingredient image lookup failed:", imageError.error.message);
+  }
   const items: ExtractedReceiptItemPreview[] = [];
   for (const [index, line] of input.lines.entries()) {
     const category = categories.data.find((entry) => entry.slug === line.categorySlug) ?? other;
     let stockImageKind: "themealdb_meal" | "themealdb_ingredient" | undefined;
     let stockImageName: string | undefined;
-    if (line.isFoodItem) {
-      const images = await searchIngredientImages(line.normalizedName, 1);
-      if (images.success && images.data[0]) {
-        stockImageKind = "themealdb_ingredient";
-        stockImageName = images.data[0].stockImageName;
-      }
+    const images = imageResults[index];
+    if (images?.success && images.data[0]) {
+      stockImageKind = "themealdb_ingredient";
+      stockImageName = images.data[0].stockImageName;
     }
     items.push({
       tempId: `receipt-${index}`,
