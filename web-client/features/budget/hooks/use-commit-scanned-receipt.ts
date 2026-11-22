@@ -63,7 +63,7 @@ export function useCommitScannedReceipt() {
     onMutate: async (input: CommitScannedReceiptInput) => {
       const context = await snapshotQueryCaches(client, [budgetKeys.all, inventoryKeys.all]);
       const createInput: CreateReceiptInput = {
-        ...(input.merchantId ? { merchantId: input.merchantId } : { merchantName: input.merchantName ?? "Unknown merchant" }),
+        ...(input.merchantId ? { merchantId: input.merchantId } : input.merchantName ? { merchantName: input.merchantName } : {}),
         source: "scanned",
         purchasedAt: input.purchasedAt,
         currency: input.currency,

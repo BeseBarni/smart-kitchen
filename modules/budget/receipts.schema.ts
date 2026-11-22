@@ -180,8 +180,8 @@ export const commitScannedReceiptInputSchema = z.object({
   notes: z.string().max(2000).optional(),
   items: z.array(commitScannedReceiptItemSchema).min(1).max(200),
 }).strict().refine(
-  (value) => Boolean(value.merchantId) !== Boolean(value.merchantName),
-  "Provide exactly one of merchantId or merchantName.",
+  (value) => !(value.merchantId && value.merchantName),
+  "Provide at most one of merchantId or merchantName.",
 );
 
 export const commitScannedReceiptResultDtoSchema = z.object({

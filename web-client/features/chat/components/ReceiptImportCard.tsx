@@ -82,7 +82,7 @@ export function ReceiptImportCard({ directive, source, disabled }: {
         disabled={disabled || !directive.mediaAssetId || !items.some((item) => item.selected) || commit.isPending}
         onClick={() => commit.mutate({
           mediaAssetId: directive.mediaAssetId,
-          ...(merchantId ? { merchantId } : { merchantName }),
+          ...(merchantId ? { merchantId } : merchantName.trim() ? { merchantName } : {}),
           purchasedAt: directive.purchasedAt ?? new Date().toISOString(),
           currency: directive.currency,
           items: items.filter((item) => item.selected).map((item) => ({

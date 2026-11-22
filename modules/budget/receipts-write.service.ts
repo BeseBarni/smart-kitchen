@@ -48,8 +48,12 @@ async function validateReceiptMedia(
   mediaAssetId: string | null | undefined,
 ): Promise<Result<true, AppError>> {
   if (!mediaAssetId) return ok(true);
-  const assets = await mediaService.assertOwnedUploadedAssets(userId, [mediaAssetId], "receipt_scan");
-  return assets.success ? ok(true) : err(assets.error);
+  const assets = await mediaService.assertOwnedUploadedAssets(userId, [mediaAssetId]);
+  if (!assets.success) return err(assets.error);
+  if (assets.data.some((asset) => asset.purpose !== "receipt_scan" && asset.purpose !== "chat_attachment")) {
+    return err({ code: "UNAUTHORIZED", message: "This media asset cannot be used as a receipt." });
+  }
+  return ok(true);
 }
 
 async function resolveMerchant(
