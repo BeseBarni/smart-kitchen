@@ -15,3 +15,7 @@ test("formats chat timestamps in the local time zone and selected locale", () =>
     else process.env.TZ = originalTimezone;
   }
 });
+
+test("omits an invalid chat timestamp instead of throwing", () => {
+  assert.equal(formatChatTime("not-a-date"), null);
+});

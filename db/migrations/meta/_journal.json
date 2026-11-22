@@ -71,6 +71,13 @@
       "when": 1795347382597,
       "tag": "0009_sticky_prima",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1795355225999,
+      "tag": "0010_canonical_expense_categories",
+      "breakpoints": true
     }
   ]
 }

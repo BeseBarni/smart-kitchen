@@ -1,4 +1,4 @@
-import { ok, type AppError, type Result } from "@app/shared";
+import { err, ok, type AppError, type Result } from "@app/shared";
 import * as categoriesService from "./expense-categories.service";
 import * as merchantsService from "./merchants.service";
 import { listWithStats as listMerchants } from "./merchants.repo";
@@ -73,6 +73,9 @@ export async function enrichReceiptPreview(
 }, AppError>> {
   const categories = await categoriesService.listAvailable(userId);
   if (!categories.success) return categories;
+  if (categories.data.length === 0) {
+    return err({ code: "INTERNAL_ERROR", message: "Expense categories have not been initialized." });
+  }
   const merchant = await resolveMerchant(userId, input.merchant);
   const other = categories.data.find((category) => category.slug === "other") ?? categories.data[0];
   const imageResults = await Promise.all(input.lines.map((line) =>

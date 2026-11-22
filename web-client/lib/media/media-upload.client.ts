@@ -30,7 +30,10 @@ function putFile(
     xhr.onerror = () => reject(new Error("chat.uploadFailed"));
     xhr.onabort = () => reject(new DOMException("Upload aborted", "AbortError"));
     xhr.open("PUT", uploadUrl);
-    for (const [name, value] of Object.entries(headers)) xhr.setRequestHeader(name, value);
+    for (const [name, value] of Object.entries(headers)) {
+      // The browser derives Content-Length from the Blob and forbids setting it manually.
+      if (name.toLowerCase() !== "content-length") xhr.setRequestHeader(name, value);
+    }
     signal?.addEventListener("abort", () => xhr.abort(), { once: true });
     xhr.send(blob);
   });

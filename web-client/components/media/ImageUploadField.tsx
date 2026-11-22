@@ -1,7 +1,7 @@
 "use client";
 
 import { Camera, ImagePlus, Trash2 } from "lucide-react";
-import { useRef } from "react";
+import { useRef, type ChangeEvent } from "react";
 import { Button } from "@/components/ui/button";
 import { useImageUpload } from "@/lib/media/use-image-upload";
 import type { UploadedImage } from "@/lib/media/media-upload.client";
@@ -38,11 +38,15 @@ export function ImageUploadField({
   const upload = useImageUpload(purpose);
   const preview = upload.result?.previewUrl ?? valueUrl;
   const choose = (input: HTMLInputElement | null): void => input?.click();
-  const handleFiles = async (files: FileList | null): Promise<void> => {
-    const file = files?.[0];
+  const handleFile = async (file: File | undefined): Promise<void> => {
     if (!file) return;
     const uploaded = await upload.upload(file);
     if (uploaded) onUploaded(uploaded);
+  };
+  const handleFileChange = (event: ChangeEvent<HTMLInputElement>): void => {
+    const file = event.currentTarget.files?.[0];
+    event.currentTarget.value = "";
+    void handleFile(file);
   };
   const shape = variant === "avatar"
     ? "size-24 rounded-full"
@@ -82,9 +86,9 @@ export function ImageUploadField({
       </div>
       {upload.error && <p role="alert" className="text-body-sm text-destructive">{upload.error}</p>}
       <input ref={galleryRef} type="file" accept="image/jpeg,image/png,image/webp,image/avif" className="hidden"
-        onChange={(event) => void handleFiles(event.target.files)} />
+        onChange={handleFileChange} />
       <input ref={cameraRef} type="file" accept="image/*" capture="environment" className="hidden"
-        onChange={(event) => void handleFiles(event.target.files)} />
+        onChange={handleFileChange} />
     </div>
   );
 }

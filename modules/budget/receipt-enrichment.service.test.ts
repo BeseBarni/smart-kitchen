@@ -2,15 +2,13 @@ import assert from "node:assert/strict";
 import { mock, test } from "node:test";
 
 test("receipt enrichment shares a catalog request across food lines, including on failure", async () => {
+  let categoryData = [
+    { id: "00000000-0000-4000-8000-000000000001", slug: "food" },
+    { id: "00000000-0000-4000-8000-000000000002", slug: "other" },
+  ];
   const categories = mock.module("./expense-categories.service", {
     namedExports: {
-      listAvailable: async () => ({
-        success: true,
-        data: [
-          { id: "00000000-0000-4000-8000-000000000001", slug: "food" },
-          { id: "00000000-0000-4000-8000-000000000002", slug: "other" },
-        ],
-      }),
+      listAvailable: async () => ({ success: true, data: categoryData }),
     },
   });
   let fetches = 0;
@@ -75,6 +73,13 @@ test("receipt enrichment shares a catalog request across food lines, including o
     assert.equal(recovered.data.items[0]?.stockImageName, "tomato");
     assert.equal(recovered.data.items[1]?.stockImageName, "chicken");
     assert.equal(recovered.data.items[15]?.stockImageName, undefined);
+
+    categoryData = [];
+    const missingCategories = await enrichReceiptPreview("user", { ...input, lines: [] });
+    assert.equal(missingCategories.success, false);
+    if (missingCategories.success) return;
+    assert.equal(missingCategories.error.code, "INTERNAL_ERROR");
+    assert.equal(missingCategories.error.message, "Expense categories have not been initialized.");
   } finally {
     warnings.mock.restore();
     fetchMock.mock.restore();
