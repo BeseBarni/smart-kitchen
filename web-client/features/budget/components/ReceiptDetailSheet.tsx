@@ -7,6 +7,7 @@ import { useBudgetUiStore } from "../stores/budget-ui.store";
 import { useReceiptDetail } from "../hooks/use-receipt-detail";
 import { useBudgetMutations } from "../hooks/use-budget-mutations";
 import { useBudgetOverview } from "../hooks/use-budget-overview";
+import { expenseCategoryLabel } from "../utils/category-label.utils";
 
 export function ReceiptDetailSheet(): React.JSX.Element {
   const { t, formatCurrency, formatDate } = useText();
@@ -43,7 +44,7 @@ export function ReceiptDetailSheet(): React.JSX.Element {
                 ingredientId: line.ingredientId,
               }));
               mutations.update.mutate({ id: receipt.id, input: { items } });
-            }} className="h-11 rounded-lg border border-outline-variant px-2">{categories.map((category) => <option key={category.id} value={category.id}>{category.label}</option>)}</select>
+            }} className="h-11 rounded-lg border border-outline-variant px-2">{categories.map((category) => <option key={category.id} value={category.id}>{expenseCategoryLabel(category, t)}</option>)}</select>
           </div>)}
         </div>
         <div className="flex gap-2"><Button type="button" className="h-12 flex-1" onClick={() => ui.setEditingReceipt(receipt.id)}>{t("budget.editReceipt")}</Button>

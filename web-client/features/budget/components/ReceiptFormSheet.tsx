@@ -17,6 +17,7 @@ import { MerchantSelectChips } from "./MerchantSelectChips";
 import { useExtractReceiptFromMedia } from "../hooks/use-extract-receipt-from-media";
 import { useCommitScannedReceipt } from "../hooks/use-commit-scanned-receipt";
 import { ManualExpenseFields } from "./ManualExpenseFields";
+import { expenseCategoryLabel } from "../utils/category-label.utils";
 import { X } from "lucide-react";
 
 const EMPTY_CATEGORIES: ExpenseCategoryDto[] = [];
@@ -197,13 +198,13 @@ export function ReceiptFormSheet({ detail }: { detail?: ReceiptDetailDto }): Rea
                 const category = categories.find((candidate) => candidate.id === merchant.defaultCategoryId);
                 if (category) {
                   form.setValue("items.0.categoryId", category.id, { shouldDirty: true });
-                  form.setValue("items.0.name", category.label, { shouldDirty: true });
+                  form.setValue("items.0.name", expenseCategoryLabel(category, t), { shouldDirty: true });
                 }
               }
             }}
             onCategorySelect={(category) => {
               form.setValue("items.0.categoryId", category.id, { shouldDirty: true });
-              form.setValue("items.0.name", category.label, { shouldDirty: true });
+              form.setValue("items.0.name", expenseCategoryLabel(category, t), { shouldDirty: true });
             }}
             onPurchasedAtChange={(value) => form.setValue("purchasedAt", value, { shouldDirty: true, shouldValidate: true })}
             onScanReceipt={() => ui.openSheet("create-scanned")}
@@ -248,7 +249,7 @@ export function ReceiptFormSheet({ detail }: { detail?: ReceiptDetailDto }): Rea
             <input type="number" step="0.01" {...form.register(`items.${index}.amount`, { valueAsNumber: true })} placeholder={t("budget.amount")} className="h-11 rounded-lg border border-outline-variant px-2 tabular-nums" />
           </div>
           <select {...form.register(`items.${index}.categoryId`)} className="mt-2 h-11 w-full rounded-lg border border-outline-variant px-2">
-            {categories.map((category) => <option key={category.id} value={category.id}>{category.label}</option>)}
+            {categories.map((category) => <option key={category.id} value={category.id}>{expenseCategoryLabel(category, t)}</option>)}
           </select>
           <div className="mt-2 grid grid-cols-2 gap-2">
             <input type="number" min="0.01" step="0.01" {...form.register(`items.${index}.quantity`, { valueAsNumber: true })} placeholder={t("budget.quantity")} className="h-11 rounded-lg border border-outline-variant px-3" />

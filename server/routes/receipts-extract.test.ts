@@ -13,6 +13,7 @@ test("receipt extraction overlaps media loading and context queries after owners
   let owned = false;
   let extractionKind: "receipt" | "other" = "receipt";
   let enrichedLines: unknown;
+  let extractedLocale: string | undefined;
   const modulesMock = mock.module("@app/modules", {
     namedExports: {
       ...modules,
@@ -58,19 +59,22 @@ test("receipt extraction overlaps media loading and context queries after owners
   });
   const aiMock = mock.module("@app/ai", {
     namedExports: {
-      executeReceiptPreviewExtractor: async () => ({
-        success: true,
-        data: {
-          output: extractionKind === "other" ? { kind: "other" } : {
-            kind: "receipt", merchant: null, purchasedAt: null, currency: "HUF", ambiguities: [],
-            lineItems: [{
-              rawText: "MILK", normalizedName: "Milk", quantity: 1, unit: "l", amount: 10,
-              categorySlug: "food", isFoodItem: true, suggestedStorageLocation: "fridge",
-              estimatedShelfLifeDays: 4, shelfLifeDays: { fridge: 4 }, confidence: "high",
-            }],
+      executeReceiptPreviewExtractor: async (input: { userLocale?: string }) => {
+        extractedLocale = input.userLocale;
+        return {
+          success: true,
+          data: {
+            output: extractionKind === "other" ? { kind: "other" } : {
+              kind: "receipt", merchant: null, purchasedAt: null, currency: "HUF", ambiguities: [],
+              lineItems: [{
+                rawText: "MILK", normalizedName: "Milk", quantity: 1, unit: "l", amount: 10,
+                categorySlug: "food", isFoodItem: true, suggestedStorageLocation: "fridge",
+                estimatedShelfLifeDays: 4, shelfLifeDays: { fridge: 4 }, confidence: "high",
+              }],
+            },
           },
-        },
-      }),
+        };
+      },
     },
   });
   try {
@@ -78,7 +82,7 @@ test("receipt extraction overlaps media loading and context queries after owners
     const request = () => receiptRoutes.request("/extract-from-media", {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({ mediaAssetId: "00000000-0000-4000-8000-000000000001" }),
+      body: JSON.stringify({ mediaAssetId: "00000000-0000-4000-8000-000000000001", userLocale: "hu" }),
     });
     const pending = request();
     await started;
@@ -88,6 +92,7 @@ test("receipt extraction overlaps media loading and context queries after owners
     releaseObject();
     assert.equal((await pending).status, 200);
     assert.equal(Array.isArray(enrichedLines) && enrichedLines.length, 1);
+    assert.equal(extractedLocale, "hu");
 
     extractionKind = "other";
     assert.equal((await request()).status, 422);

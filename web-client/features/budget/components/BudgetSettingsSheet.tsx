@@ -8,6 +8,7 @@ import { useText } from "@/lib/i18n";
 import { useBudgetUiStore } from "../stores/budget-ui.store";
 import { useBudgetMutations } from "../hooks/use-budget-mutations";
 import { useBudgetOverview } from "../hooks/use-budget-overview";
+import { expenseCategoryLabel } from "../utils/category-label.utils";
 
 export function BudgetSettingsSheet({ summary }: { summary: MonthlyBudgetSummaryDto }): React.JSX.Element {
   const { t, formatCurrency } = useText();
@@ -47,7 +48,7 @@ export function BudgetSettingsSheet({ summary }: { summary: MonthlyBudgetSummary
             className="mt-1 h-12 w-full rounded-lg border border-outline-variant px-3 uppercase" /></label>
         <h3 className="text-title-sm">{t("budget.categoryAllocations")}</h3>
         {categories.map((category) => <label key={category.id} className="flex min-h-14 items-center justify-between gap-3 rounded-xl border border-outline-variant px-3">
-          <span className="text-body-md">{category.label}</span>
+          <span className="text-body-md">{expenseCategoryLabel(category, t)}</span>
           <input type="number" min="0" step="0.01" value={limits[category.id] ?? 0}
             onChange={(event) => setLimits((current) => ({ ...current, [category.id]: Number(event.target.value) }))}
             className="h-11 w-28 rounded-lg border border-outline-variant px-2 text-right tabular-nums" />

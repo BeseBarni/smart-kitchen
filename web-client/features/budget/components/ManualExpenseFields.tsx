@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import type { ExpenseCategoryDto, MerchantDto } from "@app/modules/schemas";
 import { useText } from "@/lib/i18n";
+import { expenseCategoryLabel } from "../utils/category-label.utils";
 
 type Props = {
   amount: number;
@@ -48,16 +49,6 @@ function categoryIcon(slug: string): React.JSX.Element {
     case "entertainment": return <Coffee className={className} />;
     case "other": return <CookingPot className={className} />;
     default: return <Tag className={className} />;
-  }
-}
-
-function categoryTitle(slug: string, label: string, t: ReturnType<typeof useText>["t"]): string {
-  switch (slug) {
-    case "food": return t("budget.categories.food");
-    case "household": return t("budget.categories.household");
-    case "entertainment": return t("budget.categories.entertainment");
-    case "other": return t("budget.categories.other");
-    default: return label;
   }
 }
 
@@ -165,7 +156,7 @@ export function ManualExpenseFields({
                 {categoryIcon(category.slug)}
               </span>
               <span className="flex min-w-0 flex-col">
-                <span className="truncate text-title-sm leading-tight">{categoryTitle(category.slug, category.label, t)}</span>
+                <span className="truncate text-title-sm leading-tight">{expenseCategoryLabel(category, t)}</span>
                 <span className={`truncate text-label-sm ${selected ? "text-primary" : "text-on-surface-variant"}`}>
                   {categoryDescription(category.slug, t)}
                 </span>

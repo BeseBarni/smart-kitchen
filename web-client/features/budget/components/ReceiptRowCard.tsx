@@ -2,6 +2,7 @@ import { Sparkles, CookingPot, FileText, Package } from "lucide-react";
 import type { ReceiptSummaryDto } from "@app/modules/schemas";
 import { useText } from "@/lib/i18n";
 import { isOptimisticId } from "@/lib/optimistic";
+import { expenseCategoryLabel } from "../utils/category-label.utils";
 
 function dominantIcon(category: ReceiptSummaryDto["categorySummary"][number] | undefined): React.JSX.Element {
   if (!category) return <FileText size={18} />;
@@ -20,7 +21,7 @@ export function ReceiptRowCard({ receipt, onOpen }: { receipt: ReceiptSummaryDto
     <span className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-surface-container-low text-primary">{dominantIcon(dominant)}</span>
     <span className="min-w-0 flex-1">
       <strong className="block truncate text-body-md">{title}</strong>
-      <span className="block text-label-md text-muted-foreground">{dominant?.category.label ?? t("budget.manual")} • {t("budget.items", { count: receipt.itemCount })}</span>
+      <span className="block text-label-md text-muted-foreground">{dominant ? expenseCategoryLabel(dominant.category, t) : t("budget.manual")} • {t("budget.items", { count: receipt.itemCount })}</span>
     </span>
     <span className="text-right"><strong className="block tabular-nums">-{formatCurrency(receipt.totalAmount, receipt.currency)}</strong><span className="text-label-md text-muted-foreground">{formatDate(date, { hour: "2-digit", minute: "2-digit" })}</span></span>
   </button>;
