@@ -14,6 +14,14 @@ import {
 } from "./receipts-write.repo";
 import { getReceiptDetail } from "./receipts-read.service";
 import type { CreateReceiptInput, ReceiptDetailDto, UpdateReceiptInput } from "./receipts.schema";
+import type {
+  CommitScannedReceiptInput,
+  CommitScannedReceiptResultDto,
+  CommitScannedReceiptItem,
+} from "./receipts.schema";
+import { insertScannedInventoryRows, insertScannedReceiptItems } from "./receipts-write.repo";
+import { resolveOrCreateTags } from "../tags/tags.service";
+import { list } from "../inventory/inventory.service";
 
 function notFound(): AppError {
   return { code: "ITEM_NOT_FOUND", message: "Receipt not found." };
@@ -49,9 +57,15 @@ async function resolveMerchant(
   merchantId: string | undefined,
   merchantName: string | undefined,
   tx: BudgetTransaction,
+  defaultCategoryId?: string,
 ): Promise<Result<string | null, AppError>> {
   if (merchantName !== undefined) {
-    const merchant = await merchantsService.findOrCreateByName(userId, merchantName, {}, tx);
+    const merchant = await merchantsService.findOrCreateByName(
+      userId,
+      merchantName,
+      defaultCategoryId ? { defaultCategoryId } : {},
+      tx,
+    );
     return merchant.success ? ok(merchant.data.id) : err(merchant.error);
   }
   if (!merchantId) return ok(null);
@@ -138,4 +152,93 @@ export async function remove(userId: string, id: string): Promise<Result<{ delet
       : err(notFound());
   });
   return result.success ? ok(result.data) : err(result.error);
+}
+
+export async function commitScannedReceipt(
+  userId: string,
+  input: CommitScannedReceiptInput,
+): Promise<Result<CommitScannedReceiptResultDto, AppError>> {
+  const categories = await categoriesService.assertCategoriesAccessible(
+    userId,
+    input.items.map((item) => item.categoryId),
+  );
+  if (!categories.success) return err(categories.error);
+  if (input.mediaAssetId) {
+    const media = await validateReceiptMedia(userId, input.mediaAssetId);
+    if (!media.success) return err(media.error);
+  }
+  const firstItem = input.items[0];
+  if (!firstItem) return err({ code: "VALIDATION_ERROR", message: "At least one receipt item is required." });
+  const dominantCategoryId = input.items.reduce<{ id: string; amount: number }>(
+    (dominant, item) => item.amount > dominant.amount
+      ? { id: item.categoryId, amount: item.amount }
+      : dominant,
+    { id: firstItem.categoryId, amount: firstItem.amount },
+  ).id;
+  const resolvedItems: CommitScannedReceiptItem[] = [];
+  for (const item of input.items) {
+    if (!item.addToInventory) {
+      resolvedItems.push(item);
+      continue;
+    }
+    if (!item.storageLocation) {
+      return err({ code: "VALIDATION_ERROR", message: "A stocked receipt item requires a storage location." });
+    }
+    if (item.tags?.length) {
+      const tags = await resolveOrCreateTags(userId, item.tags);
+      if (!tags.success) return err(tags.error);
+      resolvedItems.push({ ...item, tags: tags.data.map((tag) => ({ slug: tag.slug, label: tag.label })) });
+    } else {
+      resolvedItems.push(item);
+    }
+  }
+  const created = await withReceiptTransaction(userId, async (ownerId, tx) => {
+    const merchant = await resolveMerchant(
+      ownerId,
+      input.merchantId,
+      input.merchantName,
+      tx,
+      dominantCategoryId,
+    );
+    if (!merchant.success) return err(merchant.error);
+    const merchantId = merchant.data;
+    const receipt = await insertReceiptRow(ownerId, tx, {
+      merchantId,
+      mediaAssetId: input.mediaAssetId ?? null,
+      source: "scanned",
+      title: input.title ?? null,
+      purchasedAt: new Date(input.purchasedAt),
+      currency: input.currency,
+      notes: input.notes ?? null,
+    });
+    if (!receipt.success) return err(receipt.error);
+    const inventory = await insertScannedInventoryRows(ownerId, tx, input.currency, resolvedItems);
+    if (!inventory.success) return err(inventory.error);
+    const items = await insertScannedReceiptItems(
+      ownerId,
+      tx,
+      receipt.data.id,
+      resolvedItems,
+      inventory.data,
+    );
+    if (!items.success) return err(items.error);
+    return ok({ receiptId: receipt.data.id, inventoryIds: inventory.data.map((entry) => entry.item.id) });
+  });
+  if (!created.success) return err(created.error);
+  const receipt = await getReceiptDetail(userId, created.data.receiptId);
+  if (!receipt.success) return err(receipt.error);
+  const inventory = await list(userId, {
+    storageLocation: undefined,
+    status: "in_stock",
+    search: undefined,
+    sortBy: "createdAt",
+    limit: 100,
+    offset: 0,
+  });
+  if (!inventory.success) return err(inventory.error);
+  const idSet = new Set(created.data.inventoryIds);
+  return ok({
+    receipt: receipt.data,
+    createdInventoryItems: inventory.data.filter((item) => idSet.has(item.id)),
+  });
 }

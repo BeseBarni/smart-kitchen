@@ -7,6 +7,7 @@ export type AgentName =
   | "inventory_ops"
   | "recipe_architect"
   | "kitchen_advisor"
+  | "budget_agent"
   | "vision_extractor";
 
 export type AgentStreamEvent =

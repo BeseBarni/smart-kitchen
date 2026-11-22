@@ -16,4 +16,5 @@ export * as expenseCategoriesService from "./budget/expense-categories.service";
 export * as merchantService from "./budget/merchants.service";
 export * as receiptReadService from "./budget/receipts-read.service";
 export * as receiptWriteService from "./budget/receipts-write.service";
+export * as receiptEnrichmentService from "./budget/receipt-enrichment.service";
 export * as budgetService from "./budget/budget.service";

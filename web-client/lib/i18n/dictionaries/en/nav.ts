@@ -4,6 +4,7 @@ export const nav = {
   inventory: "Inventory",
   recipes: "Recipes",
   tracker: "Calories",
+  budget: "Budget",
   account: "Account",
   assistant: "Assistant Chat",
 } as const;

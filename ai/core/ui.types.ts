@@ -1,4 +1,4 @@
-import type { NutritionTargetChanges } from "@app/modules/schemas";
+import type { MonthlyBudgetSummaryDto, NutritionTargetChanges } from "@app/modules/schemas";
 
 export type InventoryActionSummary = {
   id: string;
@@ -108,20 +108,29 @@ export type UiDirective =
     }
   | {
       component: "receipt_import_card";
+      mediaAssetId?: string;
+      mediaUrl?: string;
       merchant: string | null;
+      matchedMerchantId?: string | null;
+      merchantName?: string | null;
       purchasedAt: string | null;
       currency: string;
       totalAmount: number | null;
+      ambiguities?: string[];
       items: Array<{
         tempId: string;
         name: string;
         quantity: number;
         unit: string;
+        rawReceiptText?: string;
         priceAmount: number | null;
+        amount?: number;
+        categoryId?: string;
+        categorySlug?: string;
+        addToInventory?: boolean;
         storageLocation: "fridge" | "freezer" | "pantry";
         estimatedShelfLifeDays: number | null;
         expiresAt?: string | null;
-        shelfLifeDays?: { fridge?: number | null; freezer?: number | null; pantry?: number | null };
         estimatedMacrosPerUnit?: {
           calories: number | null;
           proteinG: number | null;
@@ -129,7 +138,15 @@ export type UiDirective =
           fatG: number | null;
           fiberG: number | null;
         } | null;
+        shelfLifeDays?: { fridge?: number | null; freezer?: number | null; pantry?: number | null };
+        suggestedTags?: Array<{ slug?: string; label: string; category?: "dietary" | "nutrition" | "prep" | "flavor" | "custom" }>;
+        stockImageKind?: "themealdb_meal" | "themealdb_ingredient";
+        stockImageName?: string;
         isFoodItem: boolean;
         confidence: "high" | "medium" | "low";
       }>;
+    }
+  | {
+      component: "budget_summary_card";
+      summary: MonthlyBudgetSummaryDto;
     };

@@ -20,6 +20,11 @@ export const visionExtractorInputSchema = z
     userCaption: z.string().trim().max(4000).optional(),
     userLocale: z.enum(["en", "hu", "es"]),
     defaultCurrency: z.string().trim().min(1).max(8),
+    availableCategories: z.array(z.object({
+      slug: z.string().trim().min(1),
+      label: z.string().trim().min(1),
+    }).strict()).optional(),
+    knownMerchants: z.array(z.string().trim().min(1)).max(20).optional(),
   })
   .strict();
 
@@ -35,9 +40,9 @@ export const visionExtractorOutputSchema = z.discriminatedUnion("kind", [
       normalizedName: z.string(),
       quantity: z.number().positive(),
       unit: z.string(),
-      totalPrice: z.number().nonnegative().nullable(),
-      unitPrice: z.number().nonnegative().nullable(),
-      suggestedStorageLocation: z.enum(["fridge", "freezer", "pantry"]),
+      amount: z.number().nonnegative(),
+      categorySlug: z.string().trim().min(1),
+      suggestedStorageLocation: z.enum(["fridge", "freezer", "pantry"]).nullable(),
       estimatedShelfLifeDays: z.number().positive().nullable(),
       expiresAt: z.iso.datetime().nullable().describe("Explicitly visible, unambiguous expiration timestamp, or null; never infer a label date."),
       estimatedMacrosPerUnit: estimatedMacrosPerUnitSchema.nullable()
@@ -118,12 +123,19 @@ export function visionSkillImages(
 }
 
 function prompt(input: z.output<typeof visionExtractorInputSchema>): string {
+  const categories = input.availableCategories?.map((category) => `${category.slug} (${category.label})`).join(", ");
+  const merchants = input.knownMerchants?.join(", ");
   return [
     "<role>Classify and extract one kitchen photo scenario accurately.</role>",
     "<rules>",
     "Handle English and Hungarian grocery receipts, including common abbreviations.",
     "Expand product names when clear; preserve raw receipt text and never invent illegible numbers.",
-    "Exclude bags, toiletries, cleaning supplies, and other non-food rows from receipt import.",
+    "For receipt images, keep EVERY genuine purchased line item: groceries, cleaning supplies, toiletries, pet food, litter, pharmacy goods, tickets, entertainment, plastic bags, and deposit fees.",
+    "Assign each receipt row exactly one categorySlug from the available category list. Use `food` for edible groceries, `household` for cleaning/pet/pharmacy/home goods, `entertainment` for tickets/media, and `other` for ambiguities or fees.",
+    "Use `amount` as the exact paid line total after line discounts. Put only unallocated basket-wide discounts or uncertain totals in ambiguities[]. Never invent a line amount.",
+    "Exclude VAT/ÁFA summary rows, subtotals, card-payment rows, loyalty totals, change due, and other receipt metadata, but preserve itemized paid bags or DRS/palackbetét deposit fees.",
+    "Prefer one of the known merchant names for the merchant field instead of copying legal suffixes. Categories: " + (categories ?? "food, household, entertainment, other") + ".",
+    "Known merchants: " + (merchants ?? "none"),
     "For each identifiable food receipt row, estimate calories, protein, carbs, fat and fiber per ONE of its stated quantity units, not per 100g or per entire purchase unless that is the unit. For example, for grams divide typical per-100g nutrition by 100. Use null for values that cannot be reasonably estimated, especially when package size is unknown. These are estimates, not label measurements.",
     "Estimate prepared-dish portion macros conservatively and distinguish visible ingredients from likely hidden staples.",
     "For every detected food or prepared dish provide conservative shelfLifeDays estimates in days for fridge, freezer, and pantry. Use null for unsuitable or unknown storage methods; estimates are not proof of freshness or safety. For receipt rows estimatedShelfLifeDays must match the suggested storage method.",

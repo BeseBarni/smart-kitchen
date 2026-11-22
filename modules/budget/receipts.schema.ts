@@ -1,6 +1,9 @@
 import { z } from "zod";
 import { expenseCategoryDtoSchema } from "./expense-categories.schema";
 import { merchantSummaryDtoSchema } from "./merchants.schema";
+import { inventoryItemSchema } from "../inventory/inventory.schema";
+import { shelfLifeDaysSchema } from "../tags/tags.schema";
+import { rawTagSchema } from "../tags/tags.schema";
 
 const currencySchema = z.string().regex(/^[A-Z]{3}$/, "Use a three-letter ISO currency code.");
 const receiptItemInputSchema = z.object({
@@ -18,8 +21,8 @@ const receiptMerchantChoice = z.object({
   merchantId: z.string().uuid().optional().describe("Existing merchant identifier."),
   merchantName: z.string().trim().min(1).max(120).optional().describe("Merchant to resolve or create."),
 }).refine(
-  ({ merchantId, merchantName }) => Boolean(merchantId) !== Boolean(merchantName),
-  "Provide exactly one of merchantId or merchantName.",
+  ({ merchantId, merchantName }) => !(merchantId && merchantName),
+  "Provide at most one of merchantId or merchantName.",
 );
 
 export const createReceiptInputSchema = receiptMerchantChoice.extend({
@@ -113,3 +116,82 @@ export type ListReceiptsQuery = z.infer<typeof listReceiptsQuerySchema>;
 export type ReceiptItemDto = z.infer<typeof receiptItemDtoSchema>;
 export type ReceiptSummaryDto = z.infer<typeof receiptSummaryDtoSchema>;
 export type ReceiptDetailDto = z.infer<typeof receiptDetailDtoSchema>;
+
+export const extractReceiptFromMediaInputSchema = z.object({
+  mediaAssetId: z.string().uuid().describe("Persisted uploaded receipt media asset."),
+  userLocale: z.enum(["en", "hu", "es"]).optional().describe("Locale used for receipt enrichment."),
+}).strict().describe("Input for extracting a private receipt image.");
+
+export const extractedReceiptItemPreviewSchema = z.object({
+  tempId: z.string().min(1),
+  rawReceiptText: z.string(),
+  name: z.string().trim().min(1),
+  quantity: z.number().positive(),
+  unit: z.string().trim().min(1),
+  amount: z.number().nonnegative(),
+  categoryId: z.string().uuid(),
+  categorySlug: z.string().trim().min(1),
+  isFoodItem: z.boolean(),
+  addToInventory: z.boolean(),
+  storageLocation: z.enum(["fridge", "freezer", "pantry"]),
+  estimatedShelfLifeDays: z.number().positive().nullable(),
+  shelfLifeDays: shelfLifeDaysSchema,
+  suggestedTags: z.array(rawTagSchema).max(3).default([]),
+  stockImageKind: z.enum(["themealdb_meal", "themealdb_ingredient"]).optional(),
+  stockImageName: z.string().trim().min(1).max(255).optional(),
+  confidence: z.enum(["high", "medium", "low"]),
+}).strict();
+
+export const extractedReceiptPreviewDtoSchema = z.object({
+  mediaAssetId: z.string().uuid(),
+  mediaUrl: z.string().url(),
+  merchantName: z.string().nullable(),
+  matchedMerchantId: z.string().uuid().nullable(),
+  matchedMerchantName: z.string().nullable(),
+  purchasedAt: z.iso.datetime(),
+  currency: z.string().regex(/^[A-Z]{3}$/),
+  ambiguities: z.array(z.string()),
+  items: z.array(extractedReceiptItemPreviewSchema).min(1).max(200),
+}).strict();
+
+export const commitScannedReceiptItemSchema = z.object({
+  name: z.string().trim().min(1).max(200),
+  rawReceiptText: z.string().max(500).optional(),
+  categoryId: z.string().uuid(),
+  amount: z.number().finite().nonnegative(),
+  quantity: z.number().finite().positive(),
+  unit: z.string().trim().min(1).max(32).optional(),
+  addToInventory: z.boolean(),
+  storageLocation: z.enum(["fridge", "freezer", "pantry"]).optional(),
+  expiresAt: z.iso.datetime().optional(),
+  shelfLifeDays: shelfLifeDaysSchema.optional(),
+  tags: z.array(rawTagSchema).max(3).optional(),
+  stockImageKind: z.enum(["themealdb_meal", "themealdb_ingredient"]).optional(),
+  stockImageName: z.string().trim().min(1).max(255).optional(),
+}).strict();
+
+export const commitScannedReceiptInputSchema = z.object({
+  mediaAssetId: z.string().uuid().optional(),
+  merchantId: z.string().uuid().optional(),
+  merchantName: z.string().trim().min(1).max(120).optional(),
+  title: z.string().trim().max(160).optional(),
+  purchasedAt: z.iso.datetime(),
+  currency: z.string().regex(/^[A-Z]{3}$/),
+  notes: z.string().max(2000).optional(),
+  items: z.array(commitScannedReceiptItemSchema).min(1).max(200),
+}).strict().refine(
+  (value) => Boolean(value.merchantId) !== Boolean(value.merchantName),
+  "Provide exactly one of merchantId or merchantName.",
+);
+
+export const commitScannedReceiptResultDtoSchema = z.object({
+  receipt: receiptDetailDtoSchema,
+  createdInventoryItems: z.array(inventoryItemSchema),
+}).strict();
+
+export type ExtractReceiptFromMediaInput = z.infer<typeof extractReceiptFromMediaInputSchema>;
+export type ExtractedReceiptItemPreview = z.infer<typeof extractedReceiptItemPreviewSchema>;
+export type ExtractedReceiptPreviewDto = z.infer<typeof extractedReceiptPreviewDtoSchema>;
+export type CommitScannedReceiptItem = z.infer<typeof commitScannedReceiptItemSchema>;
+export type CommitScannedReceiptInput = z.infer<typeof commitScannedReceiptInputSchema>;
+export type CommitScannedReceiptResultDto = z.infer<typeof commitScannedReceiptResultDtoSchema>;

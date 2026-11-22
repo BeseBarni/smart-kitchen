@@ -4,4 +4,12 @@ export type JsonValue =
   | JsonPrimitive
   | { readonly [key: string]: JsonValue }
   | readonly JsonValue[];
-export type AppDomain = "inventory" | "recipes" | "ingredients" | "meal-logs" | "profile";
+export type AppDomain =
+  | "inventory"
+  | "recipes"
+  | "ingredients"
+  | "meal-logs"
+  | "profile"
+  | "budget"
+  | "receipts"
+  | "merchants";

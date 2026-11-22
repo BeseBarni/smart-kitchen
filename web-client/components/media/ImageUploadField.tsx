@@ -15,8 +15,8 @@ export interface ImageUploadFieldLabels {
 }
 
 interface Props {
-  purpose: "avatar" | "recipe_cover" | "ingredient_photo";
-  variant: "avatar" | "cover" | "square";
+  purpose: "avatar" | "recipe_cover" | "ingredient_photo" | "inventory_photo" | "receipt_scan" | "chat_attachment";
+  variant: "avatar" | "cover" | "square" | "wide";
   labels: ImageUploadFieldLabels;
   valueUrl?: string | null;
   disabled?: boolean;
@@ -48,7 +48,9 @@ export function ImageUploadField({
     ? "size-24 rounded-full"
     : variant === "cover"
       ? "aspect-[4/3] w-full rounded-xl"
-      : "size-24 rounded-xl";
+      : variant === "wide"
+        ? "aspect-[16/9] w-full rounded-xl"
+        : "size-24 rounded-xl";
 
   return (
     <div className="space-y-2">

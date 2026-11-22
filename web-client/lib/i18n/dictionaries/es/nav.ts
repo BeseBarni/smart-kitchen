@@ -7,6 +7,7 @@ export const nav = {
   inventory: "Inventario",
   recipes: "Recetas",
   tracker: "Calorías",
+  budget: "Presupuesto",
   account: "Cuenta",
   assistant: "Asistente de cocina",
 } satisfies WidenStrings<typeof english>;

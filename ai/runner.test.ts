@@ -39,32 +39,41 @@ test("allows a receipt review tool on a turn without an automatic receipt", () =
   assert.equal(events.length, 1);
 });
 
-test("receipt review preserves per-unit nutrition estimates and excludes non-food", () => {
-  const macros = { calories: 0.82, proteinG: 0.017, carbsG: 0.23, fatG: 0.003, fiberG: null };
+test("receipt review preserves mixed-category paid lines", () => {
   const line = {
     rawText: "APPLES", normalizedName: "Apples", quantity: 500, unit: "g",
-    totalPrice: 4, unitPrice: null, suggestedStorageLocation: "fridge",
-    estimatedShelfLifeDays: 7, expiresAt: "2026-03-01T00:00:00.000Z",
-    estimatedMacrosPerUnit: macros, isFoodItem: true, confidence: "high",
+    amount: 4, categorySlug: "food", suggestedStorageLocation: "fridge",
+    estimatedShelfLifeDays: 7, isFoodItem: true, confidence: "high",
+    expiresAt: null, estimatedMacrosPerUnit: null,
     shelfLifeDays: { fridge: 7, freezer: 90, pantry: null },
   };
   const output = visionExtractorOutputSchema.parse({
     kind: "receipt", merchant: "Shop", purchasedAt: null, currency: "USD", totalAmount: 5,
-    lineItems: [line, { ...line, normalizedName: "Bag", isFoodItem: false, estimatedMacrosPerUnit: null }],
+    lineItems: [line, { ...line, rawText: "SOAP", normalizedName: "Soap", amount: 1, categorySlug: "household", isFoodItem: false, suggestedStorageLocation: null }],
     ambiguities: [],
   });
   assert.equal(output.kind, "receipt");
   if (output.kind !== "receipt") return;
-  const directive = receiptImportDirective(output);
-  assert.equal(directive.items.length, 1);
-  assert.deepEqual(directive.items[0]?.estimatedMacrosPerUnit, macros);
-  assert.deepEqual(directive.items[0]?.shelfLifeDays, line.shelfLifeDays);
-  assert.equal(directive.items[0]?.expiresAt, line.expiresAt);
-  assert.equal(directive.items[0]?.priceAmount, 4 / 500);
+  const preview = {
+    mediaAssetId: "00000000-0000-4000-8000-000000000001",
+    mediaUrl: "https://example.com/receipt.jpg",
+    merchantName: "Shop",
+    matchedMerchantId: null,
+    matchedMerchantName: null,
+    purchasedAt: "2026-03-01T00:00:00.000Z",
+    currency: "USD",
+    ambiguities: [],
+    items: [
+      { tempId: "receipt-0", rawReceiptText: "APPLES", name: "Apples", quantity: 500, unit: "g", amount: 4, categoryId: "00000000-0000-4000-8000-000000000002", categorySlug: "food", isFoodItem: true, addToInventory: true, storageLocation: "fridge" as const, estimatedShelfLifeDays: 7, shelfLifeDays: line.shelfLifeDays, suggestedTags: [], confidence: "high" as const },
+      { tempId: "receipt-1", rawReceiptText: "SOAP", name: "Soap", quantity: 1, unit: "piece", amount: 1, categoryId: "00000000-0000-4000-8000-000000000003", categorySlug: "household", isFoodItem: false, addToInventory: false, storageLocation: "pantry" as const, estimatedShelfLifeDays: null, shelfLifeDays: {}, suggestedTags: [], confidence: "high" as const },
+    ],
+  };
+  const directive = receiptImportDirective(preview);
+  assert.equal(directive.items.length, 2);
+  assert.equal(directive.items[0]?.categorySlug, "food");
+  assert.equal(directive.items[1]?.categorySlug, "household");
+  assert.equal(directive.items[0]?.priceAmount, 4);
   assert.deepEqual(uiDirectiveSchema.parse(directive), directive);
-  assert.equal(visionExtractorOutputSchema.safeParse({
-    ...output, lineItems: [{ ...line, estimatedMacrosPerUnit: { ...macros, proteinG: -1 } }],
-  }).success, false);
   assert.equal(visionExtractorOutputSchema.safeParse({
     ...output, lineItems: [{ ...line, shelfLifeDays: { fridge: 7 } }],
   }).success, false);

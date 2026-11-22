@@ -1,9 +1,9 @@
 import { z } from "zod";
-import { estimatedMacrosPerUnitSchema, nutritionTargetChangesSchema, rawTagSchema, shelfLifeDaysSchema, stockImageKindSchema } from "@app/modules/schemas";
+import { estimatedMacrosPerUnitSchema, monthlyBudgetSummaryDtoSchema, nutritionTargetChangesSchema, rawTagSchema, shelfLifeDaysSchema, stockImageKindSchema } from "@app/modules/schemas";
 import type { AgentStreamEvent } from "./stream.types";
 
-const agentNameSchema = z.enum(["orchestrator", "inventory_ops", "recipe_architect", "kitchen_advisor", "vision_extractor"]);
-const appDomainSchema = z.enum(["inventory", "recipes", "ingredients", "meal-logs", "profile"]);
+const agentNameSchema = z.enum(["orchestrator", "inventory_ops", "recipe_architect", "kitchen_advisor", "budget_agent", "vision_extractor"]);
+const appDomainSchema = z.enum(["inventory", "recipes", "ingredients", "meal-logs", "profile", "budget", "receipts", "merchants"]);
 const inventoryActionSchema = z.object({
   id: z.string(),
   name: z.string(),
@@ -33,6 +33,7 @@ const recipePayloadSchema = z.object({
   currency: z.string().optional(),
   tags: z.array(rawTagSchema).max(3).optional(),
   shelfLifeDays: shelfLifeDaysSchema.optional(),
+  estimatedMacrosPerUnit: estimatedMacrosPerUnitSchema.nullable().optional(),
 });
 export const uiDirectiveSchema = z.discriminatedUnion("component", [
   z.object({ component: z.literal("profile_targets_updated") }),
@@ -99,24 +100,40 @@ export const uiDirectiveSchema = z.discriminatedUnion("component", [
   }),
   z.object({
     component: z.literal("receipt_import_card"),
+    mediaAssetId: z.string().uuid().optional(),
+    mediaUrl: z.string().url().optional(),
     merchant: z.string().nullable(),
+    matchedMerchantId: z.string().uuid().nullable().optional(),
+    merchantName: z.string().nullable().optional(),
     purchasedAt: z.string().nullable(),
     currency: z.string(),
     totalAmount: z.number().nullable(),
+    ambiguities: z.array(z.string()).optional(),
     items: z.array(z.object({
       tempId: z.string(),
       name: z.string(),
       quantity: z.number().positive(),
       unit: z.string(),
+      rawReceiptText: z.string().optional(),
       priceAmount: z.number().nonnegative().nullable(),
+      amount: z.number().nonnegative().optional(),
+      categoryId: z.string().uuid().optional(),
+      categorySlug: z.string().optional(),
+      addToInventory: z.boolean().optional(),
       storageLocation: z.enum(["fridge", "freezer", "pantry"]),
       estimatedShelfLifeDays: z.number().positive().nullable(),
       expiresAt: z.iso.datetime().nullable().optional(),
       shelfLifeDays: shelfLifeDaysSchema.optional(),
-      estimatedMacrosPerUnit: estimatedMacrosPerUnitSchema.nullable().optional(),
+      suggestedTags: z.array(rawTagSchema).max(3).optional(),
+      stockImageKind: z.enum(["themealdb_meal", "themealdb_ingredient"]).optional(),
+      stockImageName: z.string().optional(),
       isFoodItem: z.boolean(),
       confidence: z.enum(["high", "medium", "low"]),
     })),
+  }),
+  z.object({
+    component: z.literal("budget_summary_card"),
+    summary: monthlyBudgetSummaryDtoSchema,
   }),
 ]);
 

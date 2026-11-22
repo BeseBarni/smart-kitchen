@@ -1,4 +1,5 @@
-export type MediaPurpose = "avatar" | "recipe_cover" | "ingredient_photo" | "chat_attachment";
+import type { MediaPurpose } from "@app/modules/schemas";
+export type { MediaPurpose } from "@app/modules/schemas";
 
 export interface CompressedImage {
   blob: Blob;
@@ -12,6 +13,7 @@ export interface CompressedImage {
 function preset(purpose: MediaPurpose): { maxEdge: number; square: boolean; quality: number } {
   if (purpose === "avatar") return { maxEdge: 512, square: true, quality: 0.85 };
   if (purpose === "chat_attachment") return { maxEdge: 1600, square: false, quality: 0.82 };
+  if (purpose === "receipt_scan") return { maxEdge: 1600, square: false, quality: 0.82 };
   return { maxEdge: 1280, square: false, quality: 0.84 };
 }
 

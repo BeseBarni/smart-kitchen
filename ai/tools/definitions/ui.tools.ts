@@ -1,4 +1,9 @@
-import { chatJsonValueSchema, estimatedMacrosPerUnitSchema, generatedShelfLifeDaysSchema } from "@app/modules";
+import {
+  chatJsonValueSchema,
+  estimatedMacrosPerUnitSchema,
+  generatedShelfLifeDaysSchema,
+  monthlyBudgetSummaryDtoSchema,
+} from "@app/modules";
 import { z } from "zod";
 import { defineTool, toolOk } from "./tool.types";
 
@@ -80,22 +85,36 @@ export const presentRecommendationsTool = defineTool({
 });
 
 const receiptImportSchema = z.object({
+  mediaAssetId: z.string().uuid(),
+  mediaUrl: z.string().url(),
   merchant: z.string().nullable(),
+  matchedMerchantId: z.string().uuid().nullable(),
+  merchantName: z.string().nullable(),
   purchasedAt: z.string().nullable(),
   currency: z.string(),
   totalAmount: z.number().nonnegative().nullable(),
+  ambiguities: z.array(z.string()),
   items: z.array(z.object({
     tempId: z.string(),
     name: z.string(),
     quantity: z.number().positive(),
     unit: z.string(),
+    rawReceiptText: z.string(),
     priceAmount: z.number().nonnegative().nullable(),
+    amount: z.number().nonnegative(),
+    categoryId: z.string().uuid(),
+    categorySlug: z.string(),
+    addToInventory: z.boolean(),
     storageLocation: z.enum(["fridge", "freezer", "pantry"]),
     estimatedShelfLifeDays: z.number().positive().nullable(),
-    expiresAt: z.iso.datetime().nullable().describe("Explicitly known expiry, or null."),
     shelfLifeDays: generatedShelfLifeDaysSchema,
-    estimatedMacrosPerUnit: estimatedMacrosPerUnitSchema.nullable().optional()
-      .describe("Estimated nutrition per quantity unit, if available."),
+    suggestedTags: z.array(z.object({
+      slug: z.string().optional(),
+      label: z.string(),
+      category: z.enum(["dietary", "nutrition", "prep", "flavor", "custom"]).optional(),
+    }).strict()).max(3),
+    stockImageKind: z.enum(["themealdb_meal", "themealdb_ingredient"]).optional(),
+    stockImageName: z.string().optional(),
     isFoodItem: z.boolean(),
     confidence: z.enum(["high", "medium", "low"]),
   }).strict()).describe("Editable extracted receipt food lines."),
@@ -111,9 +130,20 @@ export const presentReceiptImportTool = defineTool({
   toUiDirective: (input) => ({ component: "receipt_import_card", ...input }),
 });
 
+export const presentBudgetSummaryTool = defineTool({
+  name: "ui_present_budget_summary",
+  description: "Present a non-mutating compact monthly budget standing card.",
+  inputSchema: monthlyBudgetSummaryDtoSchema,
+  outputSchema: monthlyBudgetSummaryDtoSchema,
+  annotations: { readOnlyHint: true, idempotentHint: true },
+  execute: async (summary) => toolOk(summary),
+  toUiDirective: (summary) => ({ component: "budget_summary_card", summary }),
+});
+
 export const uiTools = [
   presentRecipeDraftTool,
   requestConfirmationTool,
   presentRecommendationsTool,
   presentReceiptImportTool,
+  presentBudgetSummaryTool,
 ] as const;

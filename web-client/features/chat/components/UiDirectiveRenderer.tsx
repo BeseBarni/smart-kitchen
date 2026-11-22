@@ -8,6 +8,7 @@ import { MarkdownContent } from "@/components/MarkdownContent";
 import { ProfileTargetsConfirmation } from "./ProfileTargetsConfirmation";
 import { useText } from "@/lib/i18n";
 import { ReceiptImportCard } from "./ReceiptImportCard";
+import { BudgetSummaryCard } from "./BudgetSummaryCard";
 
 export function UiDirectiveRenderer({
   directive,
@@ -75,6 +76,9 @@ export function UiDirectiveRenderer({
   }
   if (directive.component === "receipt_import_card") {
     return <ReceiptImportCard directive={directive} source={receiptSource} disabled={disabled} />;
+  }
+  if (directive.component === "budget_summary_card") {
+    return <BudgetSummaryCard summary={directive.summary} />;
   }
   if (directive.component === "consumption_summary_card") {
     const meal = directive.loggedMeal;

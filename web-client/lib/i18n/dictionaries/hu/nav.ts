@@ -7,6 +7,7 @@ export const nav = {
   inventory: "Készlet",
   recipes: "Receptek",
   tracker: "Kalóriák",
+  budget: "Költségvetés",
   account: "Fiók",
   assistant: "Konyhai asszisztens",
 } satisfies WidenStrings<typeof english>;

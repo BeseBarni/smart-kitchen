@@ -4,6 +4,9 @@ import {
   type ConversationItemPayloadDto,
   type ConversationStreamInput,
   mediaService,
+  expenseCategoriesService,
+  merchantService,
+  receiptEnrichmentService,
 } from "@app/modules";
 import { err, ok, type AppError, type Result } from "@app/shared";
 import { FAST_MODEL } from "./core/llm.client";
@@ -63,25 +66,36 @@ export function assistantMessagePayload(
 }
 
 export function receiptImportDirective(
-  output: Extract<VisionExtractorOutput, { kind: "receipt" }>,
+  preview: import("@app/modules/schemas").ExtractedReceiptPreviewDto,
 ): Extract<UiDirective, { component: "receipt_import_card" }> {
   return {
     component: "receipt_import_card",
-    merchant: output.merchant,
-    purchasedAt: output.purchasedAt,
-    currency: output.currency,
-    totalAmount: output.totalAmount,
-    items: output.lineItems.filter((item) => item.isFoodItem).map((item, index) => ({
-      tempId: `receipt-${index}`,
-      name: item.normalizedName,
+    mediaAssetId: preview.mediaAssetId,
+    mediaUrl: preview.mediaUrl,
+    merchant: preview.matchedMerchantName ?? preview.merchantName,
+    matchedMerchantId: preview.matchedMerchantId,
+    merchantName: preview.merchantName,
+    purchasedAt: preview.purchasedAt,
+    currency: preview.currency,
+    totalAmount: preview.items.reduce((sum, item) => sum + item.amount, 0),
+    ambiguities: preview.ambiguities,
+    items: preview.items.map((item) => ({
+      tempId: item.tempId,
+      name: item.name,
       quantity: item.quantity,
       unit: item.unit,
-      priceAmount: item.unitPrice ?? (item.totalPrice != null ? item.totalPrice / item.quantity : null),
-      storageLocation: item.suggestedStorageLocation,
+      rawReceiptText: item.rawReceiptText,
+      priceAmount: item.amount,
+      amount: item.amount,
+      categoryId: item.categoryId,
+      categorySlug: item.categorySlug,
+      addToInventory: item.addToInventory,
+      storageLocation: item.storageLocation,
       estimatedShelfLifeDays: item.estimatedShelfLifeDays,
-      expiresAt: item.expiresAt,
       shelfLifeDays: item.shelfLifeDays,
-      estimatedMacrosPerUnit: item.estimatedMacrosPerUnit,
+      suggestedTags: item.suggestedTags,
+      stockImageKind: item.stockImageKind,
+      stockImageName: item.stockImageName,
       isFoodItem: item.isFoodItem,
       confidence: item.confidence,
     })),
@@ -248,6 +262,12 @@ export async function runStreamingTurn(input: {
           status: "analyzing_image",
           label: "Analyzing photo...",
         });
+        const [categories, knownMerchants] = await Promise.all([
+          expenseCategoriesService.listAvailable(input.userId),
+          merchantService.list(input.userId, { sort: "recommended", limit: 20 }),
+        ]);
+        if (!categories.success) throw new Error(categories.error.message);
+        if (!knownMerchants.success) throw new Error(knownMerchants.error.message);
         const extraction = await executeVisionExtractor({
           images: assetVisionAttachments.length > 0
             ? assetVisionAttachments
@@ -255,6 +275,8 @@ export async function runStreamingTurn(input: {
           userCaption: userCaption || undefined,
           userLocale: context.locale,
           defaultCurrency: "HUF",
+          availableCategories: categories.data.map((category) => ({ slug: category.slug, label: category.label })),
+          knownMerchants: knownMerchants.data.map((merchant) => merchant.name),
         });
         if (!extraction.success) throw new Error(extraction.error.message);
         const output = extraction.data.output;
@@ -265,7 +287,39 @@ export async function runStreamingTurn(input: {
           mimeTypes: persistedAttachmentMetadata.map((attachment) => attachment.mimeType),
           caption: userCaption || null,
         });
-        const ledgerOutput = chatJsonValueSchema.parse(JSON.parse(JSON.stringify(output)));
+        let ledgerOutputData: unknown = output;
+        if (output.kind === "receipt") {
+          const mediaAssetId = assetAttachmentMetadata[0]?.assetId;
+          if (!mediaAssetId) throw new Error("A receipt image must be saved as an uploaded media asset before review.");
+          const mediaUrl = await mediaService.resolveReadableUrl(mediaAssetId, input.userId);
+          if (!mediaUrl.success) throw new Error(mediaUrl.error.message);
+          const preview = await receiptEnrichmentService.enrichReceiptPreview(input.userId, {
+            mediaAssetId,
+            mediaUrl: mediaUrl.data,
+            merchant: output.merchant,
+            purchasedAt: output.purchasedAt,
+            currency: output.currency,
+            ambiguities: output.ambiguities,
+            lines: output.lineItems.map((item) => ({
+              rawText: item.rawText,
+              normalizedName: item.normalizedName,
+              quantity: item.quantity,
+              unit: item.unit,
+              amount: item.amount,
+              categorySlug: item.categorySlug,
+              isFoodItem: item.isFoodItem,
+              suggestedStorageLocation: item.suggestedStorageLocation,
+              estimatedShelfLifeDays: item.estimatedShelfLifeDays,
+              shelfLifeDays: item.shelfLifeDays,
+              suggestedTags: item.suggestedTags ?? [],
+              confidence: item.confidence,
+            })),
+          });
+          if (!preview.success) throw new Error(preview.error.message);
+          ledgerOutputData = preview.data;
+          emitReceipt(receiptImportDirective(preview.data));
+        }
+        const ledgerOutput = chatJsonValueSchema.parse(JSON.parse(JSON.stringify(ledgerOutputData)));
         await context.recordLedger([{
           type: "skill_execution",
           role: "assistant",
@@ -283,10 +337,6 @@ export async function runStreamingTurn(input: {
           },
         }]);
         emit({ type: "skill_completed", skillName: "vision_extractor", latencyMs: extraction.data.latencyMs });
-
-        if (output.kind === "receipt") {
-          emitReceipt(receiptImportDirective(output));
-        }
       }
       const result = await orchestratorAgent.execute(
         { task: taskText },

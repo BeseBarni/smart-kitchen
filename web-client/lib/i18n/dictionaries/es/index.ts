@@ -9,5 +9,6 @@ import { mealTracker } from "./meal-tracker";
 import { chat } from "./chat";
 import { shopping } from "./shopping";
 import { offline } from "./offline";
+import { budget } from "./budget";
 
-export const es = { common, nav, auth, settings, errors, inventory, recipes, mealTracker, chat, shopping, offline };
+export const es = { common, nav, auth, settings, errors, inventory, recipes, mealTracker, chat, shopping, offline, budget };

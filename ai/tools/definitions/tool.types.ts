@@ -28,7 +28,7 @@ export type ToolDefinition = {
     destructiveHint?: boolean;
     idempotentHint?: boolean;
   };
-  invalidateDomains?: Array<"inventory" | "recipes" | "ingredients" | "meal-logs" | "profile">;
+  invalidateDomains?: Array<"inventory" | "recipes" | "ingredients" | "meal-logs" | "profile" | "budget" | "receipts" | "merchants">;
   toUiDirective?: (result: unknown) => UiDirective;
   execute: (input: unknown, context: ToolContext) => Promise<ToolOutcome>;
 };

@@ -8,6 +8,7 @@ import { inventoryOpsAgent } from "./inventory-ops.agent";
 import { kitchenAdvisorAgent } from "./kitchen-advisor.agent";
 import { recipeArchitectAgent } from "./recipe-architect.agent";
 import type { AgentContext } from "./agent.types";
+import { budgetAgent } from "./budget.agent";
 
 export function orchestratorTools(context: AgentContext) {
   const inventory = defineTool({
@@ -78,10 +79,29 @@ export function orchestratorTools(context: AgentContext) {
       return toolOk({ summary: (await kitchenAdvisorAgent.execute({ task: question }, context)).summary });
     },
   });
+  const budget = defineTool({
+    name: "delegate_to_budget_agent",
+    description: "Delegate spending queries, budget pacing, monthly limits, manual expenses, or reviewed receipt commits.",
+    inputSchema: z.object({
+      task: z.string().min(1).describe("Clear budget or spending task."),
+      contextHint: z.string().optional().describe("Only relevant budget context."),
+    }).strict(),
+    annotations: { readOnlyHint: false },
+    execute: async (input) => {
+      context.emit({
+        type: "agent_status",
+        agent: "orchestrator",
+        status: "delegating",
+        label: "Delegating a budget task.",
+      });
+      return toolOk({ summary: (await budgetAgent.execute(input, context)).summary });
+    },
+  });
   return [
     inventory,
     recipe,
     advisor,
+    budget,
     profileUpdateTargetsTool,
     requestConfirmationTool,
     presentRecommendationsTool,
