@@ -110,6 +110,8 @@ export const receiptRoutes = new Hono<AuthEnvironment>()
       isFoodItem: item.isFoodItem,
       suggestedStorageLocation: item.suggestedStorageLocation,
       estimatedShelfLifeDays: item.estimatedShelfLifeDays,
+      estimatedMacrosPerUnit: item.estimatedMacrosPerUnit,
+      imageSearchTerm: item.imageSearchTerm,
       shelfLifeDays: item.shelfLifeDays,
       suggestedTags: item.suggestedTags ?? [],
       confidence: item.confidence,

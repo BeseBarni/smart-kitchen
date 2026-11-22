@@ -85,20 +85,24 @@ export function ReceiptImportCard({ directive, source, disabled }: {
           ...(merchantId ? { merchantId } : merchantName.trim() ? { merchantName } : {}),
           purchasedAt: directive.purchasedAt ?? new Date().toISOString(),
           currency: directive.currency,
-          items: items.filter((item) => item.selected).map((item) => ({
-            name: item.name,
-            rawReceiptText: item.rawReceiptText,
-            categoryId: item.categoryId ?? categories.find((category) => category.slug === item.categorySlug)?.id ?? "",
-            amount: item.amount ?? item.priceAmount ?? 0,
-            quantity: item.quantity,
-            unit: item.unit,
-            addToInventory: item.addToInventory,
-            storageLocation: item.storageLocation,
-            shelfLifeDays: item.shelfLifeDays,
-            tags: item.suggestedTags,
-            stockImageKind: item.stockImageKind,
-            stockImageName: item.stockImageName,
-          })),
+          items: items.filter((item) => item.selected).map((item) => {
+            const sameName = directive.items.find((original) => original.tempId === item.tempId)?.name === item.name;
+            return {
+              name: item.name,
+              rawReceiptText: item.rawReceiptText,
+              categoryId: item.categoryId ?? categories.find((category) => category.slug === item.categorySlug)?.id ?? "",
+              amount: item.amount ?? item.priceAmount ?? 0,
+              quantity: item.quantity,
+              unit: item.unit,
+              addToInventory: item.addToInventory,
+              storageLocation: item.storageLocation,
+              shelfLifeDays: item.shelfLifeDays,
+              tags: item.suggestedTags,
+              estimatedMacrosPerUnit: sameName ? item.estimatedMacrosPerUnit : undefined,
+              stockImageKind: sameName ? item.stockImageKind : undefined,
+              stockImageName: sameName ? item.stockImageName : undefined,
+            };
+          }),
         }, { onSuccess: () => setConfirmed(true) })}
       >
         {commit.isPending ? t("chat.importingReceipt") : stockCount > 0

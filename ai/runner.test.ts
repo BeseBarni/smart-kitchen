@@ -44,7 +44,8 @@ test("receipt review preserves mixed-category paid lines", () => {
     rawText: "APPLES", normalizedName: "Apples", quantity: 500, unit: "g",
     amount: 4, categorySlug: "food", suggestedStorageLocation: "fridge",
     estimatedShelfLifeDays: 7, isFoodItem: true, confidence: "high",
-    expiresAt: null, estimatedMacrosPerUnit: null,
+    expiresAt: null, estimatedMacrosPerUnit: { calories: 0.52, proteinG: 0.003, carbsG: 0.14, fatG: 0, fiberG: null },
+    imageSearchTerm: "apple",
     shelfLifeDays: { fridge: 7, freezer: 90, pantry: null },
   };
   const output = visionExtractorOutputSchema.parse({
@@ -64,7 +65,7 @@ test("receipt review preserves mixed-category paid lines", () => {
     currency: "USD",
     ambiguities: [],
     items: [
-      { tempId: "receipt-0", rawReceiptText: "APPLES", name: "Apples", quantity: 500, unit: "g", amount: 4, categoryId: "00000000-0000-4000-8000-000000000002", categorySlug: "food", isFoodItem: true, addToInventory: true, storageLocation: "fridge" as const, estimatedShelfLifeDays: 7, shelfLifeDays: line.shelfLifeDays, suggestedTags: [], confidence: "high" as const },
+      { tempId: "receipt-0", rawReceiptText: "APPLES", name: "Apples", quantity: 500, unit: "g", amount: 4, categoryId: "00000000-0000-4000-8000-000000000002", categorySlug: "food", isFoodItem: true, addToInventory: true, storageLocation: "fridge" as const, estimatedShelfLifeDays: 7, estimatedMacrosPerUnit: line.estimatedMacrosPerUnit, shelfLifeDays: line.shelfLifeDays, suggestedTags: [], confidence: "high" as const },
       { tempId: "receipt-1", rawReceiptText: "SOAP", name: "Soap", quantity: 1, unit: "piece", amount: 1, categoryId: "00000000-0000-4000-8000-000000000003", categorySlug: "household", isFoodItem: false, addToInventory: false, storageLocation: "pantry" as const, estimatedShelfLifeDays: null, shelfLifeDays: {}, suggestedTags: [], confidence: "high" as const },
     ],
   };
@@ -73,6 +74,11 @@ test("receipt review preserves mixed-category paid lines", () => {
   assert.equal(directive.items[0]?.categorySlug, "food");
   assert.equal(directive.items[1]?.categorySlug, "household");
   assert.equal(directive.items[0]?.priceAmount, 4);
+  const parsedDirective = uiDirectiveSchema.parse(directive);
+  assert.equal(parsedDirective.component, "receipt_import_card");
+  if (parsedDirective.component === "receipt_import_card") {
+    assert.deepEqual(parsedDirective.items[0]?.estimatedMacrosPerUnit, line.estimatedMacrosPerUnit);
+  }
   assert.deepEqual(uiDirectiveSchema.parse(directive), directive);
   assert.equal(visionExtractorOutputSchema.safeParse({
     ...output, lineItems: [{ ...line, shelfLifeDays: { fridge: 7 } }],

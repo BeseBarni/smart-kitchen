@@ -46,6 +46,8 @@ const receiptOutputSchema = z.object({
       expiresAt: z.iso.datetime().nullable().describe("Explicitly visible, unambiguous expiration timestamp, or null; never infer a label date."),
       estimatedMacrosPerUnit: estimatedMacrosPerUnitSchema.nullable()
         .describe("Estimated nutrition for exactly one of the line item's quantity units, or null if not reasonably estimable."),
+      imageSearchTerm: z.string().trim().min(1).nullable()
+        .describe("English generic ingredient name for image lookup, or null for non-food or unidentifiable items."),
       isFoodItem: z.boolean(),
       confidence: confidenceSchema,
       suggestedTags: z.array(suggestedTagSchema).max(3).optional(),
@@ -124,7 +126,6 @@ export const receiptPreviewExtractorOutputSchema = z.discriminatedUnion("kind", 
   receiptOutputSchema.omit({ totalAmount: true }).extend({
     lineItems: z.array(receiptOutputSchema.shape.lineItems.element.omit({
       expiresAt: true,
-      estimatedMacrosPerUnit: true,
     })),
   }),
   otherOutputSchema.pick({ kind: true }),
@@ -152,8 +153,9 @@ function prompt(input: z.output<typeof visionExtractorInputSchema>, receiptPrevi
     "Exclude VAT/ÁFA summary rows, subtotals, card-payment rows, loyalty totals, change due, and other receipt metadata, but preserve itemized paid bags or DRS/palackbetét deposit fees.",
     "Prefer one of the known merchant names for the merchant field instead of copying legal suffixes. Categories: " + (categories ?? "food, household, entertainment, other") + ".",
     "Known merchants: " + (merchants ?? "none"),
+    "For every identifiable food receipt row, estimate calories, protein, carbs, fat and fiber per ONE of its stated quantity units, not per 100g or per entire purchase unless that is the unit. For example, for grams divide typical per-100g nutrition by 100. Use null for values that cannot be reasonably estimated, especially when package size is unknown; use null for non-food. These are estimates, not label measurements.",
+    "For each identifiable food receipt row, provide imageSearchTerm as a concise English generic ingredient name for a stock image search, regardless of receipt language. Use null for non-food or unidentifiable items; do not generate image URLs.",
     ...(receiptPreview ? [] : [
-      "For each identifiable food receipt row, estimate calories, protein, carbs, fat and fiber per ONE of its stated quantity units, not per 100g or per entire purchase unless that is the unit. For example, for grams divide typical per-100g nutrition by 100. Use null for values that cannot be reasonably estimated, especially when package size is unknown. These are estimates, not label measurements.",
       "Estimate prepared-dish portion macros conservatively and distinguish visible ingredients from likely hidden staples.",
     ]),
     "For every detected food or prepared dish provide conservative shelfLifeDays estimates in days for fridge, freezer, and pantry. Use null for unsuitable or unknown storage methods; estimates are not proof of freshness or safety. For receipt rows estimatedShelfLifeDays must match the suggested storage method.",

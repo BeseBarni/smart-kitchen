@@ -2,8 +2,9 @@ import assert from "node:assert/strict";
 import { mock, test } from "node:test";
 import type { z } from "zod";
 
-test("receipt preview extraction omits unused nutrition and expiry without changing chat vision", async () => {
+test("receipt extraction estimates all nutrition and image search terms in one vision request", async () => {
   const calls: Array<{ prompt: string; system: string; schema: z.ZodType }> = [];
+  const macros = { calories: 0.52, proteinG: 0.003, carbsG: 0.14, fatG: 0, fiberG: null };
   const previewLine = {
     rawText: "MILK",
     normalizedName: "Milk",
@@ -13,6 +14,8 @@ test("receipt preview extraction omits unused nutrition and expiry without chang
     categorySlug: "food",
     suggestedStorageLocation: "fridge",
     estimatedShelfLifeDays: 4,
+    estimatedMacrosPerUnit: macros,
+    imageSearchTerm: "milk",
     isFoodItem: true,
     confidence: "high",
     shelfLifeDays: { fridge: 4, freezer: null, pantry: null },
@@ -25,6 +28,7 @@ test("receipt preview extraction omits unused nutrition and expiry without chang
     lineItems: [previewLine, {
       ...previewLine, rawText: "SOAP", normalizedName: "Soap", categorySlug: "household",
       isFoodItem: false, suggestedStorageLocation: null, estimatedShelfLifeDays: null,
+      estimatedMacrosPerUnit: null, imageSearchTerm: null,
     }],
     ambiguities: [],
   };
@@ -49,10 +53,15 @@ test("receipt preview extraction omits unused nutrition and expiry without chang
     if (preview.success && preview.data.output.kind === "receipt") {
       assert.equal(preview.data.output.lineItems.length, 2);
       assert.equal(preview.data.output.lineItems[1]?.categorySlug, "household");
+      assert.deepEqual(preview.data.output.lineItems[0]?.estimatedMacrosPerUnit, macros);
+      assert.equal(preview.data.output.lineItems[1]?.estimatedMacrosPerUnit, null);
     } else {
       assert.fail("Expected a receipt preview");
     }
-    assert.doesNotMatch(calls[0]!.prompt, /estimate calories|expiresAt/);
+    assert.equal(calls.length, 1);
+    assert.match(calls[0]!.prompt, /estimate calories/);
+    assert.match(calls[0]!.prompt, /imageSearchTerm.*English/);
+    assert.doesNotMatch(calls[0]!.prompt, /expiresAt/);
     assert.match(calls[0]!.system, /Hungarian/i);
     assert.equal(calls[0]!.schema.safeParse({ kind: "other" }).success, true);
     assert.equal(calls[0]!.schema.safeParse({
@@ -63,7 +72,7 @@ test("receipt preview extraction omits unused nutrition and expiry without chang
       ...receipt,
       totalAmount: 20,
       lineItems: receipt.lineItems.map((line) => ({
-        ...line, expiresAt: null, estimatedMacrosPerUnit: null,
+        ...line, expiresAt: null,
       })),
     };
     const chat = await executeVisionExtractor(input);

@@ -159,8 +159,11 @@ default is a lightweight model rather than a Pro reasoning model; override
 `REASONING_MODEL` if your workload needs a more capable model available to you.
 Receipt scans use `AI_VISION_MODEL` (default `gemini-3.5-flash`). The dedicated
 receipt preview requests only the fields it uses; chat image analysis retains
-its richer output. Evaluate speed and extraction quality before changing the
-vision model.
+its richer output. Both extract all receipt lines, estimated nutrition per
+quantity unit, and English ingredient image search terms in one vision request.
+Image matches use the shared cached ingredient catalog; unavailable matches and
+unknown nutrition remain unset. Stocked lines retain the estimates in inventory.
+Evaluate speed and extraction quality before changing the vision model.
 
 The smoke test writes conversations, recipes, and inventory. Use only a
 disposable development database and a dedicated existing Neon Auth user.

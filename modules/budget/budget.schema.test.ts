@@ -37,6 +37,20 @@ test("scanned receipts allow an unknown merchant but reject conflicting selector
   assert.equal(commitScannedReceiptInputSchema.safeParse({ ...receipt, merchantName: "Aldi", merchantId: item.categoryId }).success, false);
 });
 
+test("scanned receipt nutrition must be nonnegative and may be unknown", () => {
+  const macros = { calories: 0.52, proteinG: 0.003, carbsG: 0.14, fatG: 0, fiberG: null };
+  const receipt = {
+    purchasedAt: "2026-01-03T11:00:00.000Z",
+    currency: "HUF",
+    items: [{ ...item, quantity: 500, unit: "g", addToInventory: true, estimatedMacrosPerUnit: macros }],
+  };
+  const parsed = commitScannedReceiptInputSchema.parse(receipt);
+  assert.deepEqual(parsed.items[0]?.estimatedMacrosPerUnit, macros);
+  assert.equal(commitScannedReceiptInputSchema.safeParse({
+    ...receipt, items: [{ ...receipt.items[0], estimatedMacrosPerUnit: { ...macros, calories: -1 } }],
+  }).success, false);
+});
+
 test("monthly budget contract rejects duplicate category limits", () => {
   const input = {
     totalLimitAmount: 50_000,

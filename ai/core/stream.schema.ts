@@ -122,6 +122,7 @@ export const uiDirectiveSchema = z.discriminatedUnion("component", [
       addToInventory: z.boolean().optional(),
       storageLocation: z.enum(["fridge", "freezer", "pantry"]),
       estimatedShelfLifeDays: z.number().positive().nullable(),
+      estimatedMacrosPerUnit: estimatedMacrosPerUnitSchema.nullable().optional(),
       expiresAt: z.iso.datetime().nullable().optional(),
       shelfLifeDays: shelfLifeDaysSchema.optional(),
       suggestedTags: z.array(rawTagSchema).max(3).optional(),

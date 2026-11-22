@@ -97,6 +97,27 @@ test("replays one receipt card for an uploaded receipt without hiding later revi
   assert.deepEqual(turns[1]?.uiDirectives, [receipt, { ...receipt, merchant: "Another shop" }]);
 });
 
+test("retains receipt nutrition when restoring chat history", () => {
+  const macros = { calories: 0.52, proteinG: 0.003, carbsG: 0.14, fatG: 0, fiberG: null };
+  const receipt = {
+    component: "receipt_import_card", merchant: null, purchasedAt: null, currency: "USD",
+    totalAmount: 2, items: [{
+      tempId: "1", name: "Apple", quantity: 500, unit: "g", priceAmount: 2,
+      storageLocation: "fridge", estimatedShelfLifeDays: 7, isFoodItem: true,
+      confidence: "high", estimatedMacrosPerUnit: macros,
+    }],
+  };
+  const turns = mapConversationHistory([item({
+    sequence: 0, type: "message", role: "assistant",
+    payload: { kind: "message", text: "Review", uiDirectives: [receipt] },
+  })]);
+  const directive = turns[0]?.uiDirectives[0];
+  assert.equal(directive?.component, "receipt_import_card");
+  if (directive?.component === "receipt_import_card") {
+    assert.deepEqual(directive.items[0]?.estimatedMacrosPerUnit, macros);
+  }
+});
+
 test("restores receipt import status and the original directive index independently for each message", () => {
   const receipt = {
     component: "receipt_import_card", merchant: "Shop", purchasedAt: null, currency: "USD",

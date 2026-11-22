@@ -16,6 +16,8 @@ export type RawReceiptLine = {
   isFoodItem: boolean;
   suggestedStorageLocation: "fridge" | "freezer" | "pantry" | null;
   estimatedShelfLifeDays: number | null;
+  estimatedMacrosPerUnit: ExtractedReceiptItemPreview["estimatedMacrosPerUnit"];
+  imageSearchTerm: string | null;
   shelfLifeDays: { fridge?: number | null; freezer?: number | null; pantry?: number | null };
   suggestedTags: Array<{ slug?: string; label: string; category?: "dietary" | "nutrition" | "prep" | "flavor" | "custom" }>;
   confidence: "high" | "medium" | "low";
@@ -79,7 +81,7 @@ export async function enrichReceiptPreview(
   const merchant = await resolveMerchant(userId, input.merchant);
   const other = categories.data.find((category) => category.slug === "other") ?? categories.data[0];
   const imageResults = await Promise.all(input.lines.map((line) =>
-    line.isFoodItem ? searchIngredientImages(line.normalizedName, 1) : null,
+    line.isFoodItem ? searchIngredientImages(line.imageSearchTerm ?? line.normalizedName, 1) : null,
   ));
   const imageError = imageResults.find((result) => result && !result.success);
   if (imageError && !imageError.success) {
@@ -108,6 +110,7 @@ export async function enrichReceiptPreview(
       addToInventory: line.isFoodItem,
       storageLocation: line.suggestedStorageLocation ?? "pantry",
       estimatedShelfLifeDays: line.estimatedShelfLifeDays,
+      estimatedMacrosPerUnit: line.isFoodItem ? line.estimatedMacrosPerUnit : null,
       shelfLifeDays: line.shelfLifeDays,
       suggestedTags: line.suggestedTags.slice(0, 3),
       ...(stockImageKind ? { stockImageKind } : {}),

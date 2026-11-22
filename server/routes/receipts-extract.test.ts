@@ -70,6 +70,8 @@ test("receipt extraction overlaps media loading and context queries after owners
                 rawText: "MILK", normalizedName: "Milk", quantity: 1, unit: "l", amount: 10,
                 categorySlug: "food", isFoodItem: true, suggestedStorageLocation: "fridge",
                 estimatedShelfLifeDays: 4, shelfLifeDays: { fridge: 4 }, confidence: "high",
+                estimatedMacrosPerUnit: { calories: 42, proteinG: 3, carbsG: 5, fatG: 1, fiberG: null },
+                imageSearchTerm: "milk",
               }],
             },
           },
@@ -92,6 +94,9 @@ test("receipt extraction overlaps media loading and context queries after owners
     releaseObject();
     assert.equal((await pending).status, 200);
     assert.equal(Array.isArray(enrichedLines) && enrichedLines.length, 1);
+    assert.deepEqual((enrichedLines as Array<{ estimatedMacrosPerUnit: unknown }>)[0]?.estimatedMacrosPerUnit,
+      { calories: 42, proteinG: 3, carbsG: 5, fatG: 1, fiberG: null });
+    assert.equal((enrichedLines as Array<{ imageSearchTerm: string }>)[0]?.imageSearchTerm, "milk");
     assert.equal(extractedLocale, "hu");
 
     extractionKind = "other";

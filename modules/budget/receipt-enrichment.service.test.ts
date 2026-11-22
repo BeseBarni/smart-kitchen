@@ -37,6 +37,8 @@ test("receipt enrichment shares a catalog request across food lines, including o
       isFoodItem: true,
       suggestedStorageLocation: "fridge" as const,
       estimatedShelfLifeDays: 2,
+      estimatedMacrosPerUnit: { calories: 1, proteinG: 0.2, carbsG: 0, fatG: 0.1, fiberG: null },
+      imageSearchTerm: "Chicken",
       shelfLifeDays: { fridge: 2 },
       suggestedTags: [],
       confidence: "high" as const,
@@ -49,9 +51,9 @@ test("receipt enrichment shares a catalog request across food lines, including o
       currency: "HUF",
       ambiguities: [],
       lines: [
-        { ...foodLine, normalizedName: "Tomato" },
+        { ...foodLine, normalizedName: "Paradicsom", imageSearchTerm: "Tomato" },
         ...Array.from({ length: 14 }, () => foodLine),
-        { ...foodLine, normalizedName: "Bag", categorySlug: "other", isFoodItem: false },
+        { ...foodLine, normalizedName: "Bag", categorySlug: "other", isFoodItem: false, imageSearchTerm: null },
       ],
     };
     const nonFood = await enrichReceiptPreview("user", { ...input, lines: [input.lines[15]!] });
@@ -73,6 +75,8 @@ test("receipt enrichment shares a catalog request across food lines, including o
     assert.equal(recovered.data.items[0]?.stockImageName, "tomato");
     assert.equal(recovered.data.items[1]?.stockImageName, "chicken");
     assert.equal(recovered.data.items[15]?.stockImageName, undefined);
+    assert.deepEqual(recovered.data.items[0]?.estimatedMacrosPerUnit, foodLine.estimatedMacrosPerUnit);
+    assert.equal(recovered.data.items[15]?.estimatedMacrosPerUnit, null);
 
     categoryData = [];
     const missingCategories = await enrichReceiptPreview("user", { ...input, lines: [] });

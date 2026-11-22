@@ -18,6 +18,7 @@ import { useExtractReceiptFromMedia } from "../hooks/use-extract-receipt-from-me
 import { useCommitScannedReceipt } from "../hooks/use-commit-scanned-receipt";
 import { ManualExpenseFields } from "./ManualExpenseFields";
 import { expenseCategoryLabel } from "../utils/category-label.utils";
+import { scannedReceiptItem } from "../utils/scanned-receipt-item";
 import { X } from "lucide-react";
 
 const EMPTY_CATEGORIES: ExpenseCategoryDto[] = [];
@@ -29,6 +30,7 @@ const formSchema = z.object({
   merchantName: z.string(),
   title: z.string(),
   items: z.array(z.object({
+    tempId: z.string().optional(),
     name: z.string().min(1),
     categoryId: z.string().min(1),
     amount: z.number().nonnegative(),
@@ -83,6 +85,7 @@ export function ReceiptFormSheet({ detail }: { detail?: ReceiptDetailDto }): Rea
     if (data.matchedMerchantId) form.setValue("merchantId", data.matchedMerchantId);
     form.setValue("merchantName", data.matchedMerchantName ?? data.merchantName ?? "");
     replace(data.items.map((item) => ({
+      tempId: item.tempId,
       name: item.name,
       categoryId: item.categoryId,
       amount: item.amount,
@@ -108,7 +111,8 @@ export function ReceiptFormSheet({ detail }: { detail?: ReceiptDetailDto }): Rea
       currency: values.currency,
       ...(values.title ? { title: values.title } : {}),
       mediaAssetId,
-      items: values.items,
+      items: values.items.map(({ name, categoryId, amount, quantity, unit }) =>
+        ({ name, categoryId, amount, quantity, unit })),
     } as const;
     if (detail) {
       mutations.update.mutate({ id: detail.id, input });
@@ -119,23 +123,7 @@ export function ReceiptFormSheet({ detail }: { detail?: ReceiptDetailDto }): Rea
         purchasedAt: values.purchasedAt,
         currency: values.currency,
         ...(values.title ? { title: values.title } : {}),
-        items: values.items.map((item, index) => {
-          const enriched = preview.items[index];
-          return {
-            name: item.name,
-            rawReceiptText: enriched?.rawReceiptText,
-            categoryId: item.categoryId,
-            amount: item.amount,
-            quantity: item.quantity ?? 1,
-            unit: item.unit,
-            addToInventory: Boolean(enriched?.isFoodItem && stockItems),
-            storageLocation: enriched?.storageLocation,
-            shelfLifeDays: enriched?.shelfLifeDays,
-            tags: enriched?.suggestedTags,
-            stockImageKind: enriched?.stockImageKind,
-            stockImageName: enriched?.stockImageName,
-          };
-        }),
+        items: values.items.map((item) => scannedReceiptItem(item, preview.items, stockItems)),
       });
     } else {
       mutations.create.mutate(input as CreateReceiptInput);

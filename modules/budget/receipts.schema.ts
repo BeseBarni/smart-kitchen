@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { expenseCategoryDtoSchema } from "./expense-categories.schema";
 import { merchantSummaryDtoSchema } from "./merchants.schema";
-import { inventoryItemSchema } from "../inventory/inventory.schema";
+import { estimatedMacrosPerUnitSchema, inventoryItemSchema } from "../inventory/inventory.schema";
 import { shelfLifeDaysSchema } from "../tags/tags.schema";
 import { rawTagSchema } from "../tags/tags.schema";
 
@@ -135,6 +135,8 @@ export const extractedReceiptItemPreviewSchema = z.object({
   addToInventory: z.boolean(),
   storageLocation: z.enum(["fridge", "freezer", "pantry"]),
   estimatedShelfLifeDays: z.number().positive().nullable(),
+  estimatedMacrosPerUnit: estimatedMacrosPerUnitSchema.nullable().optional()
+    .describe("Estimated nutrition per recorded quantity unit."),
   shelfLifeDays: shelfLifeDaysSchema,
   suggestedTags: z.array(rawTagSchema).max(3).default([]),
   stockImageKind: z.enum(["themealdb_meal", "themealdb_ingredient"]).optional(),
@@ -164,6 +166,8 @@ export const commitScannedReceiptItemSchema = z.object({
   addToInventory: z.boolean(),
   storageLocation: z.enum(["fridge", "freezer", "pantry"]).optional(),
   expiresAt: z.iso.datetime().optional(),
+  estimatedMacrosPerUnit: estimatedMacrosPerUnitSchema.nullable().optional()
+    .describe("Estimated nutrition per recorded quantity unit."),
   shelfLifeDays: shelfLifeDaysSchema.optional(),
   tags: z.array(rawTagSchema).max(3).optional(),
   stockImageKind: z.enum(["themealdb_meal", "themealdb_ingredient"]).optional(),
