@@ -8,6 +8,13 @@ export * from "./shopping/shopping.schema";
 export * from "./meal-suggestions/meal-suggestions.schema";
 export * from "./tags/tags.schema";
 export * from "./media/media.schema";
+export * from "./mealdb/mealdb.schema";
+export {
+  extractMealDbMealImageName,
+  normalizeMealDbIngredientImageName,
+  resolveEntityImages,
+  resolveMealDbImageUrl,
+} from "./mealdb/mealdb-image.utils";
 
 import {
   profileSchema,

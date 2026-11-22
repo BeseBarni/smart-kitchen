@@ -53,3 +53,12 @@ Before planning or writing code, you MUST read the relevant specification file:
 ## Code Quality Rules
 - Strict TypeScript: NO `any`, NO `as unknown as` hacks; explicit return types on exported functions.
 - Keep files small and cohesive; prefer pure functions and composition over classes/inheritance.
+
+## Meal Image Lookup
+- For TheMealDB recipe and ingredient workflows, follow `.github/skills/themealdb/SKILL.md`.
+- Use [TheMealDB's official JSON API](https://www.themealdb.com/documentation) to find meal images; do not scrape its website. URL-encode user-supplied search values.
+- Search by meal name (`search.php?s=...`) or filter by ingredient, category, or area (`filter.php?i=...`, `c=...`, or `a=...`). Filter results are summaries: look up a candidate by `idMeal` (`lookup.php?i=...`) and verify that it represents the intended meal before using its `strMealThumb`.
+- Use the returned `strMealThumb` URL; `/small`, `/medium`, and `/large` variants are available. Do not invent image URLs or imply that a TheMealDB image depicts a different recipe. Treat missing results or images as unavailable rather than fabricating a match.
+- When displaying an image, credit TheMealDB and link to `https://www.themealdb.com/meal/{idMeal}`. Preserve applicable source, copyright, attribution, and licensing metadata, and check the relevant rights before redistribution.
+- API key `1` is for development and educational use only. Check the current [API documentation](https://www.themealdb.com/documentation) and [terms of use](https://www.themealdb.com/terms_of_use.php) for production access and image-use requirements.
+- If presenting the associated recipe, use the full lookup, preserve its instructions, and pair each nonempty `strIngredientN` with its corresponding `strMeasureN` in order without inventing missing quantities.

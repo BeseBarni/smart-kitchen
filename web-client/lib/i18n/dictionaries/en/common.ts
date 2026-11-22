@@ -14,4 +14,11 @@ export const common = {
   syncing: "Syncing...",
   optimisticRollback: "The change could not be saved. It was restored.",
   unknown: "Unknown",
+  stockImageTab: "Search stock image",
+  uploadPhotoTab: "Upload photo",
+  stockImageSearch: "Search stock images",
+  stockImagePlaceholder: "Search for a dish or ingredient",
+  stockImageEmpty: "No matching stock images found.",
+  stockImageError: "Stock image search failed.",
+  stockImageAttribution: "Recipe and image data: TheMealDB",
 } as const;

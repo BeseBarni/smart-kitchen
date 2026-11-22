@@ -18,6 +18,8 @@ export function recipeCard(recipe: RecipeDto) {
     title: recipe.title,
     description: recipe.description ?? "",
     imageUrl: recipe.imageUrl,
+    stockImageKind: recipe.stockImageKind,
+    stockImageName: recipe.stockImageName,
     prepTimeMin: recipe.prepTimeMin,
     cookTimeMin: recipe.cookTimeMin,
     isFreezerFriendly: recipe.isFreezerFriendly,

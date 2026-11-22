@@ -12,6 +12,7 @@ import { useText } from "@/lib/i18n";
 import { ImageUploadField } from "@/components/media/ImageUploadField";
 import type { UploadedImage } from "@/lib/media/media-upload.client";
 import { useState } from "react";
+import { StockImageSearchGrid } from "@/features/media";
 
 interface Props {
   recipe?: RecipeDto;
@@ -23,6 +24,7 @@ interface Props {
 export function RecipeFormSheet({ recipe, busy, onClose, onSave }: Props): React.JSX.Element {
   const { t } = useText();
   const [coverUrl, setCoverUrl] = useState<string | null>(recipe?.imageUrl ?? null);
+  const [imageMode, setImageMode] = useState<"upload" | "stock">("upload");
   const form = useForm<CreateRecipeInput>({
     resolver: zodResolver(createRecipeSchema),
     defaultValues: recipeFormValues(recipe),
@@ -46,7 +48,11 @@ export function RecipeFormSheet({ recipe, busy, onClose, onSave }: Props): React
         <SheetTitle>{t(recipe ? "recipes.editTitle" : "recipes.newTitle")}</SheetTitle>
         <SheetDescription>{t("recipes.formDescription")}</SheetDescription>
         <form onSubmit={(event) => void submit(event)} className="mt-4 space-y-4">
-          <ImageUploadField
+          <div className="grid grid-cols-2 gap-2" role="tablist">
+            <Button type="button" variant={imageMode === "upload" ? "default" : "outline"} onClick={() => setImageMode("upload")} className="min-h-11">{t("common.uploadPhotoTab")}</Button>
+            <Button type="button" variant={imageMode === "stock" ? "default" : "outline"} onClick={() => setImageMode("stock")} className="min-h-11">{t("common.stockImageTab")}</Button>
+          </div>
+          {imageMode === "upload" ? <ImageUploadField
             purpose="recipe_cover"
             variant="cover"
             labels={{
@@ -62,13 +68,23 @@ export function RecipeFormSheet({ recipe, busy, onClose, onSave }: Props): React
               setCoverUrl(image.previewUrl);
               form.setValue("imageAssetId", image.assetId);
               form.setValue("imageUrl", image.url);
+              form.setValue("stockImageKind", null);
+              form.setValue("stockImageName", null);
             }}
             onRemoved={() => {
               setCoverUrl(null);
               form.setValue("imageAssetId", null);
               form.setValue("imageUrl", null);
+              form.setValue("stockImageKind", null);
+              form.setValue("stockImageName", null);
             }}
-          />
+          /> : <StockImageSearchGrid kind="meal" onSelect={(candidate) => {
+            setCoverUrl(candidate.previewUrl);
+            form.setValue("stockImageKind", candidate.stockImageKind);
+            form.setValue("stockImageName", candidate.stockImageName);
+            form.setValue("imageAssetId", null);
+            form.setValue("imageUrl", null);
+          }} />}
           <label className="block space-y-1 text-label-md">{t("recipes.name")}
             <Input {...form.register("title")} disabled={busy} className="h-11 bg-card" />
           </label>

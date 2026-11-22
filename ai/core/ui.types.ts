@@ -6,6 +6,9 @@ export type InventoryActionSummary = {
   quantity: number;
   unit: string;
   location: "fridge" | "freezer" | "pantry";
+  stockImageKind?: "themealdb_meal" | "themealdb_ingredient" | null;
+  stockImageName?: string | null;
+  imageUrl?: string | null;
 };
 
 export type RecipeCardPayload = {
@@ -13,6 +16,8 @@ export type RecipeCardPayload = {
   title: string;
   description: string;
   imageUrl?: string | null;
+  stockImageKind?: "themealdb_meal" | "themealdb_ingredient" | null;
+  stockImageName?: string | null;
   prepTimeMin?: number | null;
   cookTimeMin?: number | null;
   isFreezerFriendly?: boolean;

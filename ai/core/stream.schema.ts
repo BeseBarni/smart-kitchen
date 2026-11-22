@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { estimatedMacrosPerUnitSchema, nutritionTargetChangesSchema, rawTagSchema, shelfLifeDaysSchema } from "@app/modules/schemas";
+import { estimatedMacrosPerUnitSchema, nutritionTargetChangesSchema, rawTagSchema, shelfLifeDaysSchema, stockImageKindSchema } from "@app/modules/schemas";
 import type { AgentStreamEvent } from "./stream.types";
 
 const agentNameSchema = z.enum(["orchestrator", "inventory_ops", "recipe_architect", "kitchen_advisor", "vision_extractor"]);
@@ -15,7 +15,9 @@ const recipePayloadSchema = z.object({
   id: z.string().optional(),
   title: z.string(),
   description: z.string(),
-  imageUrl: z.string().url().nullable().optional(),
+  imageUrl: z.string().min(1).nullable().optional(),
+  stockImageKind: stockImageKindSchema.nullable().optional(),
+  stockImageName: z.string().min(1).max(255).nullable().optional(),
   prepTimeMin: z.number().nullable().optional(),
   cookTimeMin: z.number().nullable().optional(),
   isFreezerFriendly: z.boolean().optional(),

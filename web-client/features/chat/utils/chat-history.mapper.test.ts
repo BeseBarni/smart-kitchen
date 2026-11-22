@@ -157,6 +157,25 @@ test("replays structured recipe cards without changing text-only history", () =>
   assert.equal(turns[1]?.assistantMessage.text, "Ingredients: tomatoes. Cook them.");
 });
 
+test("retains a persisted recipe image reference when restoring chat history", () => {
+  const turns = mapConversationHistory([
+    item({ sequence: 0, type: "message", role: "assistant", payload: {
+      kind: "message", text: "Open the recipe.", uiDirectives: [{
+        component: "recipe_preview_card", status: "draft", canSave: true, canCookAndStock: false,
+        recipe: {
+          title: "Chicken gyros", description: "", servings: 2, ingredients: [], instructions: ["Cook."],
+          stockImageKind: "themealdb_meal", stockImageName: "hcg6l91763596970.jpg",
+        },
+      }],
+    } }),
+  ]);
+  const directive = turns[0]?.uiDirectives[0];
+  assert.equal(directive?.component, "recipe_preview_card");
+  if (directive?.component !== "recipe_preview_card") return;
+  assert.equal(directive.recipe.stockImageKind, "themealdb_meal");
+  assert.equal(directive.recipe.stockImageName, "hcg6l91763596970.jpg");
+});
+
 test("restores successful legacy recipe tool results without duplicating saved directives", () => {
   const recipe = { title: "Soup", description: "Warm", servings: 2, ingredients: [{ name: "Lentils", quantity: 1, unit: "cup" }], instructions: ["Simmer."] };
   const items = [

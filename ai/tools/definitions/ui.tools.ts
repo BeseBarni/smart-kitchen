@@ -19,6 +19,8 @@ const recipeDraft = z.object({
   fiberPerServing: z.number().nonnegative().describe("Estimated fiber grams per serving."),
   costPerServing: z.number().nullable().optional().describe("Cost per serving."),
   currency: z.string().optional().describe("Currency code."),
+  stockImageKind: z.enum(["themealdb_meal", "themealdb_ingredient"]).nullable().optional().describe("Normalized TheMealDB stock image kind."),
+  stockImageName: z.string().min(1).max(255).nullable().optional().describe("Exact normalized TheMealDB stock image name."),
   shelfLifeDays: generatedShelfLifeDaysSchema,
 }).strict();
 

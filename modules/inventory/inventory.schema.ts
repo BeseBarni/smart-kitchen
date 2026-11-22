@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { rawTagSchema, shelfLifeDaysSchema, tagDtoSchema } from "../tags/tags.schema";
+import { resolvedImageUrlsSchema, stockImageKindSchema } from "../mealdb/mealdb.schema";
 
 export const inventoryItemSchema = z
   .object({
@@ -17,6 +18,10 @@ export const inventoryItemSchema = z
     preparedAt: z.iso.datetime().nullable().describe("Preparation time, if applicable."),
     expiresAt: z.iso.datetime().nullable().describe("Expiration time, if known."),
     imageUrl: z.string().url().nullable().describe("Image URL, if available."),
+    imageAssetId: z.string().uuid().nullable().optional().describe("Uploaded media asset, if available."),
+    stockImageKind: stockImageKindSchema.nullable().optional().describe("The normalized TheMealDB stock image kind."),
+    stockImageName: z.string().trim().min(1).max(255).nullable().optional().describe("The normalized TheMealDB stock image name."),
+    imageUrls: resolvedImageUrlsSchema.optional().describe("Resolved small, medium, and large image URLs."),
     caloriesPerUnit: z.number().nonnegative().nullable().describe("Calories per inventory unit."),
     proteinPerUnit: z.number().nonnegative().nullable().describe("Protein grams per inventory unit."),
     carbsPerUnit: z.number().nonnegative().nullable().describe("Carbohydrate grams per inventory unit."),
@@ -38,6 +43,8 @@ export const inventoryItemSchema = z
 export const createInventoryItemSchema = inventoryItemSchema
   .omit({ id: true, userId: true, createdAt: true, updatedAt: true })
   .extend({
+    stockImageKind: stockImageKindSchema.nullable().optional(),
+    stockImageName: z.string().trim().min(1).max(255).nullable().optional(),
     fiberPerUnit: z.number().nonnegative().nullable().optional().describe("Fiber grams per unit, if known."),
     shelfLifeDays: shelfLifeDaysSchema.optional().describe("Typical shelf life in days by storage method."),
     tags: z.array(rawTagSchema).max(3).optional().describe("Up to three attribute tags to resolve."),
@@ -110,6 +117,9 @@ export const batchInventoryItemSchema = z
       .describe("Typical shelf life in days by storage method."),
     tags: z.array(rawTagSchema).max(3).optional()
       .describe("Up to three attribute tags to resolve."),
+    imageAssetId: z.string().uuid().nullable().optional(),
+    stockImageKind: stockImageKindSchema.nullable().optional(),
+    stockImageName: z.string().trim().min(1).max(255).nullable().optional(),
   })
   .strict()
   .describe("One item in a receipt or photo inventory batch.");

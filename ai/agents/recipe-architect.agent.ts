@@ -15,6 +15,7 @@ import { runAgentLoop } from "./agent-loop";
 import type { AgentContext, LedgerItem, SubAgent } from "./agent.types";
 import type { SkillDefinition, SkillRun } from "../skills/skill.types";
 import { tagsListAvailableTool } from "../tools/definitions/tags.tools";
+import { mealDbSearchForAgent } from "../tools/adapters/mealdb-search.adapter";
 
 function jsonValue(value: unknown) {
   const encoded = JSON.stringify(value);
@@ -113,6 +114,7 @@ export const recipeArchitectAgent: SubAgent = {
         profileGetTool,
         presentRecipeDraftTool,
         tagsListAvailableTool,
+        mealDbSearchForAgent(context),
         skillTool(
           "meal_prep_architect_skill",
           "Generate a structured batch-cookable recipe from validated meal-prep context.",
@@ -161,6 +163,9 @@ export const recipeArchitectAgent: SubAgent = {
         "For a saved recipe requested in detail, use recipes_get_detail so the user can open its recipe card.",
         "Before assigning chips, call tags_list_available and strongly prefer existing canonical or user slugs.",
         "Maximum three attribute tags plus one item-type chip. Always provide realistic fridge/freezer/pantry shelfLifeDays with null where unsuitable.",
+        "For a meal or ingredient without a user-uploaded photo, call media_search_themealdb_images with concise English terms for query, fallbackEnglishTerm, and mainIngredient even when the user's language is different. Keep user-facing text in the selected language.",
+        "Only persist stockImageKind and stockImageName returned directly by media_search_themealdb_images. Never invent filenames.",
+        "If no returned candidate visually fits, omit the stock image fields rather than attaching a mismatch.",
       ].join("\n"),
     }),
 }

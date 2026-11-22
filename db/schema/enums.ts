@@ -19,6 +19,10 @@ export const inventoryStatusEnum = pgEnum("inventory_status", [
   "discarded",
 ]);
 export const mealTypeEnum = pgEnum("meal_type", ["breakfast", "lunch", "dinner", "snack"]);
+export const stockImageKindEnum = pgEnum("stock_image_kind", [
+  "themealdb_meal",
+  "themealdb_ingredient",
+]);
 export const conversationItemTypeEnum = pgEnum("conversation_item_type", [
   "message",
   "tool_call",

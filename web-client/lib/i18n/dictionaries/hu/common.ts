@@ -17,4 +17,11 @@ export const common = {
   syncing: "Szinkronizálás...",
   optimisticRollback: "A módosítást nem sikerült menteni. Az előző állapot visszaállt.",
   unknown: "Ismeretlen",
+  stockImageTab: "Képtáras keresés",
+  uploadPhotoTab: "Saját fotó",
+  stockImageSearch: "Stockképek keresése",
+  stockImagePlaceholder: "Ételt vagy hozzávalót keresse",
+  stockImageEmpty: "Nem található megfelelő stockkép.",
+  stockImageError: "A stockképek keresése sikertelen.",
+  stockImageAttribution: "Recept- és képadatok: TheMealDB",
 } satisfies WidenStrings<typeof english>;

@@ -12,6 +12,8 @@ import { StorageMethodSwitcher } from "./StorageMethodSwitcher";
 import { MealIngredientsList } from "./MealIngredientsList";
 import { ItemAiActionsSection } from "./ItemAiActionsSection";
 import { useText } from "@/lib/i18n";
+import { ResolvedEntityImage } from "@/components/media/ResolvedEntityImage";
+import { CookingPot } from "lucide-react";
 
 export function ItemDetailModal(): React.JSX.Element {
   const { t } = useText();
@@ -44,6 +46,14 @@ export function ItemDetailModal(): React.JSX.Element {
                 : t("inventory.detailStoredSubtitle")}</SheetDescription>
             </SheetHeader>
             <div className="space-y-3 pb-4">
+              <div className="relative h-44 overflow-hidden rounded-2xl bg-muted">
+                <ResolvedEntityImage
+                  entity={detail.data}
+                  alt={detail.data.name}
+                  size="large"
+                  fallback={<div className="flex h-full items-center justify-center"><CookingPot size={36} className="text-muted-foreground" aria-hidden="true" /></div>}
+                />
+              </div>
               <ItemChipRow item={detail.data} />
               <FreshnessCountdownCard item={detail.data} />
               <ItemMacrosGrid item={detail.data} />

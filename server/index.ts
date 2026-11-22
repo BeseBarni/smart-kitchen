@@ -13,6 +13,7 @@ import { profileRoutes } from "./routes/profile.routes";
 import { recipeRoutes } from "./routes/recipes.routes";
 import { shoppingRoutes } from "./routes/shopping.routes";
 import { tagRoutes } from "./routes/tags.routes";
+import { mealDbRoutes } from "./routes/mealdb.routes";
 import type { AuthEnvironment } from "./middleware/auth.middleware";
 import { errorResponse } from "./middleware/error-handler";
 
@@ -54,6 +55,7 @@ export const app = new Hono<AuthEnvironment>()
   .route("/meal-logs", mealLogRoutes)
   .route("/meal-suggestions", mealSuggestionsRoutes)
   .route("/tags", tagRoutes)
+  .route("/mealdb", mealDbRoutes)
   .route("/", chatRoutes);
 
 export type AppType = typeof app;

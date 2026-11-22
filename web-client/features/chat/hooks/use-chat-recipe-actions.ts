@@ -27,7 +27,8 @@ export type ChatRecipeActionsState = {
 export function recipeDraftCreateInput(recipe: RecipeDirective["recipe"]): CreateRecipeInput {
   return {
     title: recipe.title, description: recipe.description, instructions: recipe.instructions,
-    imageUrl: recipe.imageUrl ?? null, prepTimeMin: recipe.prepTimeMin ?? null, cookTimeMin: recipe.cookTimeMin ?? null, servings: recipe.servings,
+    imageUrl: recipe.imageUrl ?? null, stockImageKind: recipe.stockImageKind ?? null,
+    stockImageName: recipe.stockImageName ?? null, prepTimeMin: recipe.prepTimeMin ?? null, cookTimeMin: recipe.cookTimeMin ?? null, servings: recipe.servings,
     isFreezerFriendly: recipe.isFreezerFriendly ?? false, source: "ai_skill",
     ingredients: recipe.ingredients.map((ingredient, sortOrder) => ({
       ingredientId: null, displayName: ingredient.name, quantity: ingredient.quantity,

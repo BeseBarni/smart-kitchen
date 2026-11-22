@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { rawTagSchema, shelfLifeDaysSchema, tagDtoSchema } from "../tags/tags.schema";
+import { resolvedImageUrlsSchema, stockImageKindSchema } from "../mealdb/mealdb.schema";
 
 export const baseUnitSchema = z.enum(["g", "ml", "pcs"]).describe("Supported base unit.");
 
@@ -12,6 +13,9 @@ export const ingredientSchema = z
     category: z.string().nullable().describe("Ingredient category, if assigned."),
     imageUrl: z.string().min(1).nullable().describe("Image URL, if available."),
     imageAssetId: z.string().uuid().nullable().optional().describe("Uploaded media asset, if available."),
+    stockImageKind: stockImageKindSchema.nullable().optional().describe("The normalized TheMealDB stock image kind."),
+    stockImageName: z.string().trim().min(1).max(255).nullable().optional().describe("The normalized TheMealDB stock image name."),
+    imageUrls: resolvedImageUrlsSchema.optional().describe("Resolved small, medium, and large image URLs."),
     defaultUnit: baseUnitSchema.describe("Default measurement unit."),
     baseQuantity: z.number().nonnegative().describe("Quantity the nutrition values describe."),
     calories: z.number().nonnegative().nullable().describe("Calories per base quantity."),
@@ -37,6 +41,8 @@ export const ingredientSchema = z
 export const createIngredientSchema = ingredientSchema
   .omit({ id: true, userId: true, createdAt: true, updatedAt: true })
   .extend({
+    stockImageKind: stockImageKindSchema.nullable().optional(),
+    stockImageName: z.string().trim().min(1).max(255).nullable().optional(),
     shelfLifeDays: shelfLifeDaysSchema.optional()
       .describe("Typical shelf life in days by storage method."),
     tags: z.array(rawTagSchema).max(3).optional()

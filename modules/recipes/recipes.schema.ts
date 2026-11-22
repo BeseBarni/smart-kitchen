@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { ingredientSchema } from "../ingredients/ingredients.schema";
 import { rawTagSchema, shelfLifeDaysSchema, tagDtoSchema } from "../tags/tags.schema";
+import { resolvedImageUrlsSchema, stockImageKindSchema } from "../mealdb/mealdb.schema";
 
 export const recipeIngredientSchema = z
   .object({
@@ -39,6 +40,9 @@ export const recipeSchema = z
       .describe("Ordered recipe steps."),
     imageUrl: z.string().min(1).nullable().describe("Image URL, if available."),
     imageAssetId: z.string().uuid().nullable().optional().describe("Uploaded media asset, if available."),
+    stockImageKind: stockImageKindSchema.nullable().optional().describe("The normalized TheMealDB stock image kind."),
+    stockImageName: z.string().trim().min(1).max(255).nullable().optional().describe("The normalized TheMealDB stock image name."),
+    imageUrls: resolvedImageUrlsSchema.optional().describe("Resolved small, medium, and large image URLs."),
     prepTimeMin: z
       .number()
       .int()
@@ -102,6 +106,8 @@ export const recipeSchema = z
 export const createRecipeSchema = recipeSchema
   .omit({ id: true, userId: true, createdAt: true, updatedAt: true })
   .extend({
+    stockImageKind: stockImageKindSchema.nullable().optional(),
+    stockImageName: z.string().trim().min(1).max(255).nullable().optional(),
     ingredients: z.array(
       recipeIngredientSchema.omit({
         id: true,

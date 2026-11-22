@@ -2,7 +2,7 @@
 
 import type { ReactNode } from "react";
 import { Soup, X } from "lucide-react";
-import Image from "next/image";
+import { ResolvedEntityImage } from "@/components/media/ResolvedEntityImage";
 import { MarkdownContent } from "@/components/MarkdownContent";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetDescription, SheetTitle } from "@/components/ui/sheet";
@@ -12,6 +12,9 @@ type DetailRecipe = {
   title: string;
   description: string | null;
   imageUrl?: string | null;
+  imageAssetId?: string | null;
+  stockImageKind?: "themealdb_meal" | "themealdb_ingredient" | null;
+  stockImageName?: string | null;
   prepTimeMin?: number | null;
   cookTimeMin?: number | null;
   servings: number;
@@ -49,7 +52,12 @@ export function RecipeDetailModal({ open, onClose, recipe, markdown = false, chi
         <div className="space-y-4 overflow-y-auto p-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
           {recipe && <>
             <div className="relative flex h-40 items-center justify-center overflow-hidden rounded-2xl bg-secondary text-secondary-foreground">
-              {recipe.imageUrl ? <Image src={recipe.imageUrl} alt="" fill unoptimized sizes="(max-width: 430px) 100vw, 430px" className="object-cover" /> : <Soup size={64} strokeWidth={1} aria-hidden="true" />}
+              <ResolvedEntityImage
+                entity={recipe}
+                alt=""
+                size="large"
+                fallback={<Soup size={64} strokeWidth={1} aria-hidden="true" />}
+              />
             </div>
             <div>
               <h3 className="text-headline-lg">{recipe.title}</h3>

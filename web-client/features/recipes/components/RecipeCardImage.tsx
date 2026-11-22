@@ -1,13 +1,19 @@
-import Image from "next/image";
-import { CheckCircle2, Sparkles } from "lucide-react";
+import { CheckCircle2, Sparkles, Soup } from "lucide-react";
 import type { Recipe } from "../types";
 import { useText } from "@/lib/i18n";
+import { ResolvedEntityImage } from "@/components/media/ResolvedEntityImage";
 
 export function RecipeCardImage({ recipe }: { recipe: Recipe }): React.JSX.Element {
   const { t } = useText();
   return (
     <div className="relative h-44 overflow-hidden bg-muted">
-      {recipe.imageUrl ? <Image src={recipe.imageUrl} alt={recipe.title} fill unoptimized sizes="(max-width: 430px) 100vw, 430px" className="object-cover" /> : <div className="h-full bg-gradient-to-br from-secondary to-muted" aria-hidden="true" />}
+      <ResolvedEntityImage
+        entity={recipe}
+        alt={recipe.title}
+        size="medium"
+        fill
+        fallback={<div className="flex h-full items-center justify-center bg-gradient-to-br from-secondary to-muted" aria-label={recipe.title}><Soup size={34} className="text-muted-foreground" aria-hidden="true" /></div>}
+      />
       <span className="absolute top-2.5 left-2.5 inline-flex items-center gap-1 rounded-full bg-card/95 px-2.5 py-1 text-label-sm text-primary-pressed shadow-sm">
         <Sparkles size={14} aria-hidden="true" />{t(recipe.source === "ai_skill" ? "recipes.aiSuggested" : "recipes.savedRecipe")}
       </span>

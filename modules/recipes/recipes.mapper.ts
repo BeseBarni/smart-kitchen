@@ -7,6 +7,7 @@ import type {
 } from "./recipes.schema";
 import { findRecipe, listRecipeRows } from "./recipes.repo";
 import { cookRecipeRows } from "./recipes-cook.repo";
+import { resolveEntityImages } from "../mealdb/mealdb-image.utils";
 
 type RecipeDetail = NonNullable<Awaited<ReturnType<typeof findRecipe>>>;
 type IngredientRow = Exclude<RecipeDetail["lines"][number]["ingredient"], null>;
@@ -33,6 +34,7 @@ const macroFields = [
 export function ingredientRowToDto(row: IngredientRow): IngredientDto {
   return {
     ...row,
+    imageUrls: resolveEntityImages(row),
     baseQuantity: Number(row.baseQuantity),
     calories: numericToNumber(row.calories),
     proteinG: numericToNumber(row.proteinG),
@@ -51,6 +53,7 @@ export function ingredientRowToDto(row: IngredientRow): IngredientDto {
 export function recipeDto(recipe: RecipeDetail["recipe"], lines: RecipeDetail["lines"]): RecipeDto {
   return {
     ...recipe,
+    imageUrls: resolveEntityImages(recipe),
     servings: Number(recipe.servings),
     caloriesPerServing: numericToNumber(recipe.caloriesPerServing),
     proteinPerServing: numericToNumber(recipe.proteinPerServing),
@@ -73,6 +76,7 @@ export function recipeDto(recipe: RecipeDetail["recipe"], lines: RecipeDetail["l
 export function recipeListDto(recipe: RecipeListRow): RecipeDto {
   return {
     ...recipe,
+    imageUrls: resolveEntityImages(recipe),
     servings: Number(recipe.servings),
     caloriesPerServing: numericToNumber(recipe.caloriesPerServing),
     proteinPerServing: numericToNumber(recipe.proteinPerServing),
@@ -155,6 +159,7 @@ export function chooseComputedValue(
 export function cookedRowToDto(row: CookedRow): InventoryItemDto {
   return {
     ...row,
+    imageUrls: resolveEntityImages(row),
     initialQuantity: Number(row.initialQuantity),
     remainingQuantity: Number(row.remainingQuantity),
     caloriesPerUnit: numericToNumber(row.caloriesPerUnit),

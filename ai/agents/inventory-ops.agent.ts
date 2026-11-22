@@ -5,6 +5,7 @@ import { recipeCookAndStockTool } from "../tools/definitions/recipes.write.tools
 import { runAgentLoop } from "./agent-loop";
 import type { SubAgent } from "./agent.types";
 import { tagsListAvailableTool } from "../tools/definitions/tags.tools";
+import { mealDbSearchForAgent } from "../tools/adapters/mealdb-search.adapter";
 
 export const inventoryOpsAgent: SubAgent = {
   name: "inventory_ops",
@@ -14,7 +15,7 @@ export const inventoryOpsAgent: SubAgent = {
       agent: "inventory_ops",
       request,
       context,
-      tools: [...inventoryReadTools, ...inventoryWriteTools, recipesListTool, recipeCookAndStockTool, tagsListAvailableTool],
+      tools: [...inventoryReadTools, ...inventoryWriteTools, recipesListTool, recipeCookAndStockTool, tagsListAvailableTool, mealDbSearchForAgent(context)],
       system: [
         "You are the Inventory Operations agent for a user's kitchen.",
         "Look up current inventory and saved recipes before mutating stock; use exact IDs returned by tools.",
@@ -28,6 +29,8 @@ export const inventoryOpsAgent: SubAgent = {
         "Before assigning chips, call tags_list_available and strongly prefer existing canonical or user slugs.",
         "Maximum three attribute tags plus one item-type chip. Always provide realistic fridge/freezer/pantry shelfLifeDays with null where unsuitable.",
         "Shelf lives are estimates from fresh purchase or preparation, not safety guarantees. Give a known label or user-provided expiry when available; otherwise use null so the service estimates it. Do not invent a purchase or preparation date.",
+        "For standalone ingredients or meal-prep items without a user-uploaded photo, call media_search_themealdb_images with concise English terms for query, fallbackEnglishTerm, and mainIngredient even when the user's language is different. Keep user-facing text in the selected language.",
+        "Only persist stockImageKind and stockImageName returned by the tool. Never invent filenames or attach mismatched candidates.",
       ].join("\n"),
     }),
 };

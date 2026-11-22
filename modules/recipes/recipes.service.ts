@@ -29,6 +29,21 @@ import {
 import { resolveOrCreateTags } from "../tags/tags.service";
 import { replaceRecipeTags } from "../tags/tags.repo";
 import { assertOwnedUploadedAssets, softDeleteAndPurge } from "../media/media.service";
+import { isSafeMealDbImageName, isSafeMealDbIngredientName } from "../mealdb/mealdb-image.utils";
+
+function validateStockImage(
+  kind: "themealdb_meal" | "themealdb_ingredient" | null | undefined,
+  name: string | null | undefined,
+): AppError | undefined {
+  if ((kind == null) !== (name == null)) {
+    return { code: "VALIDATION_ERROR", message: "Stock image kind and name must be set together." };
+  }
+  if (!kind || !name) return undefined;
+  const valid = kind === "themealdb_meal"
+    ? isSafeMealDbImageName(name)
+    : isSafeMealDbIngredientName(name);
+  return valid ? undefined : { code: "VALIDATION_ERROR", message: "Stock image name is invalid." };
+}
 
 async function loadLinked(userId: string, lines: RecipeLineInput[]) {
   const ids = [...new Set(lines.flatMap((line) => (line.ingredientId ? [line.ingredientId] : [])))];
@@ -61,6 +76,8 @@ export async function create(
   userId: string,
   input: CreateRecipeInput,
 ): Promise<Result<RecipeDto, AppError>> {
+  const stockError = validateStockImage(input.stockImageKind, input.stockImageName);
+  if (stockError) return err(stockError);
   const linked = await loadLinked(userId, input.ingredients);
   if (!linked.success) return err(linked.error);
   if (input.imageAssetId) {
@@ -91,6 +108,8 @@ export async function update(
   id: string,
   input: UpdateRecipeInput,
 ): Promise<Result<RecipeDto, AppError>> {
+  const stockError = validateStockImage(input.stockImageKind, input.stockImageName);
+  if (stockError) return err(stockError);
   const existing = await findRecipe(userId, id);
   if (!existing) return err({ code: "ITEM_NOT_FOUND", message: "Recipe not found." });
   if (input.imageAssetId) {

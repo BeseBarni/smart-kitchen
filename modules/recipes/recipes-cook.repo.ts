@@ -21,7 +21,10 @@ export async function cookRecipeRows(
       preparedAt: preparedDate, expiresAt: batch.expiresAt
         ? new Date(batch.expiresAt)
         : estimatedExpiry(recipe.shelfLifeDays ?? undefined, batch.storageLocation, preparedDate),
-      imageUrl: recipe.imageUrl, caloriesPerUnit: recipe.caloriesPerServing,
+      imageUrl: recipe.imageUrl,
+      imageAssetId: recipe.imageAssetId,
+      stockImageKind: recipe.stockImageKind,
+      stockImageName: recipe.stockImageName,
       proteinPerUnit: recipe.proteinPerServing, carbsPerUnit: recipe.carbsPerServing,
       fatPerUnit: recipe.fatPerServing, fiberPerUnit: recipe.fiberPerServing,
       costPerUnit: recipe.costPerServing, currency: recipe.currency,

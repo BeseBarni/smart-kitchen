@@ -14,6 +14,8 @@ function insertValues(input: CreateIngredientInput) {
     category: input.category,
     imageUrl: input.imageUrl,
     imageAssetId: input.imageAssetId ?? null,
+    stockImageKind: input.stockImageKind,
+    stockImageName: input.stockImageName,
     defaultUnit: input.defaultUnit,
     baseQuantity: String(input.baseQuantity),
     calories: numberToNumeric(input.calories ?? null),
@@ -36,6 +38,8 @@ function updateValues(input: UpdateIngredientInput): Partial<typeof ingredients.
   if (input.category !== undefined) values.category = input.category;
   if (input.imageUrl !== undefined) values.imageUrl = input.imageUrl;
   if (input.imageAssetId !== undefined) values.imageAssetId = input.imageAssetId;
+  if (input.stockImageKind !== undefined) values.stockImageKind = input.stockImageKind;
+  if (input.stockImageName !== undefined) values.stockImageName = input.stockImageName;
   if (input.defaultUnit !== undefined) values.defaultUnit = input.defaultUnit;
   if (input.baseQuantity !== undefined) values.baseQuantity = String(input.baseQuantity);
   if (input.calories !== undefined) values.calories = numberToNumeric(input.calories);

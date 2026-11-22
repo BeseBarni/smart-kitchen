@@ -10,6 +10,7 @@ import type { InventoryInput, InventoryItem } from "../types";
 import { inventoryFormValues } from "../utils/inventory-form.mapper";
 import { InventoryFormFields } from "./InventoryFormFields";
 import { useText } from "@/lib/i18n";
+import { StockImageSearchGrid } from "@/features/media";
 
 interface Props {
   item?: InventoryItem;
@@ -56,6 +57,15 @@ export function InventoryItemSheet({ item, busy, onClose, onSave, onDelete }: Pr
         </div>
         <form onSubmit={(event) => void submit(event)} className="space-y-4 px-4 pb-5 pt-4">
           <InventoryFormFields form={form} disabled={busy} />
+          <StockImageSearchGrid
+            kind={form.watch("itemType") === "ingredient" ? "ingredient" : "meal"}
+            onSelect={(candidate) => {
+              form.setValue("stockImageKind", candidate.stockImageKind);
+              form.setValue("stockImageName", candidate.stockImageName);
+              form.setValue("imageAssetId", null);
+              form.setValue("imageUrl", null);
+            }}
+          />
           {form.formState.errors.root && <p role="alert" className="text-body-sm text-destructive">{t(form.formState.errors.root.type === "delete" ? "inventory.deleteError" : "inventory.saveError")}</p>}
           <Button type="submit" disabled={busy} className="h-12 w-full rounded-xl text-title-sm">{t(busy ? "inventory.saving" : item ? "inventory.saveChanges" : "inventory.saveInventory")}</Button>
           {item && onDelete && <Button type="button" disabled={busy} variant="outline" onClick={() => void deleteItem()} className="h-11 w-full text-destructive">{t("inventory.deleteItem")}</Button>}

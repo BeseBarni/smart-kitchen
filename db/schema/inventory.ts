@@ -1,4 +1,5 @@
 import {
+  check,
   index,
   jsonb,
   numeric,
@@ -7,14 +8,17 @@ import {
   timestamp,
   uuid,
 } from "drizzle-orm/pg-core";
+import { sql } from "drizzle-orm";
 import { authUsers } from "./users";
 import {
   inventoryItemTypeEnum,
   inventoryStatusEnum,
   mealTypeEnum,
   storageLocationEnum,
+  stockImageKindEnum,
 } from "./enums";
 import { recipes, ingredients } from "./food";
+import { mediaAssets } from "./media";
 
 export const inventoryItems = pgTable(
   "inventory_items",
@@ -37,6 +41,9 @@ export const inventoryItems = pgTable(
     preparedAt: timestamp("prepared_at", { withTimezone: true }),
     expiresAt: timestamp("expires_at", { withTimezone: true }),
     imageUrl: text("image_url"),
+    imageAssetId: uuid("image_asset_id").references(() => mediaAssets.id, { onDelete: "set null" }),
+    stockImageKind: stockImageKindEnum("stock_image_kind"),
+    stockImageName: text("stock_image_name"),
     caloriesPerUnit: numeric("calories_per_unit", { precision: 12, scale: 4 }),
     proteinPerUnit: numeric("protein_per_unit", { precision: 12, scale: 4 }),
     carbsPerUnit: numeric("carbs_per_unit", { precision: 12, scale: 4 }),
@@ -59,6 +66,10 @@ export const inventoryItems = pgTable(
       table.storageLocation,
     ),
     index("inventory_items_user_expires_at_idx").on(table.userId, table.expiresAt),
+    check(
+      "inventory_items_stock_image_pair_check",
+      sql`(${table.stockImageKind} is null) = (${table.stockImageName} is null)`,
+    ),
   ],
 );
 

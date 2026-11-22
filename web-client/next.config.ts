@@ -8,6 +8,15 @@ const nextConfig: NextConfig = {
   /* config options here */
   cacheComponents: true,
   partialPrefetching: true,
+  images: {
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "www.themealdb.com",
+        pathname: "/images/**",
+      },
+    ],
+  },
   transpilePackages: [
     "@app/server",
     "@app/shared",

@@ -3,6 +3,7 @@ import { ArrowRight, CircleCheck, Refrigerator, Snowflake } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import type { UiDirective } from "../types";
 import { LOCALE_META, useText } from "@/lib/i18n";
+import { ResolvedEntityImage } from "@/components/media/ResolvedEntityImage";
 
 type Props = Extract<UiDirective, { component: "inventory_action_card" }>;
 
@@ -20,7 +21,14 @@ export function InventoryActionCard({ action, items }: Props): React.JSX.Element
           const Icon = item.location === "freezer" ? Snowflake : Refrigerator;
           return (
             <li key={item.id} className="flex gap-2 rounded-lg bg-card p-2">
-              <Icon size={16} className="mt-0.5 shrink-0 text-secondary-foreground" aria-hidden="true" />
+              <span className="relative flex size-10 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-muted">
+                <ResolvedEntityImage
+                  entity={{ stockImageKind: item.stockImageKind, stockImageName: item.stockImageName, imageUrl: item.imageUrl }}
+                  alt=""
+                  size="small"
+                  fallback={<Icon size={16} className="text-secondary-foreground" aria-hidden="true" />}
+                />
+              </span>
               <div className="min-w-0">
                 <div className="truncate text-title-sm">{item.name}</div>
                 <div className="text-label-md text-muted-foreground">{formatNumber(item.quantity)} {item.unit} · {t(`inventory.${item.location}`)}</div>

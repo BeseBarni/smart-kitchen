@@ -1,5 +1,6 @@
 import {
   boolean,
+  check,
   index,
   integer,
   jsonb,
@@ -11,7 +12,8 @@ import {
 } from "drizzle-orm/pg-core";
 import { authUsers } from "./users";
 import { mediaAssets } from "./media";
-import { baseUnitEnum, recipeSourceEnum } from "./enums";
+import { baseUnitEnum, recipeSourceEnum, stockImageKindEnum } from "./enums";
+import { sql } from "drizzle-orm";
 
 export const ingredients = pgTable(
   "ingredients",
@@ -25,6 +27,8 @@ export const ingredients = pgTable(
     category: text("category"),
     imageUrl: text("image_url"),
     imageAssetId: uuid("image_asset_id").references(() => mediaAssets.id, { onDelete: "set null" }),
+    stockImageKind: stockImageKindEnum("stock_image_kind"),
+    stockImageName: text("stock_image_name"),
     defaultUnit: baseUnitEnum("default_unit").default("g").notNull(),
     baseQuantity: numeric("base_quantity", { precision: 10, scale: 2 }).default("100.00").notNull(),
     calories: numeric("calories", { precision: 10, scale: 2 }),
@@ -44,7 +48,13 @@ export const ingredients = pgTable(
     createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
   },
-  (table) => [index("ingredients_user_id_name_idx").on(table.userId, table.name)],
+  (table) => [
+    index("ingredients_user_id_name_idx").on(table.userId, table.name),
+    check(
+      "ingredients_stock_image_pair_check",
+      sql`(${table.stockImageKind} is null) = (${table.stockImageName} is null)`,
+    ),
+  ],
 );
 
 export const recipes = pgTable(
@@ -59,6 +69,8 @@ export const recipes = pgTable(
     instructions: jsonb("instructions").$type<string[]>().default([]).notNull(),
     imageUrl: text("image_url"),
     imageAssetId: uuid("image_asset_id").references(() => mediaAssets.id, { onDelete: "set null" }),
+    stockImageKind: stockImageKindEnum("stock_image_kind"),
+    stockImageName: text("stock_image_name"),
     prepTimeMin: integer("prep_time_min"),
     cookTimeMin: integer("cook_time_min"),
     servings: numeric("servings", { precision: 10, scale: 2 }).notNull(),
@@ -79,7 +91,13 @@ export const recipes = pgTable(
     createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
   },
-  (table) => [index("recipes_user_id_created_at_idx").on(table.userId, table.createdAt)],
+  (table) => [
+    index("recipes_user_id_created_at_idx").on(table.userId, table.createdAt),
+    check(
+      "recipes_stock_image_pair_check",
+      sql`(${table.stockImageKind} is null) = (${table.stockImageName} is null)`,
+    ),
+  ],
 );
 
 export const recipeIngredients = pgTable(

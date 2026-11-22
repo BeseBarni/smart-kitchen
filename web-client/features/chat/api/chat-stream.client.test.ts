@@ -111,6 +111,38 @@ test("parses chunked SSE frames and normalizes CRLF boundaries", async () => {
   ]);
 });
 
+test("retains recipe image references in streamed directives", async () => {
+  const directive = {
+    component: "recipe_preview_card", status: "draft", canSave: true, canCookAndStock: false,
+    recipe: {
+      title: "Chicken gyros", description: "", servings: 2, ingredients: [], instructions: ["Cook."],
+      stockImageKind: "themealdb_meal", stockImageName: "hcg6l91763596970.jpg",
+    },
+  };
+  const event = { type: "ui_directive", directive, invalidateDomains: [] };
+  const stream = readableChunks([`event: ui_directive\ndata: ${JSON.stringify(event)}\n\n`]);
+  const events = [];
+  for await (const parsed of parseSseStream(stream)) events.push(parsed);
+  assert.deepEqual(events, [event]);
+});
+
+test("accepts local uploaded image URLs in streamed recipe directives", async () => {
+  const event = {
+    type: "ui_directive", invalidateDomains: [],
+    directive: {
+      component: "recipe_preview_card", status: "saved", canSave: false, canCookAndStock: true,
+      recipe: {
+        title: "Soup", description: "", servings: 2, ingredients: [], instructions: ["Cook."],
+        imageUrl: "/api/media/asset-id/file",
+      },
+    },
+  };
+  const stream = readableChunks([`event: ui_directive\ndata: ${JSON.stringify(event)}\n\n`]);
+  const events = [];
+  for await (const parsed of parseSseStream(stream)) events.push(parsed);
+  assert.deepEqual(events, [event]);
+});
+
 test("rejects SSE frames whose event name differs from the payload", async () => {
   const stream = readableChunks([
     'event: agent_status\ndata: {"type":"text_delta","delta":"hello"}\n\n',

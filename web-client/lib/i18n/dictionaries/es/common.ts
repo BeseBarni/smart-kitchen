@@ -17,4 +17,11 @@ export const common = {
   syncing: "Sincronizando...",
   optimisticRollback: "No se ha podido guardar el cambio. Se ha restaurado.",
   unknown: "Desconocido",
+  stockImageTab: "Buscar imagen",
+  uploadPhotoTab: "Subir foto",
+  stockImageSearch: "Buscar imágenes de archivo",
+  stockImagePlaceholder: "Busca un plato o ingrediente",
+  stockImageEmpty: "No se encontraron imágenes coincidentes.",
+  stockImageError: "No se pudo buscar imágenes.",
+  stockImageAttribution: "Datos de recetas e imágenes: TheMealDB",
 } satisfies WidenStrings<typeof english>;

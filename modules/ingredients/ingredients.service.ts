@@ -19,10 +19,28 @@ import type {
 import { resolveOrCreateTags } from "../tags/tags.service";
 import { replaceIngredientTags } from "../tags/tags.repo";
 import { assertOwnedUploadedAssets, softDeleteAndPurge } from "../media/media.service";
+import { resolveEntityImages, isSafeMealDbIngredientName, isSafeMealDbImageName } from "../mealdb/mealdb-image.utils";
+
+function validateStockImage(
+  kind: "themealdb_meal" | "themealdb_ingredient" | null | undefined,
+  name: string | null | undefined,
+): AppError | undefined {
+  if ((kind == null) !== (name == null)) {
+    return { code: "VALIDATION_ERROR", message: "Stock image kind and name must be set together." };
+  }
+  if (kind && name) {
+    const safe = kind === "themealdb_ingredient"
+      ? isSafeMealDbIngredientName(name)
+      : isSafeMealDbImageName(name);
+    if (!safe) return { code: "VALIDATION_ERROR", message: "Stock image name is invalid." };
+  }
+  return undefined;
+}
 
 function toDto(row: Awaited<ReturnType<typeof findIngredient>> & object): IngredientDto {
   return {
     ...row,
+    imageUrls: resolveEntityImages(row),
     baseQuantity: Number(row.baseQuantity),
     calories: numericToNumber(row.calories),
     proteinG: numericToNumber(row.proteinG),
@@ -58,6 +76,8 @@ export async function create(
   userId: string,
   input: CreateIngredientInput,
 ): Promise<Result<IngredientDto, AppError>> {
+  const stockError = validateStockImage(input.stockImageKind, input.stockImageName);
+  if (stockError) return err(stockError);
   const user = await requireAuthUser(userId);
   if (!user.success) return user;
   if (input.imageAssetId) {
@@ -82,6 +102,8 @@ export async function update(
   id: string,
   input: UpdateIngredientInput,
 ): Promise<Result<IngredientDto, AppError>> {
+  const stockError = validateStockImage(input.stockImageKind, input.stockImageName);
+  if (stockError) return err(stockError);
   const existing = await findIngredient(userId, id);
   if (!existing) return err(notFound());
   if (input.imageAssetId) {

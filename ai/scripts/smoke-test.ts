@@ -132,7 +132,7 @@ async function main(): Promise<void> {
   const proposal = await collectTurn(
     userId,
     conversationId,
-    `I would like to save a two-serving recipe named ${recipeTitle}, made by simmering 200 g lentils in 500 ml water, and stock two portions in the pantry. Ask for my confirmation first; do not save or stock anything yet.`,
+    `I would like to save a two-serving recipe named ${recipeTitle}, made by simmering 200 g lentils in 500 ml water, and stock two portions in the pantry. Before presenting the draft, call media_search_themealdb_images for "lentil soup" and only use a returned stock image name. Ask for my confirmation first; do not save or stock anything yet.`,
     "confirm save and stock",
   );
   assert.ok(
@@ -169,6 +169,12 @@ async function main(): Promise<void> {
   assert.ok(savedRecipe, "the requested recipe was not saved");
   assert.ok(savedRecipe.tags === undefined || savedRecipe.tags.length <= 3, "saved recipe exceeds three attribute chips");
   assert.ok(savedRecipe.shelfLifeDays !== undefined, "saved recipe did not include storage shelf life");
+  assert.ok(
+    savedRecipe.stockImageKind === "themealdb_meal" &&
+      typeof savedRecipe.stockImageName === "string" &&
+      savedRecipe.stockImageName.length > 0,
+    "saved recipe did not persist a returned TheMealDB stock image reference",
+  );
   const stockedItems = ledger.data.items.flatMap((item) => {
     if (item.toolName !== "recipes_cook_and_stock" || item.payload.kind !== "tool_result") return [];
     const parsed = inventoryItemSchema.array().safeParse(item.payload.result);
@@ -179,10 +185,19 @@ async function main(): Promise<void> {
       item.recipeId === savedRecipe.id &&
       item.storageLocation === "pantry" &&
       item.initialQuantity === 2 &&
+      item.stockImageKind === savedRecipe.stockImageKind &&
+      item.stockImageName === savedRecipe.stockImageName &&
       (item.tags ?? []).length <= 3 &&
       item.shelfLifeDays !== undefined
     ),
     "two portions of the requested recipe were not stocked in the pantry",
+  );
+  assert.ok(
+    ledger.data.items.some((item) =>
+      item.type === "tool_call" &&
+      item.toolName === "media_search_themealdb_images"
+    ),
+    "the recipe flow did not call the TheMealDB image search tool",
   );
   assert.ok(ledger.data.items.some((item) => item.type === "tool_call"));
   assert.ok(ledger.data.items.some((item) => item.type === "skill_execution"));

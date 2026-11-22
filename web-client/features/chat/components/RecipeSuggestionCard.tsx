@@ -2,12 +2,12 @@
 
 import { useState } from "react";
 import { ArrowRight, Soup } from "lucide-react";
-import Image from "next/image";
 import type { UiDirective } from "../types";
 import { useChatRecipeActions } from "../hooks/use-chat-recipe-actions";
 import { ChatRecipeActions } from "./ChatRecipeActions";
 import { ChatRecipeSheet } from "./ChatRecipeSheet";
 import { useText } from "@/lib/i18n";
+import { ResolvedEntityImage } from "@/components/media/ResolvedEntityImage";
 
 type Props = Extract<UiDirective, { component: "recipe_preview_card" }> & { assistantResponse: string };
 
@@ -19,7 +19,16 @@ export function RecipeSuggestionCard(props: Props): React.JSX.Element {
     <article className="space-y-2">
       <button type="button" onClick={() => setOpen(true)} className="flex min-h-20 w-full items-center gap-3 rounded-2xl border border-primary/30 bg-card p-2.5 text-left shadow-sm hover:border-primary focus-visible:outline-2 focus-visible:outline-primary">
         <span className="relative flex size-16 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-secondary text-secondary-foreground">
-          {props.recipe.imageUrl ? <Image src={props.recipe.imageUrl} alt="" fill unoptimized sizes="64px" className="object-cover" /> : <Soup size={32} aria-hidden="true" />}
+          <ResolvedEntityImage
+            entity={{
+              stockImageKind: props.recipe.stockImageKind,
+              stockImageName: props.recipe.stockImageName,
+              imageUrl: props.recipe.imageUrl,
+            }}
+            alt=""
+            size="small"
+            fallback={<Soup size={32} aria-hidden="true" />}
+          />
         </span>
         <span className="min-w-0 flex-1">
           <span className="text-label-sm font-semibold uppercase text-primary">{t(props.status === "saved" ? "recipes.savedRecipe" : "chat.draft")}</span>

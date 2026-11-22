@@ -32,6 +32,21 @@ import type {
 } from "./inventory.schema";
 import type { MealLogDto } from "../meal-logs/meal-logs.schema";
 import { resolveOrCreateTags, MAX_ATTRIBUTE_CHIPS } from "../tags/tags.service";
+import { resolveEntityImages, isSafeMealDbImageName, isSafeMealDbIngredientName } from "../mealdb/mealdb-image.utils";
+
+function validateStockImage(
+  kind: "themealdb_meal" | "themealdb_ingredient" | null | undefined,
+  name: string | null | undefined,
+): AppError | undefined {
+  if ((kind == null) !== (name == null)) {
+    return { code: "VALIDATION_ERROR", message: "Stock image kind and name must be set together." };
+  }
+  if (!kind || !name) return undefined;
+  const valid = kind === "themealdb_meal"
+    ? isSafeMealDbImageName(name)
+    : isSafeMealDbIngredientName(name);
+  return valid ? undefined : { code: "VALIDATION_ERROR", message: "Stock image name is invalid." };
+}
 
 type InventoryRow = NonNullable<Awaited<ReturnType<typeof findInventoryItem>>>;
 type ConsumedRows = Extract<
@@ -45,6 +60,7 @@ export function toInventoryItemDto(
 ): InventoryItemDto {
   return {
     ...row,
+    imageUrls: resolveEntityImages(row),
     initialQuantity: Number(row.initialQuantity),
     remainingQuantity: Number(row.remainingQuantity),
     caloriesPerUnit: numericToNumber(row.caloriesPerUnit),
@@ -157,14 +173,42 @@ export async function create(
   userId: string,
   input: CreateInventoryItemInput,
 ): Promise<Result<InventoryItemDto, AppError>> {
+  const stockError = validateStockImage(input.stockImageKind, input.stockImageName);
+  if (stockError) return err(stockError);
   const validationError = await validateOwnership(userId, input);
   if (validationError) return err(validationError);
+  let persistedInput = input;
+  if (!input.stockImageKind && !input.stockImageName) {
+    if (input.recipeId) {
+      const recipe = await getRecipeById(userId, input.recipeId);
+      if (recipe.success && recipe.data.stockImageKind && recipe.data.stockImageName) {
+        persistedInput = {
+          ...input,
+          stockImageKind: recipe.data.stockImageKind,
+          stockImageName: recipe.data.stockImageName,
+          imageAssetId: input.imageAssetId ?? recipe.data.imageAssetId,
+          imageUrl: input.imageAssetId ? input.imageUrl : (recipe.data.imageUrl),
+        };
+      }
+    } else if (input.ingredientId) {
+      const ingredient = await getIngredientById(userId, input.ingredientId);
+      if (ingredient.success && ingredient.data.stockImageKind && ingredient.data.stockImageName) {
+        persistedInput = {
+          ...input,
+          stockImageKind: ingredient.data.stockImageKind,
+          stockImageName: ingredient.data.stockImageName,
+          imageAssetId: input.imageAssetId ?? ingredient.data.imageAssetId,
+          imageUrl: input.imageAssetId ? input.imageUrl : ingredient.data.imageUrl,
+        };
+      }
+    }
+  }
   const user = await requireAuthUser(userId);
   if (!user.success) return user;
   const expiry = input.expiresAt ?? estimatedExpiry(
     input.shelfLifeDays, input.storageLocation, input.preparedAt ? new Date(input.preparedAt) : new Date(),
   )?.toISOString() ?? null;
-  const row = await insertInventoryItem(userId, { ...input, expiresAt: expiry });
+  const row = await insertInventoryItem(userId, { ...persistedInput, expiresAt: expiry });
   if (!row) return err({ code: "INTERNAL_ERROR", message: "Item was not created." });
   const resolved = await resolveOrCreateTags(userId, input.tags ?? []);
   if (!resolved.success) return err(resolved.error);
@@ -178,6 +222,10 @@ export async function createBatch(
 ): Promise<Result<{ items: InventoryItemDto[] }, AppError>> {
   if (input.items.length === 0) {
     return err({ code: "VALIDATION_ERROR", message: "At least one inventory item is required." });
+  }
+  for (const item of input.items) {
+    const stockError = validateStockImage(item.stockImageKind, item.stockImageName);
+    if (stockError) return err(stockError);
   }
   const user = await requireAuthUser(userId);
   if (!user.success) return user;
@@ -210,6 +258,8 @@ export async function update(
   id: string,
   input: UpdateInventoryItemInput,
 ): Promise<Result<InventoryItemDto, AppError>> {
+  const stockError = validateStockImage(input.stockImageKind, input.stockImageName);
+  if (stockError) return err(stockError);
   const validationError = await validateOwnership(userId, input);
   if (validationError) return err(validationError);
   const row = await updateInventoryItemRow(userId, id, input);

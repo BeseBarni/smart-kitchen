@@ -9,6 +9,9 @@ const itemSummary = (item: InventoryItemDto) => ({
   quantity: item.remainingQuantity,
   unit: item.unit,
   location: item.storageLocation,
+  stockImageKind: item.stockImageKind,
+  stockImageName: item.stockImageName,
+  imageUrl: item.imageUrl,
 });
 
 const addInput = z.object({
@@ -24,6 +27,8 @@ const addInput = z.object({
   preparedAt: z.iso.datetime().nullable().describe("Preparation time or null."),
   expiresAt: z.iso.datetime().nullable().describe("Known label or user-provided expiry time; null to estimate from shelf life."),
   imageUrl: z.string().url().nullable().describe("Image URL or null."),
+  stockImageKind: z.enum(["themealdb_meal", "themealdb_ingredient"]).nullable().optional().describe("Normalized TheMealDB stock image kind."),
+  stockImageName: z.string().min(1).max(255).nullable().optional().describe("Exact normalized TheMealDB stock image name."),
   caloriesPerUnit: z.number().nonnegative().nullable().describe("Calories per unit or null."),
   proteinPerUnit: z.number().nonnegative().nullable().describe("Protein grams per unit or null."),
   carbsPerUnit: z.number().nonnegative().nullable().describe("Carbohydrate grams per unit or null."),

@@ -5,6 +5,7 @@ import { PortionStepper } from "./PortionStepper";
 import { StorageBadge } from "./StorageBadge";
 import { useText } from "@/lib/i18n";
 import { isOptimisticId } from "@/lib/optimistic";
+import { ResolvedEntityImage } from "@/components/media/ResolvedEntityImage";
 
 interface Props {
   item: InventoryItem;
@@ -34,8 +35,14 @@ export function InventoryItemCard({ item, asOf, disabled, onEdit, onAdjust, onCo
       className={`cursor-pointer rounded-xl border border-border bg-card p-3 shadow-[0_1px_3px_rgba(17,24,39,0.04)] ${syncing ? "opacity-70" : ""}`}
     >
       <div className="flex items-start gap-3">
-        <div className="flex size-12 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground">
-          <CookingPot size={21} aria-hidden="true" />
+        <div className="relative flex size-12 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-muted text-muted-foreground">
+          <ResolvedEntityImage
+            entity={item}
+            alt=""
+            size="small"
+            fill
+            fallback={<CookingPot size={21} aria-hidden="true" />}
+          />
         </div>
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-1.5">

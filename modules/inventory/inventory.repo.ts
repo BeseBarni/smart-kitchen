@@ -30,6 +30,9 @@ function insertValues(input: CreateInventoryItemInput) {
     preparedAt: input.preparedAt ? new Date(input.preparedAt) : null,
     expiresAt: input.expiresAt ? new Date(input.expiresAt) : null,
     imageUrl: input.imageUrl,
+    imageAssetId: input.imageAssetId ?? null,
+    stockImageKind: input.stockImageKind ?? null,
+    stockImageName: input.stockImageName ?? null,
     caloriesPerUnit: numberToNumeric(input.caloriesPerUnit),
     proteinPerUnit: numberToNumeric(input.proteinPerUnit),
     carbsPerUnit: numberToNumeric(input.carbsPerUnit),
@@ -55,6 +58,9 @@ function updateValues(input: UpdateInventoryItemInput): Partial<typeof inventory
   if (input.preparedAt !== undefined) values.preparedAt = input.preparedAt ? new Date(input.preparedAt) : null;
   if (input.expiresAt !== undefined) values.expiresAt = input.expiresAt ? new Date(input.expiresAt) : null;
   if (input.imageUrl !== undefined) values.imageUrl = input.imageUrl;
+  if (input.imageAssetId !== undefined) values.imageAssetId = input.imageAssetId;
+  if (input.stockImageKind !== undefined) values.stockImageKind = input.stockImageKind;
+  if (input.stockImageName !== undefined) values.stockImageName = input.stockImageName;
   if (input.caloriesPerUnit !== undefined) values.caloriesPerUnit = numberToNumeric(input.caloriesPerUnit);
   if (input.proteinPerUnit !== undefined) values.proteinPerUnit = numberToNumeric(input.proteinPerUnit);
   if (input.carbsPerUnit !== undefined) values.carbsPerUnit = numberToNumeric(input.carbsPerUnit);
@@ -200,6 +206,9 @@ export function batchInventoryValues(userId: string, item: BatchInventoryItemInp
     preparedAt: null,
     expiresAt: item.expiresAt ? new Date(item.expiresAt) : null,
     imageUrl: null,
+    imageAssetId: item.imageAssetId ?? null,
+    stockImageKind: item.stockImageKind ?? null,
+    stockImageName: item.stockImageName ?? null,
     caloriesPerUnit: numberToNumeric(item.estimatedMacrosPerUnit?.calories ?? null),
     proteinPerUnit: numberToNumeric(item.estimatedMacrosPerUnit?.proteinG ?? null),
     carbsPerUnit: numberToNumeric(item.estimatedMacrosPerUnit?.carbsG ?? null),

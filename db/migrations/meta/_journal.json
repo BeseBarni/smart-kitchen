@@ -57,6 +57,13 @@
       "when": 1795299633996,
       "tag": "0007_perpetual_la_nuit",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1795304177953,
+      "tag": "0008_lowly_riptide",
+      "breakpoints": true
     }
   ]
 }
