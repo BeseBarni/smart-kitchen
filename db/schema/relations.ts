@@ -4,6 +4,11 @@ import { ingredients, recipeIngredients, recipes } from "./food";
 import { inventoryItems, mealLogs } from "./inventory";
 import { conversationItems, conversations } from "./conversations";
 import { ingredientTags, inventoryItemTags, recipeTags, tags } from "./tags";
+import { expenseCategories } from "./expense-categories";
+import { merchants } from "./merchants";
+import { receiptItems, receipts } from "./receipts";
+import { monthlyBudgetCategoryLimits, monthlyBudgets } from "./budgets";
+import { mediaAssets } from "./media";
 
 export const authUsersRelations = relations(authUsers, ({ many, one }) => ({
   profile: one(userProfiles),
@@ -12,6 +17,10 @@ export const authUsersRelations = relations(authUsers, ({ many, one }) => ({
   inventoryItems: many(inventoryItems),
   mealLogs: many(mealLogs),
   conversations: many(conversations),
+  expenseCategories: many(expenseCategories),
+  merchants: many(merchants),
+  receipts: many(receipts),
+  monthlyBudgets: many(monthlyBudgets),
 }));
 
 export const userProfilesRelations = relations(userProfiles, ({ one }) => ({
@@ -23,6 +32,7 @@ export const ingredientsRelations = relations(ingredients, ({ many, one }) => ({
   recipeIngredients: many(recipeIngredients),
   inventoryItems: many(inventoryItems),
   tags: many(ingredientTags),
+  receiptItems: many(receiptItems),
 }));
 
 export const recipesRelations = relations(recipes, ({ many, one }) => ({
@@ -50,6 +60,7 @@ export const inventoryItemsRelations = relations(inventoryItems, ({ many, one })
   ingredient: one(ingredients, { fields: [inventoryItems.ingredientId], references: [ingredients.id] }),
   mealLogs: many(mealLogs),
   tags: many(inventoryItemTags),
+  receiptItems: many(receiptItems),
 }));
 
 export const mealLogsRelations = relations(mealLogs, ({ one }) => ({
@@ -78,6 +89,63 @@ export const tagsRelations = relations(tags, ({ many, one }) => ({
   recipeTags: many(recipeTags),
   ingredientTags: many(ingredientTags),
   inventoryItemTags: many(inventoryItemTags),
+}));
+
+export const expenseCategoriesRelations = relations(expenseCategories, ({ many, one }) => ({
+  user: one(authUsers, { fields: [expenseCategories.userId], references: [authUsers.id] }),
+  receiptItems: many(receiptItems),
+  merchantDefaults: many(merchants, { relationName: "merchantDefaultCategory" }),
+  budgetLimits: many(monthlyBudgetCategoryLimits),
+}));
+
+export const merchantsRelations = relations(merchants, ({ many, one }) => ({
+  user: one(authUsers, { fields: [merchants.userId], references: [authUsers.id] }),
+  defaultCategory: one(expenseCategories, {
+    fields: [merchants.defaultCategoryId],
+    references: [expenseCategories.id],
+    relationName: "merchantDefaultCategory",
+  }),
+  receipts: many(receipts),
+}));
+
+export const receiptsRelations = relations(receipts, ({ many, one }) => ({
+  user: one(authUsers, { fields: [receipts.userId], references: [authUsers.id] }),
+  merchant: one(merchants, { fields: [receipts.merchantId], references: [merchants.id] }),
+  mediaAsset: one(mediaAssets, { fields: [receipts.mediaAssetId], references: [mediaAssets.id] }),
+  items: many(receiptItems),
+}));
+
+export const receiptItemsRelations = relations(receiptItems, ({ one }) => ({
+  receipt: one(receipts, { fields: [receiptItems.receiptId], references: [receipts.id] }),
+  category: one(expenseCategories, { fields: [receiptItems.categoryId], references: [expenseCategories.id] }),
+  inventoryItem: one(inventoryItems, {
+    fields: [receiptItems.inventoryItemId],
+    references: [inventoryItems.id],
+  }),
+  ingredient: one(ingredients, { fields: [receiptItems.ingredientId], references: [ingredients.id] }),
+}));
+
+export const monthlyBudgetsRelations = relations(monthlyBudgets, ({ many, one }) => ({
+  user: one(authUsers, { fields: [monthlyBudgets.userId], references: [authUsers.id] }),
+  categoryLimits: many(monthlyBudgetCategoryLimits),
+}));
+
+export const monthlyBudgetCategoryLimitsRelations = relations(
+  monthlyBudgetCategoryLimits,
+  ({ one }) => ({
+    budget: one(monthlyBudgets, {
+      fields: [monthlyBudgetCategoryLimits.monthlyBudgetId],
+      references: [monthlyBudgets.id],
+    }),
+    category: one(expenseCategories, {
+      fields: [monthlyBudgetCategoryLimits.categoryId],
+      references: [expenseCategories.id],
+    }),
+  }),
+);
+
+export const mediaAssetsRelations = relations(mediaAssets, ({ many }) => ({
+  receipts: many(receipts),
 }));
 
 export const recipeTagsRelations = relations(recipeTags, ({ one }) => ({

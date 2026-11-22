@@ -6,6 +6,7 @@ export const mediaPurposeEnum = pgEnum("media_purpose", [
   "ingredient_photo",
   "avatar",
   "inventory_photo",
+  "receipt_scan",
 ]);
 
 export const mediaStatusEnum = pgEnum("media_status", [

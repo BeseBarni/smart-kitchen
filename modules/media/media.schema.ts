@@ -6,6 +6,7 @@ export const mediaPurposeSchema = z.enum([
   "ingredient_photo",
   "avatar",
   "inventory_photo",
+  "receipt_scan",
 ]).describe("Purpose of an uploaded media asset.");
 
 export const mediaStatusSchema = z.enum([

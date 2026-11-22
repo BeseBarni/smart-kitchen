@@ -6,4 +6,8 @@ export * from "./shopping";
 export * from "./conversations";
 export * from "./tags";
 export * from "./media";
+export * from "./expense-categories";
+export * from "./merchants";
+export * from "./receipts";
+export * from "./budgets";
 export * from "./relations";

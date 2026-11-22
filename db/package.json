@@ -14,7 +14,7 @@
     "db:migrate": "drizzle-kit migrate --config=drizzle.config.ts",
     "db:push": "drizzle-kit push --config=drizzle.config.ts",
     "db:studio": "drizzle-kit studio --config=drizzle.config.ts",
-    "db:seed": "tsx seed.ts"
+    "db:seed": "tsx seed.ts && tsx seed-budget.ts"
   },
   "dependencies": {
     "drizzle-orm": "^0.44.7",

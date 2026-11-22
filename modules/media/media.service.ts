@@ -52,7 +52,12 @@ function dto(asset: MediaAssetRow, config: R2Config): MediaAssetDto {
 }
 
 function resolveSyncUrl(asset: MediaAssetRow, config: R2Config): string {
-  if (config.publicUrl && asset.purpose !== "chat_attachment" && asset.purpose !== "avatar") {
+  if (
+    config.publicUrl &&
+    asset.purpose !== "chat_attachment" &&
+    asset.purpose !== "avatar" &&
+    asset.purpose !== "receipt_scan"
+  ) {
     return `${config.publicUrl}/${asset.objectKey}`;
   }
   return `/api/media/${asset.id}/file`;
@@ -160,7 +165,12 @@ export async function resolveReadableUrl(assetId: string, userId: string): Promi
   }
   try {
     const config = readR2Config();
-    if (config.publicUrl && asset.purpose !== "chat_attachment" && asset.purpose !== "avatar") {
+    if (
+      config.publicUrl &&
+      asset.purpose !== "chat_attachment" &&
+      asset.purpose !== "avatar" &&
+      asset.purpose !== "receipt_scan"
+    ) {
       return ok(`${config.publicUrl}/${asset.objectKey}`);
     }
     return ok(await createPresignedGetUrl(config, asset.objectKey, 3600));

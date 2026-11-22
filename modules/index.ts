@@ -12,3 +12,8 @@ export * as mealSuggestionsService from "./meal-suggestions/meal-suggestions.ser
 export * as tagsService from "./tags/tags.service";
 export * as mediaService from "./media/media.service";
 export * as mealDbService from "./mealdb/mealdb.service";
+export * as expenseCategoriesService from "./budget/expense-categories.service";
+export * as merchantService from "./budget/merchants.service";
+export * as receiptReadService from "./budget/receipts-read.service";
+export * as receiptWriteService from "./budget/receipts-write.service";
+export * as budgetService from "./budget/budget.service";

@@ -9,6 +9,10 @@ export * from "./meal-suggestions/meal-suggestions.schema";
 export * from "./tags/tags.schema";
 export * from "./media/media.schema";
 export * from "./mealdb/mealdb.schema";
+export * from "./budget/expense-categories.schema";
+export * from "./budget/merchants.schema";
+export * from "./budget/receipts.schema";
+export * from "./budget/budget.schema";
 export {
   extractMealDbMealImageName,
   normalizeMealDbIngredientImageName,
