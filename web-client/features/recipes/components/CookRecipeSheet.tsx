@@ -34,8 +34,8 @@ export function CookRecipeSheet({ recipe, busy, onClose, onSave }: Props): React
   });
   return (
     <Sheet open onOpenChange={(open) => { if (!open && !busy) onClose(); }}>
-      <SheetContent side="bottom" className="mx-auto max-h-[90dvh] w-full max-w-[430px] rounded-t-2xl pb-[env(safe-area-inset-bottom,0px)]">
-        <SheetTitle>{t("recipes.cookTitle", { name: recipe.title })}</SheetTitle>
+      <SheetContent side="bottom" className="mx-auto max-h-[90dvh] w-full max-w-[430px] overflow-y-auto rounded-t-2xl p-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
+        <SheetTitle className="pr-10">{t("recipes.cookTitle", { name: recipe.title })}</SheetTitle>
         <SheetDescription>{t("recipes.cookDescription")}</SheetDescription>
         <form onSubmit={(event) => void submit(event)} className="mt-4 space-y-4">
           <label className="block space-y-1 text-label-md">{t("recipes.portions")}

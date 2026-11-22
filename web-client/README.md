@@ -157,6 +157,10 @@ secret. Both model tiers default to `gemini-3.5-flash-lite`; `AI_MODEL`,
 Make sure your key has access and sufficient quota for the chosen models. The
 default is a lightweight model rather than a Pro reasoning model; override
 `REASONING_MODEL` if your workload needs a more capable model available to you.
+Receipt scans use `AI_VISION_MODEL` (default `gemini-3.5-flash`). The dedicated
+receipt preview requests only the fields it uses; chat image analysis retains
+its richer output. Evaluate speed and extraction quality before changing the
+vision model.
 
 The smoke test writes conversations, recipes, and inventory. Use only a
 disposable development database and a dedicated existing Neon Auth user.

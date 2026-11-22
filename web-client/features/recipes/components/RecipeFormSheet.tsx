@@ -44,8 +44,8 @@ export function RecipeFormSheet({ recipe, busy, onClose, onSave }: Props): React
   });
   return (
     <Sheet open onOpenChange={(open) => { if (!open && !busy) onClose(); }}>
-      <SheetContent side="bottom" className="mx-auto max-h-[90dvh] w-full max-w-[430px] overflow-y-auto rounded-t-2xl pb-[env(safe-area-inset-bottom,0px)]">
-        <SheetTitle>{t(recipe ? "recipes.editTitle" : "recipes.newTitle")}</SheetTitle>
+      <SheetContent side="bottom" className="mx-auto max-h-[90dvh] w-full max-w-[430px] overflow-y-auto rounded-t-2xl p-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
+        <SheetTitle className="pr-10">{t(recipe ? "recipes.editTitle" : "recipes.newTitle")}</SheetTitle>
         <SheetDescription>{t("recipes.formDescription")}</SheetDescription>
         <form onSubmit={(event) => void submit(event)} className="mt-4 space-y-4">
           <div className="grid grid-cols-2 gap-2" role="tablist">

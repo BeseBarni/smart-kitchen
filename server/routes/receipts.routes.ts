@@ -19,7 +19,7 @@ import {
   merchantService,
   receiptEnrichmentService,
 } from "@app/modules";
-import { executeVisionExtractor } from "@app/ai";
+import { executeReceiptPreviewExtractor } from "@app/ai";
 
 const receiptParams = z.object({ id: z.string().uuid() });
 
@@ -72,18 +72,20 @@ export const receiptRoutes = new Hono<AuthEnvironment>()
     const input = context.req.valid("json");
     const owned = await mediaService.assertOwnedUploadedAssets(userId, [input.mediaAssetId], "receipt_scan");
     if (!owned.success) return resultToResponse(context, owned);
-    const object = await mediaService.getObjectBufferForAsset(userId, input.mediaAssetId);
+    const [object, categories, merchants] = await Promise.all([
+      mediaService.getObjectBufferForAsset(userId, input.mediaAssetId),
+      expenseCategoriesService.listAvailable(userId),
+      merchantService.list(userId, { sort: "recommended", limit: 20 }),
+    ]);
     if (!object.success) return resultToResponse(context, object);
     const mime = object.data.mimeType;
     if (mime !== "image/jpeg" && mime !== "image/png" && mime !== "image/webp" &&
       mime !== "image/avif" && mime !== "image/heic" && mime !== "image/heif") {
       return context.json({ success: false, error: { code: "VALIDATION_ERROR", message: "Unsupported receipt image format." } }, 422);
     }
-    const categories = await expenseCategoriesService.listAvailable(userId);
     if (!categories.success) return resultToResponse(context, categories);
-    const merchants = await merchantService.list(userId, { sort: "recommended", limit: 20 });
     if (!merchants.success) return resultToResponse(context, merchants);
-    const extraction = await executeVisionExtractor({
+    const extraction = await executeReceiptPreviewExtractor({
       images: [{ mimeType: mime, base64Data: Buffer.from(object.data.bytes).toString("base64") }],
       userCaption: undefined,
       userLocale: input.userLocale ?? "en",

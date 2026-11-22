@@ -35,8 +35,8 @@ export function BudgetSettingsSheet({ summary }: { summary: MonthlyBudgetSummary
     ui.closeSheet();
   };
   return <Sheet open={ui.activeSheet === "budget-settings"} onOpenChange={(open) => { if (!open) ui.closeSheet(); }}>
-    <SheetContent side="bottom" className="mx-auto max-h-[92dvh] w-full max-w-[430px] overflow-y-auto rounded-t-2xl pb-[env(safe-area-inset-bottom,0px)]">
-      <SheetTitle>{t("budget.budgetSettings")}</SheetTitle>
+    <SheetContent side="bottom" className="mx-auto max-h-[92dvh] w-full max-w-[430px] overflow-y-auto rounded-t-2xl p-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
+      <SheetTitle className="pr-10">{t("budget.budgetSettings")}</SheetTitle>
       <SheetDescription>{t("budget.budgetDescription")}</SheetDescription>
       <section className="space-y-4">
         <label className="block text-label-md">{t("budget.monthlyLimit")}

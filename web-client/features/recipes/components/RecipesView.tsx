@@ -40,9 +40,9 @@ export function RecipesView(): React.JSX.Element {
   const busy = mutations.create.isPending || mutations.update.isPending || mutations.remove.isPending || mutations.cookAndStock.isPending;
 
   const saveRecipe = async (input: CreateRecipeInput): Promise<void> => {
-    if (formRecipe) mutations.update.mutate({ id: formRecipe.id, input });
-    else mutations.create.mutate(input);
-    toast.success(getText("recipes.saved"));
+    const onSuccess = (): void => { toast.success(getText("recipes.saved")); };
+    if (formRecipe) mutations.update.mutate({ id: formRecipe.id, input }, { onSuccess });
+    else mutations.create.mutate(input, { onSuccess });
     setFormOpen(false);
     setFormRecipe(undefined);
   };

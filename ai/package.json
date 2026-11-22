@@ -14,7 +14,7 @@
   },
   "scripts": {
     "typecheck": "tsc --noEmit",
-    "test": "node --experimental-test-module-mocks --import tsx --test agents/agent-loop.test.ts agents/orchestrator.tools.test.ts core/llm.client.test.ts core/sse.encoder.test.ts tools/adapters/vercel.adapter.test.ts tools/adapters/mealdb-search.adapter.test.ts tools/definitions/inventory.write.tools.test.ts tools/definitions/storage-generation.test.ts runner.test.ts",
+    "test": "node --experimental-test-module-mocks --import tsx --test agents/agent-loop.test.ts agents/orchestrator.tools.test.ts core/llm.client.test.ts core/sse.encoder.test.ts skills/vision-extractor.skill.test.ts tools/adapters/vercel.adapter.test.ts tools/adapters/mealdb-search.adapter.test.ts tools/definitions/inventory.write.tools.test.ts tools/definitions/storage-generation.test.ts runner.test.ts",
     "smoke-test": "tsx scripts/smoke-test.ts"
   },
   "dependencies": {

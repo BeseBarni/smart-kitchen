@@ -150,7 +150,7 @@ export function ReceiptFormSheet({ detail }: { detail?: ReceiptDetailDto }): Rea
       overlayClassName={manualMode ? "bg-inverse-surface/40 backdrop-blur-md" : undefined}
       className={manualMode
         ? "mx-auto !bottom-16 flex max-h-[calc(100dvh-6rem)] w-full max-w-[430px] flex-col gap-0 overflow-hidden rounded-t-[28px] border-0 bg-stitch-surface-container-lowest p-0 shadow-2xl"
-        : "mx-auto max-h-[92dvh] w-full max-w-[430px] overflow-y-auto rounded-t-2xl pb-[env(safe-area-inset-bottom,0px)]"}>
+        : "mx-auto max-h-[92dvh] w-full max-w-[430px] overflow-y-auto rounded-t-2xl p-4 pb-[max(1rem,env(safe-area-inset-bottom))]"}>
       {manualMode ? <>
         <div className="flex shrink-0 justify-center pt-3 pb-1" aria-hidden="true">
           <span className="h-1.5 w-10 rounded-full bg-outline-variant/60" />
@@ -169,7 +169,7 @@ export function ReceiptFormSheet({ detail }: { detail?: ReceiptDetailDto }): Rea
           </Button>
         </div>
       </> : <>
-        <SheetTitle>{detail ? t("budget.editReceipt") : t("budget.addExpense")}</SheetTitle>
+        <SheetTitle className="pr-10">{detail ? t("budget.editReceipt") : t("budget.addExpense")}</SheetTitle>
         <SheetDescription>{t("budget.subtitle")}</SheetDescription>
       </>}
       <form onSubmit={form.handleSubmit(submit)} className={manualMode ? "flex min-h-0 flex-1 flex-col" : "space-y-4"}>

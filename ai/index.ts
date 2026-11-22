@@ -4,4 +4,4 @@ export * from "./core/ui.types";
 export * from "./runner";
 export { orchestratorAgent } from "./agents/orchestrator.agent";
 export { dailyMealSuggestionsSkill } from "./skills/daily-meal-suggestions.skill";
-export { executeVisionExtractor, visionExtractorInputSchema, visionExtractorOutputSchema } from "./skills/vision-extractor.skill";
+export { executeReceiptPreviewExtractor, executeVisionExtractor, visionExtractorInputSchema, visionExtractorOutputSchema } from "./skills/vision-extractor.skill";

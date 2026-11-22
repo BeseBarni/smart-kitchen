@@ -36,9 +36,10 @@ function toDto(row: MerchantWithStats | MerchantRow): MerchantDto {
 async function validateDefaultCategory(
   userId: string,
   categoryId: string | null | undefined,
+  tx?: BudgetTransaction,
 ): Promise<Result<true, AppError>> {
   if (!categoryId) return ok(true);
-  return categoriesService.assertCategoriesAccessible(userId, [categoryId]);
+  return categoriesService.assertCategoriesAccessible(userId, [categoryId], tx);
 }
 
 export async function list(
@@ -60,7 +61,7 @@ export async function findOrCreateByName(
   if (!displayName || !normalizedName) {
     return err({ code: "VALIDATION_ERROR", message: "Merchant name must not be empty." });
   }
-  const category = await validateDefaultCategory(userId, options.defaultCategoryId);
+  const category = await validateDefaultCategory(userId, options.defaultCategoryId, tx);
   if (!category.success) return err(category.error);
   return findOrCreateRow(userId, displayName, normalizedName, options.defaultCategoryId ?? null, tx);
 }

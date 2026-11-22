@@ -18,8 +18,8 @@ export function ReceiptDetailSheet(): React.JSX.Element {
   const categories = overview.categories.data ?? [];
   const close = (): void => ui.closeReceipt();
   return <Sheet open={Boolean(ui.selectedReceiptId)} onOpenChange={(open) => { if (!open) close(); }}>
-    <SheetContent side="bottom" className="mx-auto max-h-[92dvh] w-full max-w-[430px] overflow-y-auto rounded-t-2xl pb-[env(safe-area-inset-bottom,0px)]">
-      <SheetTitle>{receipt?.title ?? receipt?.merchant?.name ?? t("budget.receipt")}</SheetTitle>
+    <SheetContent side="bottom" className="mx-auto max-h-[92dvh] w-full max-w-[430px] overflow-y-auto rounded-t-2xl p-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
+      <SheetTitle className="pr-10">{receipt?.title ?? receipt?.merchant?.name ?? t("budget.receipt")}</SheetTitle>
       <SheetDescription>{receipt ? formatDate(new Date(receipt.purchasedAt), { dateStyle: "medium", timeStyle: "short" }) : t("budget.loading")}</SheetDescription>
       {receipt && <>
         {receipt.mediaUrl && <button type="button" className="w-full" onClick={() => window.open(receipt.mediaUrl ?? undefined, "_blank", "noopener,noreferrer")}><img src={receipt.mediaUrl} alt={t("budget.photo")} className="aspect-[16/9] w-full rounded-xl object-cover" /></button>}

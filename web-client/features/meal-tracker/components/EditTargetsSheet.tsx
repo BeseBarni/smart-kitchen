@@ -32,8 +32,8 @@ export function EditTargetsSheet({ profile, onClose }: { profile: ProfileDto; on
     onClose();
   });
   return <Sheet open onOpenChange={(open) => { if (!open && !targets.isPending) onClose(); }}>
-    <SheetContent side="bottom" className="mx-auto max-h-[90dvh] w-full max-w-[430px] overflow-y-auto rounded-t-2xl pb-[env(safe-area-inset-bottom,0px)]">
-      <SheetTitle>{t("mealTracker.dailyTargets")}</SheetTitle><SheetDescription>{t("mealTracker.targetDescription")}</SheetDescription>
+    <SheetContent side="bottom" className="mx-auto max-h-[90dvh] w-full max-w-[430px] overflow-y-auto rounded-t-2xl p-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
+      <SheetTitle className="pr-10">{t("mealTracker.dailyTargets")}</SheetTitle><SheetDescription>{t("mealTracker.targetDescription")}</SheetDescription>
       <form onSubmit={(event) => void submit(event)} className="space-y-3">
         {fields.map(([field, label]) => <label key={field} className="block text-label-md">{t(label)}<Input className="h-11" type="number" min="1" step="1" {...form.register(field, { setValueAs: (value: string) => value === "" ? null : Number(value) })} /></label>)}
         {Object.keys(form.formState.errors).length > 0 && <p role="alert" className="text-body-sm text-destructive">{t("mealTracker.invalidTargets")}</p>}
