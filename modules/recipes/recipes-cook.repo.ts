@@ -25,6 +25,7 @@ export async function cookRecipeRows(
       imageAssetId: recipe.imageAssetId,
       stockImageKind: recipe.stockImageKind,
       stockImageName: recipe.stockImageName,
+      caloriesPerUnit: recipe.caloriesPerServing,
       proteinPerUnit: recipe.proteinPerServing, carbsPerUnit: recipe.carbsPerServing,
       fatPerUnit: recipe.fatPerServing, fiberPerUnit: recipe.fiberPerServing,
       costPerUnit: recipe.costPerServing, currency: recipe.currency,

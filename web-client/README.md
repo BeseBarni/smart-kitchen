@@ -15,6 +15,9 @@ quick prompts and assistant-suggested replies. Structured recipes open in a
 detail sheet with ingredients, instructions, save and cook/stock actions.
 Chat recipe cards also provide quick save and cook/stock controls; stocking
 requires an existing saved recipe and lets you choose portions and storage.
+AI-generated recipes include estimated per-serving nutrition when reasonably
+estimable; newly cooked batches carry those values into inventory. Existing
+batches are not retroactively changed.
 The Recipes menu uses the same detail sheet and retains edit, delete, and
 cook/stock actions. Older recipe cards are restored when their structured tool
 results are available; text-only historical answers remain unchanged.

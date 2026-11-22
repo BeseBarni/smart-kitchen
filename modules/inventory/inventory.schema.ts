@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { rawTagSchema, shelfLifeDaysSchema, tagDtoSchema } from "../tags/tags.schema";
-import { resolvedImageUrlsSchema, stockImageKindSchema } from "../mealdb/mealdb.schema";
+import { entityImageUrlSchema, resolvedImageUrlsSchema, stockImageKindSchema } from "../mealdb/mealdb.schema";
 
 export const inventoryItemSchema = z
   .object({
@@ -17,7 +17,7 @@ export const inventoryItemSchema = z
     unit: z.string().describe("Unit used for the inventory quantities."),
     preparedAt: z.iso.datetime().nullable().describe("Preparation time, if applicable."),
     expiresAt: z.iso.datetime().nullable().describe("Expiration time, if known."),
-    imageUrl: z.string().url().nullable().describe("Image URL, if available."),
+    imageUrl: entityImageUrlSchema.nullable().describe("Image URL, if available."),
     imageAssetId: z.string().uuid().nullable().optional().describe("Uploaded media asset, if available."),
     stockImageKind: stockImageKindSchema.nullable().optional().describe("The normalized TheMealDB stock image kind."),
     stockImageName: z.string().trim().min(1).max(255).nullable().optional().describe("The normalized TheMealDB stock image name."),

@@ -157,6 +157,7 @@ export const recipeArchitectAgent: SubAgent = {
         "Use isolated skills with only the exact structured data they need.",
         "Present generated recipes as drafts. Save only after explicit user approval.",
         "When an approved save is requested, call recipes_create and report its returned recipe ID; a draft or lookup is not a saved recipe.",
+        "For every generated recipe estimate calories, protein, carbs, fat, and fiber per serving from the ingredient quantities, even when catalog values are unavailable. Use null for calories or macros only when not reasonably estimable, and preserve the estimates when presenting or saving the recipe.",
         "Do not claim nutrition or pricing precision when inputs are missing.",
         "The meal_prep_architect_skill automatically presents its generated recipe as a card. Do not call ui_present_recipe_draft again for the same recipe unless it has changed.",
         "Use ui_present_recipe_draft for complete generated proposals not already presented by the meal prep skill, and stay within kitchen tasks.",

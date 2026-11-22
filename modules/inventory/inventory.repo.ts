@@ -142,7 +142,6 @@ export async function findLinkedRecipe(userId: string, recipeId: string | null) 
       unit: recipeIngredients.unit,
       notes: recipeIngredients.notes,
       ingredientId: recipeIngredients.ingredientId,
-      sortOrder: recipeIngredients.sortOrder,
     })
     .from(recipeIngredients)
     .where(eq(recipeIngredients.recipeId, recipeId))

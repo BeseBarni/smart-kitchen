@@ -43,6 +43,10 @@ export function recipeCard(recipe: RecipeDto) {
 }
 
 const strictCreateRecipeSchema = createRecipeSchema.extend({
+  caloriesPerServing: z.number().nonnegative().nullable().describe("Estimated calories per serving, or null if not reasonably estimable."),
+  proteinPerServing: z.number().nonnegative().nullable().describe("Estimated protein grams per serving, or null if not reasonably estimable."),
+  carbsPerServing: z.number().nonnegative().nullable().describe("Estimated carbohydrate grams per serving, or null if not reasonably estimable."),
+  fatPerServing: z.number().nonnegative().nullable().describe("Estimated fat grams per serving, or null if not reasonably estimable."),
   fiberPerServing: z.number().nonnegative().describe("Fiber grams per serving, estimated when necessary."),
   shelfLifeDays: generatedShelfLifeDaysSchema,
   ingredients: z.array(

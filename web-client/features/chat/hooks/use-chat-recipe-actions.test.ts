@@ -9,6 +9,8 @@ test("streamed recipe drafts retain storage estimates when saved", () => {
     component: "recipe_preview_card", status: "draft", canSave: true, canCookAndStock: false,
     recipe: {
       title: "Soup", description: "Soup", servings: 2, ingredients: [], instructions: ["Cook."],
+      caloriesPerServing: 320.5, proteinPerServing: 15, carbsPerServing: 40,
+      fatPerServing: 5, fiberPerServing: 8,
       shelfLifeDays: { fridge: 3, freezer: 90, pantry: null },
     },
   });
@@ -17,6 +19,10 @@ test("streamed recipe drafts retain storage estimates when saved", () => {
   if (directive.component !== "recipe_preview_card") return;
   const input = createRecipeSchema.parse(recipeDraftCreateInput(directive.recipe));
   assert.deepEqual(input.shelfLifeDays, { fridge: 3, freezer: 90, pantry: null });
+  assert.deepEqual(
+    [input.caloriesPerServing, input.proteinPerServing, input.carbsPerServing, input.fatPerServing, input.fiberPerServing],
+    [320.5, 15, 40, 5, 8],
+  );
 });
 
 test("saving a streamed recipe retains its stock image reference", () => {

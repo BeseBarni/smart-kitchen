@@ -3,10 +3,10 @@ import { mock, test } from "node:test";
 
 test("cooked batches use recipe shelf life from preparation time unless an expiry is supplied", async () => {
   const db = await import("@app/db");
-  let inserted: Array<{ expiresAt: Date | null; shelfLifeDays: unknown }> = [];
+  let inserted: Array<{ expiresAt: Date | null; shelfLifeDays: unknown; caloriesPerUnit: string | null }> = [];
   const recipe = {
     title: "Soup", shelfLifeDays: { fridge: 3, freezer: 90, pantry: null },
-    imageUrl: null, caloriesPerServing: null, proteinPerServing: null, carbsPerServing: null,
+    imageUrl: null, caloriesPerServing: "320.5000" as string | null, proteinPerServing: null, carbsPerServing: null,
     fatPerServing: null, fiberPerServing: null, costPerServing: null, currency: "USD",
   };
   const tx = {
@@ -32,6 +32,10 @@ test("cooked batches use recipe shelf life from preparation time unless an expir
       "2026-01-04T00:00:00.000Z", "2026-02-01T00:00:00.000Z", null,
     ]);
     assert.deepEqual(inserted[0]?.shelfLifeDays, recipe.shelfLifeDays);
+    assert.deepEqual(inserted.map((row) => row.caloriesPerUnit), ["320.5000", "320.5000", "320.5000"]);
+    recipe.caloriesPerServing = null;
+    await cookRecipeRows("user", "recipe", [{ storageLocation: "fridge", quantity: 1 }]);
+    assert.equal(inserted[0]?.caloriesPerUnit, null);
   } finally {
     moduleMock.restore();
   }

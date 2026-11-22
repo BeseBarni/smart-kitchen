@@ -24,11 +24,16 @@ export const stockImageRefSchema = z
   })
   .describe("A normalized TheMealDB stock image reference.");
 
+export const entityImageUrlSchema = z.union([
+  z.string().url(),
+  z.string().regex(/^\/api\/media\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\/file$/i),
+]);
+
 export const resolvedImageUrlsSchema = z
   .object({
-    small: z.string().url().nullable(),
-    medium: z.string().url().nullable(),
-    large: z.string().url().nullable(),
+    small: entityImageUrlSchema.nullable(),
+    medium: entityImageUrlSchema.nullable(),
+    large: entityImageUrlSchema.nullable(),
     source: z.enum(["upload", "themealdb", "legacy", "none"]),
   })
   .describe("Size-aware resolved image URLs and their source.");
