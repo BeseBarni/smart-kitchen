@@ -1,0 +1,38 @@
+PROPRIETARY LICENSE — ALL RIGHTS RESERVED
+
+Copyright (c) 2026 Barnabás Bese. All rights reserved.
+
+1. Scope of Permitted Use (Academic Evaluation Only)
+This repository is made publicly visible solely for academic presentation
+and evaluation for [VEMIVIM333MA/2026/27/1
+ / Pannon Egyetem].
+
+Course instructors, teaching assistants, and authorized academic graders
+are granted a limited, non-exclusive, non-transferable, revocable
+permission to view, clone, build, and run this software locally solely
+for the purpose of inspecting, testing, and grading the project.
+
+2. Prohibited Uses
+Except for the limited academic evaluation permission granted above, no
+license or right—express or implied—is granted to any party. Without prior
+written permission from the copyright holder, you may NOT:
+  - Copy, reproduce, or redistribute the source code or compiled assets
+    (in whole or in part);
+  - Modify, adapt, or create derivative works based on this software;
+  - Deploy, host, or use the software for any commercial or non-commercial
+    purpose outside of local grading;
+  - Sublicense, sell, rent, or transfer access to the software;
+  - Use the source code or assets to train or fine-tune machine learning
+    or AI models.
+
+3. Ownership
+All right, title, and interest in and to the software, including all
+intellectual property rights, remain the exclusive property of the
+copyright holder.
+
+4. Disclaimer
+THIS SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, AND NON-INFRINGEMENT.
+IN NO EVENT SHALL THE COPYRIGHT HOLDER BE LIABLE FOR ANY CLAIM, DAMAGES,
+OR OTHER LIABILITY ARISING FROM THE USE OF THIS SOFTWARE.
