@@ -9,7 +9,7 @@ import { ChatRecipeSheet } from "./ChatRecipeSheet";
 import { useText } from "@/lib/i18n";
 import { ResolvedEntityImage } from "@/components/media/ResolvedEntityImage";
 
-type Props = Extract<UiDirective, { component: "recipe_preview_card" }> & { assistantResponse: string };
+type Props = Extract<UiDirective, { component: "recipe_preview_card" }> & { assistantResponse: string; streaming: boolean };
 
 export function RecipeSuggestionCard(props: Props): React.JSX.Element {
   const { t } = useText();

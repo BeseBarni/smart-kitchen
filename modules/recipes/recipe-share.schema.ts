@@ -21,6 +21,7 @@ export const recipeShareStatusDtoSchema = z.object({
 export const sharedRecipePublicDtoSchema = z.object({
   title: z.string(),
   description: z.string().nullable(),
+  assistantResponse: z.string().nullable().optional().describe("Assistant response included in the shared recipe."),
   instructions: z.array(z.string()),
   prepTimeMin: z.number().int().nonnegative().nullable(),
   cookTimeMin: z.number().int().nonnegative().nullable(),

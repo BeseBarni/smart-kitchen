@@ -26,6 +26,10 @@ inline before their cards; the full response remains available in the recipe
 sheet, including any non-recipe information. Chat agents and recipe skills
 receive the selected app language, and may show AI-generated progress messages
 while working; a localized standard status is shown until one is available.
+Recipes saved from chat now retain the associated full assistant response for
+the Recipes detail sheet and public recipe links, including any non-recipe
+information in that response. Previously saved recipes without a stored
+response cannot display it; this feature requires the latest database migration.
 The chat menu opens a persistent shopping list; adding ingredients from a
 recipe first compares inventory and asks you to review uncertain matches.
 Rejected user messages are shown only in the current browser session and are

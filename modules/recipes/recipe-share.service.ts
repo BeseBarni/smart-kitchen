@@ -69,6 +69,7 @@ function toPublicDto(
   return sharedRecipePublicDtoSchema.parse({
     title: recipe.title,
     description: recipe.description,
+    assistantResponse: recipe.assistantResponse ?? null,
     instructions: recipe.instructions,
     prepTimeMin: recipe.prepTimeMin,
     cookTimeMin: recipe.cookTimeMin,

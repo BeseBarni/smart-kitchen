@@ -1,0 +1,1 @@
+ALTER TABLE "recipes" ADD COLUMN "assistant_response" text;

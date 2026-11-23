@@ -43,6 +43,7 @@ export function useChatStream(
     const abortController = new AbortController();
     controller.current = abortController;
     let activeConversationId = conversationId;
+    let recipeChanged = false;
     const newTurn: ChatTurn = {
       id: crypto.randomUUID(),
       userMessage: {
@@ -145,6 +146,7 @@ export function useChatStream(
               }],
             } : current);
           } else if (event.type === "ui_directive") {
+            if (event.invalidateDomains.includes("recipes")) recipeChanged = true;
             setTurn((current) => current ? {
               ...current,
               uiDirectives: [...current.uiDirectives, event.directive],
@@ -162,6 +164,7 @@ export function useChatStream(
           } else if (event.type === "turn_completed") {
             activeConversationId = event.conversationId;
             onConversationId(event.conversationId);
+            if (recipeChanged) await invalidateAppDomains(queryClient, ["recipes"]);
           }
         },
       });

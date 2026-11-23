@@ -17,7 +17,8 @@ test("streamed recipe drafts retain storage estimates when saved", () => {
 
   assert.equal(directive.component, "recipe_preview_card");
   if (directive.component !== "recipe_preview_card") return;
-  const input = createRecipeSchema.parse(recipeDraftCreateInput(directive.recipe));
+  const input = createRecipeSchema.parse(recipeDraftCreateInput(directive.recipe, "**Delicious** soup."));
+  assert.equal(input.assistantResponse, "**Delicious** soup.");
   assert.deepEqual(input.shelfLifeDays, { fridge: 3, freezer: 90, pantry: null });
   assert.deepEqual(
     [input.caloriesPerServing, input.proteinPerServing, input.carbsPerServing, input.fatPerServing, input.fiberPerServing],

@@ -42,7 +42,7 @@ export function recipeCard(recipe: RecipeDto) {
   };
 }
 
-const strictCreateRecipeSchema = createRecipeSchema.extend({
+const strictCreateRecipeSchema = createRecipeSchema.omit({ assistantResponse: true }).extend({
   caloriesPerServing: z.number().nonnegative().nullable().describe("Estimated calories per serving, or null if not reasonably estimable."),
   proteinPerServing: z.number().nonnegative().nullable().describe("Estimated protein grams per serving, or null if not reasonably estimable."),
   carbsPerServing: z.number().nonnegative().nullable().describe("Estimated carbohydrate grams per serving, or null if not reasonably estimable."),

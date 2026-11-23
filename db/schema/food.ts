@@ -67,6 +67,7 @@ export const recipes = pgTable(
       .references(() => authUsers.id, { onDelete: "cascade" }),
     title: text("title").notNull(),
     description: text("description"),
+    assistantResponse: text("assistant_response"),
     instructions: jsonb("instructions").$type<string[]>().default([]).notNull(),
     imageUrl: text("image_url"),
     imageAssetId: uuid("image_asset_id").references(() => mediaAssets.id, { onDelete: "set null" }),

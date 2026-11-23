@@ -7,6 +7,7 @@ import {
   expenseCategoriesService,
   merchantService,
   receiptEnrichmentService,
+  recipeService,
 } from "@app/modules";
 import { err, ok, type AppError, type Result } from "@app/shared";
 import { FAST_MODEL } from "./core/llm.client";
@@ -63,6 +64,18 @@ export function assistantMessagePayload(
     text,
     ...(directives.length > 0 ? { uiDirectives } : {}),
   };
+}
+
+export function createdRecipeIds(items: readonly LedgerItem[]): string[] {
+  const ids = new Set<string>();
+  for (const item of items) {
+    if (item.toolName !== "recipes_create" || item.payload.kind !== "tool_result" || item.payload.error) continue;
+    const recipe = item.payload.result;
+    if (recipe && typeof recipe === "object" && !Array.isArray(recipe) && "id" in recipe && typeof recipe.id === "string") {
+      ids.add(recipe.id);
+    }
+  }
+  return [...ids];
 }
 
 export function receiptImportDirective(
@@ -362,6 +375,11 @@ export async function runStreamingTurn(input: {
         },
       }]);
       if (!finalItem.success) throw new Error(finalItem.error.message);
+
+      for (const id of createdRecipeIds(context.ledgerItems)) {
+        const saved = await recipeService.update(input.userId, id, { assistantResponse: result.summary });
+        if (!saved.success) throw new Error(saved.error.message);
+      }
 
       await titleUpdate;
       emit({

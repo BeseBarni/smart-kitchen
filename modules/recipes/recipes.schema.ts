@@ -35,6 +35,7 @@ export const recipeSchema = z
     userId: z.string().describe("The external authentication identity ID."),
     title: z.string().min(1).describe("Recipe title."),
     description: z.string().nullable().describe("Optional recipe summary."),
+    assistantResponse: z.string().nullable().optional().describe("Original assistant response associated with this recipe."),
     instructions: z
       .array(z.string().describe("A preparation step."))
       .describe("Ordered recipe steps."),

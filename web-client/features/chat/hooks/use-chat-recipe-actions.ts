@@ -24,9 +24,10 @@ export type ChatRecipeActionsState = {
   cook: (id: string) => void;
 };
 
-export function recipeDraftCreateInput(recipe: RecipeDirective["recipe"]): CreateRecipeInput {
+export function recipeDraftCreateInput(recipe: RecipeDirective["recipe"], assistantResponse?: string): CreateRecipeInput {
   return {
     title: recipe.title, description: recipe.description, instructions: recipe.instructions,
+    assistantResponse: assistantResponse || null,
     imageUrl: recipe.imageUrl ?? null, stockImageKind: recipe.stockImageKind ?? null,
     stockImageName: recipe.stockImageName ?? null, prepTimeMin: recipe.prepTimeMin ?? null, cookTimeMin: recipe.cookTimeMin ?? null, servings: recipe.servings,
     isFreezerFriendly: recipe.isFreezerFriendly ?? false, source: "ai_skill",
@@ -46,7 +47,7 @@ export function recipeDraftCreateInput(recipe: RecipeDirective["recipe"]): Creat
   };
 }
 
-export function useChatRecipeActions({ recipe, status, canSave }: RecipeDirective): ChatRecipeActionsState {
+export function useChatRecipeActions({ recipe, status, canSave, assistantResponse, streaming }: RecipeDirective & { assistantResponse: string; streaming: boolean }): ChatRecipeActionsState {
   const { create, cookAndStock } = useRecipeMutations();
   const savedRecipes = useRecipes({ search: recipe.title, limit: 100 });
   useEffect(() => {
@@ -56,12 +57,12 @@ export function useChatRecipeActions({ recipe, status, canSave }: RecipeDirectiv
   const [location, setLocation] = useState<StorageLocation>("fridge");
   const [quantity, setQuantity] = useState(String(recipe.servings));
   const existingId = savedId ?? savedRecipes.data?.find((saved) => saved.title === recipe.title)?.id ?? null;
-  const createInput = recipeDraftCreateInput(recipe);
+  const createInput = recipeDraftCreateInput(recipe, assistantResponse);
   const parsedQuantity = Number(quantity);
   return {
     showSave: canSave && status === "draft" && !existingId,
     savePending: create.isPending,
-    saveDisabled: create.isPending || savedRecipes.isPending || savedRecipes.isError || recipe.fiberPerServing == null,
+    saveDisabled: streaming || create.isPending || savedRecipes.isPending || savedRecipes.isError || recipe.fiberPerServing == null,
     save: () => create.mutate(createInput, {
       onSuccess: (saved) => { setSavedId(saved.id); toast.success(getText("recipes.saved")); },
       onError: () => toast.error(getText("chat.saveRecipeError")),

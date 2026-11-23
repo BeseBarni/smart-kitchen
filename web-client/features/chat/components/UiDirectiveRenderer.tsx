@@ -46,7 +46,7 @@ export function UiDirectiveRenderer({
     return <InventoryActionCard {...directive} />;
   }
   if (directive.component === "recipe_preview_card") {
-    return <RecipeSuggestionCard {...directive} assistantResponse={recipeResponse} />;
+    return <RecipeSuggestionCard {...directive} assistantResponse={recipeResponse} streaming={disabled} />;
   }
   if (directive.component === "expiring_rescue_card") {
     return (

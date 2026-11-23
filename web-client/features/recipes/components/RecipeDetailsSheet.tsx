@@ -6,6 +6,7 @@ import { ShoppingReview } from "@/features/shopping";
 import { useState } from "react";
 import type { Recipe } from "../types";
 import { RecipeDetailModal } from "./RecipeDetailModal";
+import { RecipeAssistantResponse } from "./RecipeAssistantResponse";
 import { ShareRecipeSheet } from "./ShareRecipeSheet";
 import { useText } from "@/lib/i18n";
 
@@ -38,6 +39,7 @@ export function RecipeDetailsSheet({ recipe, open, loading, error, onClose, onRe
         {error && <div role="alert" className="space-y-3"><p>{t("recipes.loadError")}</p><Button type="button" onClick={onRetry} className="h-11">{t("common.retry")}</Button></div>}
         {detail && (
           <>
+            <RecipeAssistantResponse response={detail.assistantResponse} />
             <div className="grid grid-cols-2 gap-2">
               <Button type="button" variant="outline" className="min-h-11" onClick={() => { setReview(false); onEdit(); }}>{t("recipes.edit")}</Button>
               <Button type="button" className="min-h-11" onClick={() => { setReview(false); onCook(); }}>{t("recipes.cookStock")}</Button>

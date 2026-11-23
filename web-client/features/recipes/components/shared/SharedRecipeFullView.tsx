@@ -6,6 +6,7 @@ import { SharedRecipeHero } from "./SharedRecipeHero";
 import { SharedRecipeMacrosCard } from "./SharedRecipeMacrosCard";
 import { SharedRecipeIngredientsCard } from "./SharedRecipeIngredientsCard";
 import { SharedRecipeInstructionsCard } from "./SharedRecipeInstructionsCard";
+import { RecipeAssistantResponse } from "../RecipeAssistantResponse";
 
 export function SharedRecipeFullView({ recipe }: {
   recipe: SharedRecipePublicDto;
@@ -18,6 +19,7 @@ export function SharedRecipeFullView({ recipe }: {
         <SharedRecipeMacrosCard recipe={recipe} />
         <SharedRecipeIngredientsCard recipe={recipe} />
         <SharedRecipeInstructionsCard recipe={recipe} />
+        <RecipeAssistantResponse response={recipe.assistantResponse} />
       </article>
     </div>
   );

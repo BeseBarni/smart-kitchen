@@ -3,7 +3,7 @@ import { test } from "node:test";
 import { MockLanguageModelV4 } from "ai/test";
 import { generateConversationTitle } from "./agents/conversation-title";
 import { isKitchenMessage } from "./agents/chat-restriction";
-import { assistantMessagePayload, createTurnEmitter, receiptImportDirective } from "./runner";
+import { assistantMessagePayload, createdRecipeIds, createTurnEmitter, receiptImportDirective } from "./runner";
 import { toModelMessages } from "./agents/orchestrator.agent";
 import { visionExtractorInputSchema, visionExtractorOutputSchema, visionSkillImages } from "./skills/vision-extractor.skill";
 import { uiDirectiveSchema } from "./core/stream.schema";
@@ -135,6 +135,17 @@ test("assistant ledger payload omits the optional directives field when empty", 
     kind: "message",
     text: "Hello.",
   });
+});
+
+test("associates the response only with recipes created successfully in this turn", () => {
+  const created = { type: "tool_result" as const, role: "tool" as const, toolName: "recipes_create", payload: { kind: "tool_result" as const, result: { id: "created" } } };
+  assert.deepEqual(createdRecipeIds([
+    created,
+    created,
+    { ...created, toolName: "recipes_get_detail", payload: { kind: "tool_result", result: { id: "existing" } } },
+    { ...created, payload: { kind: "tool_result", error: { code: "VALIDATION_ERROR", message: "Failed" } } },
+    { ...created, payload: { kind: "tool_result", result: null } },
+  ]), ["created"]);
 });
 
 test("generates a short title using low-effort model settings", async () => {

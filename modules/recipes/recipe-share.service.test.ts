@@ -60,6 +60,7 @@ test("public recipe mapping omits private owner, cost, and linked ingredient dat
       userId: "private-owner",
       title: "Lentil soup",
       description: null,
+      assistantResponse: "**A warm soup.**",
       instructions: ["Simmer."],
       prepTimeMin: 5,
       cookTimeMin: 20,
@@ -93,10 +94,11 @@ test("public recipe mapping omits private owner, cost, and linked ingredient dat
   assert.equal(result.success, true);
   if (!result.success) return;
   assert.deepEqual(Object.keys(result.data).sort(), [
-    "title", "description", "instructions", "prepTimeMin", "cookTimeMin", "servings",
+    "title", "description", "assistantResponse", "instructions", "prepTimeMin", "cookTimeMin", "servings",
     "calories", "proteinG", "carbsG", "fatG", "shelfLifeDays", "tags", "ingredients",
     "imageUrls", "sharedAt",
   ].sort());
+  assert.equal(result.data.assistantResponse, "**A warm soup.**");
   assert.equal("userId" in result.data.tags[0]!, false);
   assert.equal("userId" in result.data.ingredients[0]!, false);
   assert.equal("priceAmount" in result.data.ingredients[0]!, false);

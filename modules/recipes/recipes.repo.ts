@@ -16,6 +16,7 @@ function insertValues(input: CreateRecipeInput, computed: RecipeComputed) {
   return {
     title: input.title,
     description: input.description,
+    assistantResponse: input.assistantResponse ?? null,
     instructions: input.instructions,
     imageUrl: input.imageUrl,
     imageAssetId: input.imageAssetId ?? null,
@@ -44,6 +45,7 @@ function updateValues(
   const values: Partial<typeof recipes.$inferInsert> = {};
   if (input.title !== undefined) values.title = input.title;
   if (input.description !== undefined) values.description = input.description;
+  if (input.assistantResponse !== undefined) values.assistantResponse = input.assistantResponse;
   if (input.instructions !== undefined) values.instructions = input.instructions;
   if (input.imageUrl !== undefined) values.imageUrl = input.imageUrl;
   if (input.imageAssetId !== undefined) values.imageAssetId = input.imageAssetId;

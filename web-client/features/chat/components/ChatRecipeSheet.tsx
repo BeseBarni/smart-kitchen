@@ -2,8 +2,7 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { MarkdownContent } from "@/components/MarkdownContent";
-import { RecipeDetailModal } from "@/features/recipes";
+import { RecipeAssistantResponse, RecipeDetailModal } from "@/features/recipes";
 import { ShoppingReview } from "@/features/shopping";
 import type { ChatRecipeActionsState } from "../hooks/use-chat-recipe-actions";
 import type { UiDirective } from "../types";
@@ -21,7 +20,7 @@ export function ChatRecipeSheet({ recipe, assistantResponse, actions, onClose }:
   const [review, setReview] = useState(false);
   return (
     <RecipeDetailModal open onClose={onClose} recipe={recipe} markdown>
-      {assistantResponse && <details className="rounded-2xl border px-3"><summary className="flex min-h-11 cursor-pointer items-center text-title-sm">{t("chat.fullResponse")}</summary><MarkdownContent text={assistantResponse} className="pb-3 text-body-sm" /></details>}
+      <RecipeAssistantResponse response={assistantResponse} />
       <ChatRecipeActions actions={actions} />
       {recipe.ingredients.length > 0 && (review
         ? <ShoppingReview items={recipe.ingredients.map(({ name, quantity, unit }) => ({ name, quantity, unit }))} onDone={() => setReview(false)} />
