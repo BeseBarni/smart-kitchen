@@ -3,6 +3,7 @@ export * from "./account/account.service";
 export * as profileService from "./profile/profile.service";
 export * as ingredientService from "./ingredients/ingredients.service";
 export * as recipeService from "./recipes/recipes.service";
+export * as recipeShareService from "./recipes/recipe-share.service";
 export * as inventoryService from "./inventory/inventory.service";
 export * as mealLogService from "./meal-logs/meal-logs.service";
 export * as chatService from "./chat/chat.service";

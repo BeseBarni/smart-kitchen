@@ -10,6 +10,9 @@ const sessionSchema = z.object({
 }).nullable();
 
 export default async function proxy(request: NextRequest): Promise<NextResponse> {
+  if (request.nextUrl.pathname === "/r" || request.nextUrl.pathname.startsWith("/r/")) {
+    return NextResponse.next();
+  }
   if (request.nextUrl.pathname === "/auth/sign-in" && request.cookies.has(NEON_AUTH_SESSION_COOKIE_NAME)) {
     const sessionResponse = await handleAuthProxyRequest({
       ...getAuthConfig(),

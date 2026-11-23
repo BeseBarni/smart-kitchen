@@ -92,6 +92,10 @@ export const recipeSchema = z
       .nullable()
       .describe("Cost per serving."),
     currency: z.string().describe("ISO currency code used for recipe cost."),
+    shareToken: z.string().regex(/^[A-Za-z0-9_-]{21}[AQgw]$/).nullable()
+      .describe("Public share token, if sharing is enabled."),
+    sharedAt: z.iso.datetime().nullable()
+      .describe("When public sharing was most recently enabled."),
     shelfLifeDays: shelfLifeDaysSchema
       .optional()
       .describe("Typical shelf life in days by storage method."),
@@ -104,7 +108,14 @@ export const recipeSchema = z
   .describe("A recipe with ordered ingredients and per-serving estimates.");
 
 export const createRecipeSchema = recipeSchema
-  .omit({ id: true, userId: true, createdAt: true, updatedAt: true })
+  .omit({
+    id: true,
+    userId: true,
+    createdAt: true,
+    updatedAt: true,
+    shareToken: true,
+    sharedAt: true,
+  })
   .extend({
     stockImageKind: stockImageKindSchema.nullable().optional(),
     stockImageName: z.string().trim().min(1).max(255).nullable().optional(),

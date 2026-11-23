@@ -1,6 +1,6 @@
 # Smart Kitchen Monorepo Structure Report
 
-**Reviewed:** 2026-11-22  
+**Reviewed:** 2026-11-23
 **Scope:** Current source tree and package manifests. Generated output, dependency trees, local environment files, and caches are excluded.
 
 ## 1. Project at a glance
@@ -130,7 +130,7 @@ The V1 adapter present is `ai/tools/adapters/vercel.adapter.ts`. Tool definition
 | `mealdb/` | TheMealDB client/service and image-name/URL normalization helpers for meal and ingredient images. |
 | `media/` | Upload lifecycle, ownership checks, readable URLs, object retrieval, deletion, and cleanup, backed by an S3-compatible client. |
 | `profile/` | Creates/reads/updates dietary preferences and nutrition targets; profile updates can synchronize the auth user image. |
-| `recipes/` | Recipe CRUD and mapping, ingredient associations, and cooking saved recipes into inventory batches. |
+| `recipes/` | Recipe CRUD and mapping, ingredient associations, cooking saved recipes into inventory batches, and tokenized public sharing. |
 | `shared/` | Shared domain helpers, numeric operations, and authenticated-user existence checks used across slices. |
 | `shopping/` | Shopping-list reads/adds/removal and comparison/matching of requested items against available items. |
 | `tags/` | Lists available canonical/user tags, normalizes slugs, resolves or creates tags, and associates them with recipes and ingredients. |
@@ -141,7 +141,7 @@ The V1 adapter present is `ai/tools/adapters/vercel.adapter.ts`. Tool definition
 
 ### `db/` — persistence
 
-The Drizzle schema is composed from `db/schema/`: enums, users, food/ingredients/recipes, inventory, shopping, conversations, tags, media, expense categories, merchants, receipts, budgets, and relations. `db/index.ts` lazily initializes a serverless-oriented Postgres.js connection and exports the typed Drizzle database. `db/migrations/` currently contains migrations `0000` through `0010` and their Drizzle metadata. `seed.ts` and `seed-budget.ts` provide development seed workflows.
+The Drizzle schema is composed from `db/schema/`: enums, users, food/ingredients/recipes, inventory, shopping, conversations, tags, media, expense categories, merchants, receipts, budgets, and relations. `db/index.ts` lazily initializes a serverless-oriented Postgres.js connection and exports the typed Drizzle database. `db/migrations/` contains migrations `0000` through `0011` and their Drizzle metadata; `0011` adds recipe-share tokens and has been applied to the linked Neon branch. `seed.ts` and `seed-budget.ts` provide development seed workflows.
 
 ### `server/` — HTTP API
 

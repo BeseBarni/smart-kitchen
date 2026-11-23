@@ -6,8 +6,10 @@ import type {
 } from "@app/modules/schemas";
 import {
   inventoryItemSchema,
+  recipeShareStatusDtoSchema,
   recipeSchema,
 } from "@app/modules/schemas";
+import type { EnableRecipeShareInput, RecipeShareStatusDto } from "@app/modules/schemas";
 import { z } from "zod";
 import { apiClient, unwrapApiResponse } from "@/lib/api-client";
 import type { RecipeListFilters } from "../types";
@@ -37,4 +39,14 @@ export const recipesApi = {
     unwrapApiResponse(await apiClient.api.recipes[":id"].$delete({ param: { id } }), z.object({ deleted: z.literal(true) })),
   cookAndStock: async (id: string, input: CookRecipeInput) =>
     unwrapApiResponse(await apiClient.api.recipes[":id"].cook.$post({ param: { id }, json: input }), z.array(inventoryItemSchema)),
+  enableShare: async (id: string, input: EnableRecipeShareInput = {}): Promise<RecipeShareStatusDto> =>
+    unwrapApiResponse(
+      await apiClient.api.recipes[":id"].share.$post({ param: { id }, json: input }),
+      recipeShareStatusDtoSchema,
+    ),
+  revokeShare: async (id: string): Promise<RecipeShareStatusDto> =>
+    unwrapApiResponse(
+      await apiClient.api.recipes[":id"].share.$delete({ param: { id } }),
+      recipeShareStatusDtoSchema,
+    ),
 };

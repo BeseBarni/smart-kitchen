@@ -71,6 +71,7 @@ test("recipe details render Markdown only for AI-generated recipes", () => {
     imageUrl: null, prepTimeMin: null, cookTimeMin: null, servings: 1,
     isFreezerFriendly: false, caloriesPerServing: null, proteinPerServing: null,
     carbsPerServing: null, fatPerServing: null, fiberPerServing: null, costPerServing: null, currency: "USD",
+    shareToken: null, sharedAt: null,
     createdAt: "2026-01-01T10:00:00.000Z", updatedAt: "2026-01-01T10:00:00.000Z",
   };
   const noop = (): void => {};

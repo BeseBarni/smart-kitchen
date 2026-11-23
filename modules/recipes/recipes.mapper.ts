@@ -63,6 +63,7 @@ export function recipeDto(recipe: RecipeDetail["recipe"], lines: RecipeDetail["l
     costPerServing: numericToNumber(recipe.costPerServing),
     createdAt: recipe.createdAt.toISOString(),
     updatedAt: recipe.updatedAt.toISOString(),
+    sharedAt: recipe.sharedAt?.toISOString() ?? null,
     shelfLifeDays: recipe.shelfLifeDays ?? {},
     tags: [],
     ingredients: lines.map(({ line, ingredient }) => ({
@@ -86,6 +87,7 @@ export function recipeListDto(recipe: RecipeListRow): RecipeDto {
     costPerServing: numericToNumber(recipe.costPerServing),
     createdAt: recipe.createdAt.toISOString(),
     updatedAt: recipe.updatedAt.toISOString(),
+    sharedAt: recipe.sharedAt?.toISOString() ?? null,
     shelfLifeDays: recipe.shelfLifeDays ?? {},
     tags: [],
     ingredients: [],

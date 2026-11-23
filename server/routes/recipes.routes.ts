@@ -2,8 +2,10 @@ import { zValidator } from "@hono/zod-validator";
 import {
   cookRecipeInputSchema,
   createRecipeSchema,
+  enableRecipeShareInputSchema,
   listRecipesQuerySchema,
   recipeIdSchema,
+  recipeShareService,
   recipeService,
   updateRecipeSchema,
 } from "@app/modules";
@@ -70,5 +72,33 @@ export const recipeRoutes = new Hono<AuthEnvironment>()
           context.req.valid("json"),
         ),
         201,
+      ),
+  )
+  .post(
+    "/:id/share",
+    requireAuth,
+    zValidator("param", recipeParams),
+    zValidator("json", enableRecipeShareInputSchema),
+    async (context) =>
+      resultToResponse(
+        context,
+        await recipeShareService.enableShare(
+          context.get("userId"),
+          context.req.valid("param").id,
+          context.req.valid("json"),
+        ),
+      ),
+  )
+  .delete(
+    "/:id/share",
+    requireAuth,
+    zValidator("param", recipeParams),
+    async (context) =>
+      resultToResponse(
+        context,
+        await recipeShareService.revokeShare(
+          context.get("userId"),
+          context.req.valid("param").id,
+        ),
       ),
   );

@@ -1,6 +1,7 @@
 export * from "./profile/profile.schema";
 export * from "./ingredients/ingredients.schema";
 export * from "./recipes/recipes.schema";
+export * from "./recipes/recipe-share.schema";
 export * from "./inventory/inventory.schema";
 export * from "./meal-logs/meal-logs.schema";
 export * from "./chat/chat.schema";

@@ -43,6 +43,8 @@ export function optimisticRecipe(input: CreateRecipeInput): RecipeDto {
     costPerServing: input.costPerServing ?? null,
     userId: "",
     shelfLifeDays: input.shelfLifeDays ?? {},
+    shareToken: null,
+    sharedAt: null,
     tags: [],
     createdAt: now,
     updatedAt: now,

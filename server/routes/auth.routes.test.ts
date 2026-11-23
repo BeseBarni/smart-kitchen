@@ -36,7 +36,11 @@ test("protected API routes reject unauthenticated reads and mutations before val
   configureAuth();
   globalThis.fetch = async () => Response.json(null);
   const requests = new Set(app.routes
-    .filter(({ method, path }) => method !== "ALL" && !path.startsWith("/api/auth/"))
+    .filter(({ method, path }) =>
+      method !== "ALL"
+      && !path.startsWith("/api/auth/")
+      && !(method === "GET" && path.startsWith("/api/public/recipes/")),
+    )
     .map(({ method, path }) => `${method} ${path.replace(/:[^/]+/g, "not-a-uuid")}`));
   assert.ok(requests.size > 0);
   for (const request of requests) {
@@ -48,6 +52,12 @@ test("protected API routes reject unauthenticated reads and mutations before val
     });
     assert.equal(response.status, 401, request);
   }
+});
+
+test("public recipe routes are reachable without a session and validate tokens", async () => {
+  const response = await app.request("http://localhost/api/public/recipes/not-a-token");
+  assert.equal(response.status, 400);
+  assert.equal(response.headers.get("cache-control"), "no-store");
 });
 
 test("expired sessions are rejected", async () => {

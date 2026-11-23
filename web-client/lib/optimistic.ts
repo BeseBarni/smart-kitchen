@@ -1,6 +1,6 @@
 import type { QueryClient, QueryKey } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { getText } from "@/lib/i18n";
+import { getText, type TranslationKey } from "@/lib/i18n";
 
 export const OPTIMISTIC_ID_PREFIX = "temp-";
 
@@ -46,7 +46,10 @@ export async function settleDomainQueries(
   ));
 }
 
-export function rollbackOptimisticMutation(context: QueryRollback | undefined): void {
+export function rollbackOptimisticMutation(
+  context: QueryRollback | undefined,
+  messageKey: TranslationKey = "common.optimisticRollback",
+): void {
   context?.rollback();
-  toast.error(getText("common.optimisticRollback"));
+  toast.error(getText(messageKey));
 }

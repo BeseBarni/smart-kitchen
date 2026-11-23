@@ -8,6 +8,7 @@ import {
   pgTable,
   text,
   timestamp,
+  uniqueIndex,
   uuid,
 } from "drizzle-orm/pg-core";
 import { authUsers } from "./users";
@@ -83,6 +84,8 @@ export const recipes = pgTable(
     fiberPerServing: numeric("fiber_per_serving", { precision: 10, scale: 2 }),
     costPerServing: numeric("cost_per_serving", { precision: 10, scale: 2 }),
     currency: text("currency").default("HUF").notNull(),
+    shareToken: text("share_token"),
+    sharedAt: timestamp("shared_at", { withTimezone: true }),
     shelfLifeDays: jsonb("shelf_life_days").$type<{
       fridge?: number | null;
       freezer?: number | null;
@@ -93,6 +96,9 @@ export const recipes = pgTable(
   },
   (table) => [
     index("recipes_user_id_created_at_idx").on(table.userId, table.createdAt),
+    uniqueIndex("recipes_share_token_uidx")
+      .on(table.shareToken)
+      .where(sql`${table.shareToken} is not null`),
     check(
       "recipes_stock_image_pair_check",
       sql`(${table.stockImageKind} is null) = (${table.stockImageName} is null)`,

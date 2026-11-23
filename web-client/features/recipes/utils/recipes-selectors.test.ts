@@ -33,6 +33,8 @@ function recipe(id: string, title: string, source: "manual" | "ai_skill", prepTi
     fiberPerServing: null,
     costPerServing: null,
     currency: "HUF",
+    shareToken: null,
+    sharedAt: null,
     createdAt: "2026-03-01T00:00:00.000Z",
     updatedAt: "2026-03-01T00:00:00.000Z",
   };

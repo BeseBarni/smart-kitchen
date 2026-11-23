@@ -31,6 +31,7 @@ Each business domain under `modules/<domain>/` (e.g., `inventory`, `recipes`, `c
 - Define all PostgreSQL tables, enums, and relations in `db/schema.ts` using Drizzle ORM.
 - Use `uuid` primary keys (`defaultRandom()`) and `createdAt` / `updatedAt` timestamps on all core tables.
 - Manage schema changes exclusively via `drizzle-kit` migrations.
+- After validating a Drizzle migration, always apply it to the linked Neon branch in the same task, regardless of branch name, and verify the resulting schema; a generated migration file alone is not completion.
 - Keep DB connection pooling clean and serverless-safe in `db/index.ts`.
 
 ## Workspace Import Conventions

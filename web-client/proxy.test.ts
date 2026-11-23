@@ -35,6 +35,11 @@ test("sign-in remains reachable without a session", async () => {
   assert.equal(response.headers.get("x-middleware-next"), "1");
 });
 
+test("shared recipe routes remain accessible without a session", async () => {
+  const response = await proxy(new NextRequest("http://localhost/r/Abcdefghijklmnopqrstuw"));
+  assert.equal(response.headers.get("x-middleware-next"), "1");
+});
+
 test("login guard reports session verification failures", async () => {
   configureAuth();
   globalThis.fetch = async () => Response.json({ message: "Auth unavailable" }, { status: 503 });

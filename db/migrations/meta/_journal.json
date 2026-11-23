@@ -78,6 +78,13 @@
       "when": 1795355225999,
       "tag": "0010_canonical_expense_categories",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1795430933981,
+      "tag": "0011_dear_bloodscream",
+      "breakpoints": true
     }
   ]
 }
